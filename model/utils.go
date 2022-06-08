@@ -21,6 +21,15 @@ type Lookup struct {
 	Name string `json:"name"`
 }
 
+func (l *Lookup) GetSafeId() *int {
+	if l == nil || l.Id == 0 {
+
+		return nil
+	}
+
+	return &l.Id
+}
+
 func (s *StringInterface) ToJson() string {
 	b, _ := json.Marshal(s)
 	return string(b)

@@ -15,11 +15,11 @@ func (c *Controller) CreateBackendProfile(session *auth_manager.Session, profile
 	profile.DomainRecord = model.DomainRecord{
 		DomainId:  session.Domain(profile.DomainId),
 		CreatedAt: model.GetMillis(),
-		CreatedBy: model.Lookup{
+		CreatedBy: &model.Lookup{
 			Id: int(session.UserId),
 		},
 		UpdatedAt: model.GetMillis(),
-		UpdatedBy: model.Lookup{
+		UpdatedBy: &model.Lookup{
 			Id: int(session.UserId),
 		},
 	}
@@ -90,7 +90,9 @@ func (c *Controller) UpdateBackendProfile(session *auth_manager.Session, profile
 	}
 
 	profile.UpdatedAt = model.GetMillis()
-	profile.UpdatedBy.Id = int(session.UserId)
+	profile.UpdatedBy = &model.Lookup{
+		Id: int(session.UserId),
+	}
 
 	if err = profile.IsValid(); err != nil {
 		return nil, err
@@ -120,7 +122,9 @@ func (c *Controller) PatchBackendProfile(session *auth_manager.Session, domainId
 	}
 
 	patch.UpdatedAt = model.GetMillis()
-	patch.UpdatedBy.Id = int(session.UserId)
+	patch.UpdatedBy = &model.Lookup{
+		Id: int(session.UserId),
+	}
 
 	return c.app.PatchFileBackendProfile(session.Domain(domainId), id, patch)
 }

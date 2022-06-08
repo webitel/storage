@@ -2,11 +2,12 @@ package sqlstore
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/lib/pq"
 	"github.com/webitel/engine/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
-	"net/http"
 )
 
 type SqlFileBackendProfileStore struct {
@@ -66,8 +67,8 @@ from p
 		"Type":        profile.Type,
 		"CreatedAt":   profile.CreatedAt,
 		"UpdatedAt":   profile.UpdatedAt,
-		"CreatedBy":   profile.CreatedBy.Id,
-		"UpdatedBy":   profile.UpdatedBy.Id,
+		"CreatedBy":   profile.CreatedBy.GetSafeId(),
+		"UpdatedBy":   profile.UpdatedBy.GetSafeId(),
 		"DomainId":    profile.DomainId,
 		"Description": profile.Description,
 	})
@@ -191,7 +192,7 @@ from p
 		"MaxSize":     profile.MaxSizeMb,
 		"Properties":  model.StringInterfaceToJson(profile.Properties),
 		"UpdatedAt":   profile.UpdatedAt,
-		"UpdatedBy":   profile.UpdatedBy.Id,
+		"UpdatedBy":   profile.UpdatedBy.GetSafeId(),
 		"DomainId":    profile.DomainId,
 		"Description": profile.Description,
 		"Id":          profile.Id,

@@ -117,7 +117,7 @@ type FileBackendProfilePath struct {
 	MaxSizeMb   *int             `json:"max_size_mb"`
 	Properties  *StringInterface `json:"properties"`
 	Description *string          `json:"description"`
-	UpdatedBy   Lookup
+	UpdatedBy   *Lookup
 	UpdatedAt   int64
 }
 

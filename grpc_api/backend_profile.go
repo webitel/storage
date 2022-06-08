@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/webitel/protos/engine"
 	"github.com/webitel/protos/storage"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
@@ -171,17 +170,11 @@ func (api *backendProfiles) DeleteBackendProfile(ctx context.Context, in *storag
 
 func toGrpcProfile(src *model.FileBackendProfile) *storage.BackendProfile {
 	return &storage.BackendProfile{
-		Id:        src.Id,
-		CreatedAt: src.CreatedAt,
-		CreatedBy: &engine.Lookup{
-			Id:   int64(src.CreatedBy.Id),
-			Name: src.CreatedBy.Name,
-		},
-		UpdatedAt: src.UpdatedAt,
-		UpdatedBy: &engine.Lookup{
-			Id:   int64(src.UpdatedBy.Id),
-			Name: src.UpdatedBy.Name,
-		},
+		Id:          src.Id,
+		CreatedAt:   src.CreatedAt,
+		CreatedBy:   GetProtoLookup(src.CreatedBy),
+		UpdatedAt:   src.UpdatedAt,
+		UpdatedBy:   GetProtoLookup(src.UpdatedBy),
 		DataSize:    int64(src.DataSize),
 		DataCount:   src.DataCount,
 		Name:        src.Name,

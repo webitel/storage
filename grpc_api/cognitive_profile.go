@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/webitel/protos/engine"
 	"github.com/webitel/storage/model"
 
 	"github.com/webitel/protos/storage"
@@ -177,17 +176,11 @@ func (api *cognitiveProfile) DeleteCognitiveProfile(ctx context.Context, in *sto
 
 func toGrpcCognitiveProfile(src *model.CognitiveProfile) *storage.CognitiveProfile {
 	return &storage.CognitiveProfile{
-		Id:        src.Id,
-		CreatedAt: getTimestamp(src.CreatedAt),
-		CreatedBy: &engine.Lookup{
-			Id:   int64(src.CreatedBy.Id),
-			Name: src.CreatedBy.Name,
-		},
-		UpdatedAt: getTimestamp(src.UpdatedAt),
-		UpdatedBy: &engine.Lookup{
-			Id:   int64(src.UpdatedBy.Id),
-			Name: src.UpdatedBy.Name,
-		},
+		Id:          src.Id,
+		CreatedAt:   getTimestamp(src.CreatedAt),
+		CreatedBy:   GetProtoLookup(src.CreatedBy),
+		UpdatedAt:   getTimestamp(src.UpdatedAt),
+		UpdatedBy:   GetProtoLookup(src.UpdatedBy),
 		Provider:    getProvider(src.Provider),
 		Properties:  toFrpcBackendProperties(src.Properties), //FIXME allow proto json
 		Enabled:     src.Enabled,

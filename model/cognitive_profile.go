@@ -9,9 +9,9 @@ type CognitiveProfile struct {
 	Id        int64      `json:"id" db:"id"`
 	DomainId  int64      `json:"-" db:"domain_id"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`
-	CreatedBy Lookup     `json:"created_by" db:"created_by"`
+	CreatedBy *Lookup    `json:"created_by" db:"created_by"`
 	UpdatedAt *time.Time `json:"updated_at" db:"updated_at"`
-	UpdatedBy Lookup     `json:"updated_by" db:"updated_by"`
+	UpdatedBy *Lookup    `json:"updated_by" db:"updated_by"`
 
 	Provider    string          `json:"provider" db:"provider"`
 	Properties  StringInterface `json:"properties" db:"properties"`
@@ -65,7 +65,7 @@ type CognitiveProfilePath struct {
 }
 
 func (f *CognitiveProfile) Path(path *CognitiveProfilePath) {
-	f.UpdatedBy = path.UpdatedBy
+	f.UpdatedBy = &path.UpdatedBy
 	f.UpdatedAt = &path.UpdatedAt
 
 	if path.Provider != nil {

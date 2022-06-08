@@ -66,8 +66,8 @@ FROM p
 		"Properties": model.StringInterfaceToJson(profile.Properties),
 		"CreatedAt":  profile.CreatedAt,
 		"UpdatedAt":  profile.UpdatedAt,
-		"CreatedBy":  profile.CreatedBy.Id,
-		"UpdatedBy":  profile.UpdatedBy.Id,
+		"CreatedBy":  profile.CreatedBy.GetSafeId(),
+		"UpdatedBy":  profile.UpdatedBy.GetSafeId(),
 
 		"Enabled":     profile.Enabled,
 		"Name":        profile.Name,
@@ -204,7 +204,7 @@ FROM p
 		"Provider":   profile.Provider,
 		"Properties": model.StringInterfaceToJson(profile.Properties),
 		"UpdatedAt":  profile.UpdatedAt,
-		"UpdatedBy":  profile.UpdatedBy.Id,
+		"UpdatedBy":  profile.UpdatedBy.GetSafeId(),
 
 		"Enabled":     profile.Enabled,
 		"Name":        profile.Name,

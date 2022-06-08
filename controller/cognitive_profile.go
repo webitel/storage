@@ -17,7 +17,7 @@ func (c *Controller) CreateCognitiveProfile(session *auth_manager.Session, profi
 	profile.DomainId = session.Domain(profile.DomainId)
 	t := time.Now()
 	profile.CreatedAt = &t
-	profile.CreatedBy = model.Lookup{
+	profile.CreatedBy = &model.Lookup{
 		Id: int(session.UserId),
 	}
 	profile.UpdatedAt = profile.CreatedAt
@@ -89,7 +89,9 @@ func (c *Controller) UpdateCognitiveProfile(session *auth_manager.Session, profi
 	}
 	t := time.Now()
 	profile.UpdatedAt = &t
-	profile.UpdatedBy.Id = int(session.UserId)
+	profile.UpdatedBy = &model.Lookup{
+		Id: int(session.UserId),
+	}
 
 	if err = profile.IsValid(); err != nil {
 		return nil, err
@@ -119,7 +121,9 @@ func (c *Controller) PatchCognitiveProfile(session *auth_manager.Session, domain
 	}
 
 	patch.UpdatedAt = time.Now()
-	patch.UpdatedBy.Id = int(session.UserId)
+	patch.UpdatedBy = model.Lookup{
+		Id: int(session.UserId),
+	}
 
 	return c.app.PatchCognitiveProfile(session.Domain(domainId), id, patch)
 }

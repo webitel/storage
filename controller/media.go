@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"io"
+
 	"github.com/webitel/engine/auth_manager"
 	"github.com/webitel/storage/model"
-	"io"
 )
 
 func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.Reader, mediaFile *model.MediaFile) (*model.MediaFile, *model.AppError) {
@@ -16,11 +17,11 @@ func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.Reade
 	mediaFile.DomainRecord = model.DomainRecord{
 		DomainId:  session.Domain(mediaFile.DomainId),
 		CreatedAt: model.GetMillis(),
-		CreatedBy: model.Lookup{
+		CreatedBy: &model.Lookup{
 			Id: int(session.UserId),
 		},
 		UpdatedAt: model.GetMillis(),
-		UpdatedBy: model.Lookup{
+		UpdatedBy: &model.Lookup{
 			Id: int(session.UserId),
 		},
 	}

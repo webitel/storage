@@ -2,7 +2,7 @@ package grpc_api
 
 import (
 	"context"
-	"github.com/webitel/protos/engine"
+
 	"github.com/webitel/protos/storage"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
@@ -86,17 +86,11 @@ func toGrpcMediaFile(src *model.MediaFile) *storage.MediaFile {
 	return &storage.MediaFile{
 		Id:        src.Id,
 		CreatedAt: src.CreatedAt,
-		CreatedBy: &engine.Lookup{
-			Id:   int64(src.CreatedBy.Id),
-			Name: src.CreatedBy.Name,
-		},
+		CreatedBy: GetProtoLookup(src.CreatedBy),
 		UpdatedAt: src.UpdatedAt,
-		UpdatedBy: &engine.Lookup{
-			Id:   int64(src.UpdatedBy.Id),
-			Name: src.UpdatedBy.Name,
-		},
-		Name:     src.Name,
-		Size:     src.Size,
-		MimeType: src.MimeType,
+		UpdatedBy: GetProtoLookup(src.UpdatedBy),
+		Name:      src.Name,
+		Size:      src.Size,
+		MimeType:  src.MimeType,
 	}
 }

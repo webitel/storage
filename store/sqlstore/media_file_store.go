@@ -3,11 +3,12 @@ package sqlstore
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/lib/pq"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
-	"net/http"
-	"strings"
 )
 
 type SqlMediaFileStore struct {
@@ -46,9 +47,9 @@ from f
 		"Mime":       file.MimeType,
 		"Properties": model.StringInterfaceToJson(file.Properties),
 		"Instance":   file.Instance,
-		"CreatedBy":  file.CreatedBy.Id,
+		"CreatedBy":  file.CreatedBy.GetSafeId(),
 		"CreatedAt":  file.CreatedAt,
-		"UpdatedBy":  file.UpdatedBy.Id,
+		"UpdatedBy":  file.UpdatedBy.GetSafeId(),
 		"UpdatedAt":  file.UpdatedAt,
 		"DomainId":   file.DomainId,
 	})
