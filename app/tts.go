@@ -23,10 +23,10 @@ type ttsFunction func(tts2.TTSParams) (io.ReadCloser, *string, error)
 
 var (
 	ttsEngine = map[string]ttsFunction{
-		TtsPoly:      tts2.Poly,
-		TtsMicrosoft: tts2.Microsoft,
-		TtsGoogle:    tts2.Google,
-		TtsYandex:    tts2.Yandex,
+		strings.ToLower(TtsPoly):      tts2.Poly,
+		strings.ToLower(TtsMicrosoft): tts2.Microsoft,
+		strings.ToLower(TtsGoogle):    tts2.Google,
+		strings.ToLower(TtsYandex):    tts2.Yandex,
 	}
 )
 
