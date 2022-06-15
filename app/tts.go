@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/webitel/storage/model"
 
@@ -31,6 +32,7 @@ var (
 
 func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err *model.AppError) {
 	var ttsErr error
+	provider = strings.ToLower(provider)
 
 	if params.ProfileId > 0 && params.Key == "" {
 		var ttsProfile *model.TtsProfile
