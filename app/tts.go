@@ -32,7 +32,7 @@ var (
 func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err *model.AppError) {
 	var ttsErr error
 
-	if params.ProfileId > -1 && params.Key == "" {
+	if params.ProfileId > 0 && params.Key == "" {
 		var ttsProfile *model.TtsProfile
 		ttsProfile, err = a.Store.CognitiveProfile().SearchTtsProfile(int64(params.DomainId), params.ProfileId)
 		if err != nil {
