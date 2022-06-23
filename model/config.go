@@ -54,10 +54,6 @@ type NoSqlSettings struct {
 	Trace bool
 }
 
-type BrokerSettings struct {
-	ConnectionString *string
-}
-
 type Config struct {
 	TranslationsDirectory        string
 	NodeName                     string
@@ -68,7 +64,6 @@ type Config struct {
 	LocalizationSettings         LocalizationSettings
 	ServiceSettings              ServiceSettings
 	SqlSettings                  SqlSettings
-	BrokerSettings               BrokerSettings
 	MediaFileStoreSettings       MediaFileStoreSettings
 	DefaultFileStore             *DefaultFileStore
 	ServerSettings               ServerSettings

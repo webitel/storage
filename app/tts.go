@@ -32,7 +32,6 @@ var (
 
 func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err *model.AppError) {
 	var ttsErr error
-	provider = strings.ToLower(provider)
 
 	if params.ProfileId > 0 && params.Key == "" {
 		var ttsProfile *model.TtsProfile
@@ -52,7 +51,7 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 
 		json.Unmarshal(ttsProfile.Properties, &params)
 	}
-
+	provider = strings.ToLower(provider)
 	if fn, ok := ttsEngine[provider]; ok {
 		out, t, ttsErr = fn(params)
 		if ttsErr != nil {
