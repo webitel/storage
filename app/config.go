@@ -14,7 +14,6 @@ var (
 	translationsDirectory = flag.String("translations_directory", "i18n", "Translations directory")
 	consulHost            = flag.String("consul", "consul:8500", "Host to consul")
 	dataSource            = flag.String("data_source", "postgres://opensips:webitel@postgres:5432/webitel?fallback_application_name=storage&sslmode=disable&connect_timeout=10&search_path=storage", "Data source")
-	amqpSource            = flag.String("amqp", "amqp://webitel:webitel@rabbit:5672?heartbeat=10", "AMQP connection")
 	grpcServerPort        = flag.Int("grpc_port", 0, "GRPC port")
 	grpcServerAddr        = flag.String("grpc_addr", "", "GRPC host")
 	dev                   = flag.Bool("dev", false, "enable dev mode")
@@ -67,9 +66,6 @@ func loadConfig(fileName string) (*model.Config, *model.AppError) {
 			MaxOpenConns:                model.NewInt(5),
 			ConnMaxLifetimeMilliseconds: model.NewInt(3600000),
 			Trace:                       false,
-		},
-		BrokerSettings: model.BrokerSettings{
-			ConnectionString: amqpSource,
 		},
 		DiscoverySettings: model.DiscoverySettings{
 			Url: *consulHost,
