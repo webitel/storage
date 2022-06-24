@@ -90,6 +90,7 @@ func (s SqlCognitiveProfileStore) GetAllPage(domainId int64, search *model.Searc
 	f := map[string]interface{}{
 		"DomainId": domainId,
 		"Ids":      pq.Array(search.Ids),
+		"Service":  pq.Array(search.Service),
 		"Q":        search.GetQ(),
 		"Enabled":  search.Enabled,
 	}
@@ -97,6 +98,7 @@ func (s SqlCognitiveProfileStore) GetAllPage(domainId int64, search *model.Searc
 	err := s.ListQuery(&profiles, search.ListRequest,
 		`domain_id = :DomainId
 				and (:Ids::int[] isnull or id = any(:Ids))
+			    and (:Service::varchar[] isnull or service = any(:Service))
 				and (not :Enabled::bool or enabled)
 				and (:Q::varchar isnull or (name ilike :Q::varchar ))`,
 		model.CognitiveProfile{}, f)
@@ -115,6 +117,7 @@ func (s SqlCognitiveProfileStore) GetAllPageByGroups(domainId int64, groups []in
 	f := map[string]interface{}{
 		"DomainId": domainId,
 		"Ids":      pq.Array(search.Ids),
+		"Service":  pq.Array(search.Service),
 		"Q":        search.GetQ(),
 		"Groups":   pq.Array(groups),
 		"Access":   auth_manager.PERMISSION_ACCESS_READ.Value(),
@@ -128,6 +131,7 @@ func (s SqlCognitiveProfileStore) GetAllPageByGroups(domainId int64, groups []in
 				  where a.dc = p.domain_id and a.object = p.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
 				and (not :Enabled::bool or enabled)
 				and (:Ids::int[] isnull or id = any(:Ids))
+				and (:Service::varchar[] isnull or service = any(:Service))
 				and (:Q::varchar isnull or (name ilike :Q::varchar ))`,
 		model.CognitiveProfile{}, f)
 

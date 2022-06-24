@@ -64,6 +64,13 @@ func (api *cognitiveProfile) SearchCognitiveProfile(ctx context.Context, in *sto
 		Enabled: in.Enabled,
 	}
 
+	if len(in.Service) != 0 {
+		rec.Service = make([]string, 0, len(in.Service))
+		for _, v := range in.Service {
+			rec.Service = append(rec.Service, v.String())
+		}
+	}
+
 	list, endOfData, err = api.ctrl.SearchCognitiveProfile(session, session.Domain(0), rec)
 
 	if err != nil {
