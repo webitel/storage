@@ -3,12 +3,13 @@ package tts
 import (
 	"bytes"
 	"fmt"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/wlog"
 )
 
 const (
@@ -17,17 +18,25 @@ const (
 
 func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 	var request *http.Request
+	var data string
 	token, err := microsoftToken(req.Key, req.Region)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	data := fmt.Sprintf(`<speak version='1.0' xml:lang='%s'>
+	if req.TextType == "ssml" {
+		data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
+	%s
+</speak>
+`, req.Language, req.Text)
+	} else {
+		data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
 	<voice xml:lang='%s' xml:gender='%s' name='%s'>
 	%s
 	 </voice>
 </speak>
 `, req.Language, req.Language, req.Voice, microsoftLocalesNameMapping(req.Language, req.Voice), req.Text)
+	}
 
 	request, err = http.NewRequest("POST", fmt.Sprintf("https://%s.tts.speech.microsoft.com/cognitiveservices/v1", req.Region), bytes.NewBuffer([]byte(data)))
 	if err != nil {
