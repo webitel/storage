@@ -24,19 +24,12 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 		return nil, nil, err
 	}
 
-	if req.TextType == "ssml" {
-		data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
-	%s
-</speak>
-`, req.Language, req.Text)
-	} else {
-		data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
+	data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
 	<voice xml:lang='%s' xml:gender='%s' name='%s'>
 	%s
 	 </voice>
 </speak>
 `, req.Language, req.Language, req.Voice, microsoftLocalesNameMapping(req.Language, req.Voice), req.Text)
-	}
 
 	request, err = http.NewRequest("POST", fmt.Sprintf("https://%s.tts.speech.microsoft.com/cognitiveservices/v1", req.Region), bytes.NewBuffer([]byte(data)))
 	if err != nil {
