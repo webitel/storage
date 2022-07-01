@@ -266,7 +266,7 @@ func (c *client) LoadTranscript(t *Task) ([]byte, error) {
 		return nil, ErrNotFound
 	}
 
-	file := files[len(files)-1]
+	file := files[0]
 	var data []byte
 
 	req, err := http.NewRequest("GET", file.Links.ContentUrl, nil)
@@ -306,6 +306,8 @@ func (c *client) GetFiles(t *Task) ([]*File, error) {
 	if data, err = ioutil.ReadAll(res.Body); err != nil {
 		return nil, err
 	}
+
+	fmt.Println(string(data))
 
 	var result Files
 	if err = json.Unmarshal(data, &result); err != nil {
