@@ -72,3 +72,7 @@ func (s *LayeredStore) CognitiveProfile() CognitiveProfileStore {
 func (s *LayeredStore) TranscriptFile() TranscriptFileStore {
 	return s.DatabaseLayer.TranscriptFile()
 }
+
+func (s *LayeredStore) ImportTemplate() ImportTemplateStore {
+	return s.DatabaseLayer.ImportTemplate()
+}

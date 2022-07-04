@@ -51,6 +51,7 @@ type StoreData interface {
 	SyncFile() SyncFileStore
 	CognitiveProfile() CognitiveProfileStore
 	TranscriptFile() TranscriptFileStore
+	ImportTemplate() ImportTemplateStore
 }
 
 type UploadJobStore interface {
@@ -146,4 +147,12 @@ type TranscriptFileStore interface {
 
 	CreateJobs(domainId int64, fileIds []int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError)
 	GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, *model.AppError)
+}
+
+type ImportTemplateStore interface {
+	Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError)
+	GetAllPage(domainId int64, req *model.SearchImportTemplate) ([]*model.ImportTemplate, *model.AppError)
+	Get(domainId int64, id int32) (*model.ImportTemplate, *model.AppError)
+	Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError)
+	Delete(domainId int64, id int32) *model.AppError
 }

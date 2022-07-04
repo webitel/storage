@@ -41,6 +41,7 @@ type SqlSupplierOldStores struct {
 	syncFile           store.SyncFileStore
 	cognitiveProfile   store.CognitiveProfileStore
 	transcriptFile     store.TranscriptFileStore
+	importTemplate     store.ImportTemplateStore
 }
 
 type SqlSupplier struct {
@@ -73,6 +74,7 @@ func NewSqlSupplier(settings model.SqlSettings) *SqlSupplier {
 	supplier.oldStores.syncFile = NewSqlSyncFileStore(supplier)
 	supplier.oldStores.cognitiveProfile = NewSqlCognitiveProfileStore(supplier)
 	supplier.oldStores.transcriptFile = NewSqlTranscriptFileStore(supplier)
+	supplier.oldStores.importTemplate = NewSqlImportTemplateStore(supplier)
 
 	err := supplier.GetMaster().CreateTablesIfNotExists()
 	if err != nil {
@@ -358,4 +360,8 @@ func (ss *SqlSupplier) CognitiveProfile() store.CognitiveProfileStore {
 
 func (ss *SqlSupplier) TranscriptFile() store.TranscriptFileStore {
 	return ss.oldStores.transcriptFile
+}
+
+func (ss *SqlSupplier) ImportTemplate() store.ImportTemplateStore {
+	return ss.oldStores.importTemplate
 }
