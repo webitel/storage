@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/texttospeech v1.3.0
-	github.com/aws/aws-sdk-go v1.44.47
+	github.com/aws/aws-sdk-go v1.44.48
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
