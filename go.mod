@@ -14,12 +14,12 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20220704120123-117e62452438
-	github.com/webitel/protos/engine v0.0.0-20220704142716-54aa0f8ca52e
+	github.com/webitel/engine v0.0.0-20220707121332-60cf8fe6b2a2
+	github.com/webitel/protos/engine v0.0.0-20220706123912-32958e54422d
 	github.com/webitel/protos/storage v0.0.0-20220704142716-54aa0f8ca52e
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	google.golang.org/api v0.86.0
-	google.golang.org/genproto v0.0.0-20220630174209-ad1d48641aa7
+	google.golang.org/genproto v0.0.0-20220706185917-7780775163c4
 	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 
@@ -54,7 +54,7 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/net v0.0.0-20220630215102-69896b714898 // indirect
+	golang.org/x/net v0.0.0-20220706163947-c90051bbdb60 // indirect
 	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0 // indirect
 	golang.org/x/sys v0.0.0-20220704084225-05e143d24a9e // indirect
 	golang.org/x/text v0.3.7 // indirect
