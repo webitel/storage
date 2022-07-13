@@ -18,7 +18,7 @@ func TestClient(t *testing.T) {
 
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-	task, err := c.TranscriptJob("https://dev.webitel.com/api/storage/recordings/59673/stream?access_token=qutef4hgejfpmgyaqpdfq8d5mo", "uk-UA")
+	task, err := c.TranscriptJob(0, "https://dev.webitel.com/api/storage/recordings/59673/stream?access_token=qutef4hgejfpmgyaqpdfq8d5mo", "uk-UA")
 	if err != nil {
 		t.Error(err.Error())
 	}

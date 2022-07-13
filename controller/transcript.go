@@ -26,3 +26,15 @@ func (c *Controller) TranscriptFilePhrases(session *auth_manager.Session, id int
 
 	return c.app.TranscriptFilePhrases(session.Domain(0), id, search)
 }
+
+func (c *Controller) DeleteTranscript(session *auth_manager.Session, ids []int64, uuid []string) ([]int64, *model.AppError) {
+	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
+	if !permission.CanRead() {
+		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+	}
+	if !permission.CanUpdate() {
+		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
+	}
+
+	return c.app.RemoveTranscript(session.Domain(0), ids, uuid)
+}

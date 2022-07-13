@@ -119,6 +119,10 @@ func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequ
 	return phrases, search.EndOfList(), nil
 }
 
+func (app *App) RemoveTranscript(domainId int64, ids []int64, uuid []string) ([]int64, *model.AppError) {
+	return app.Store.TranscriptFile().Delete(domainId, ids, uuid)
+}
+
 func (app *App) publicUri(uri string) string {
 	return app.Config().ServiceSettings.PublicHost + uri
 }

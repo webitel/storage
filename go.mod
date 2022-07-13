@@ -15,8 +15,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine v0.0.0-20220707121332-60cf8fe6b2a2
-	github.com/webitel/protos/engine v0.0.0-20220713103834-fe76774e06ae
-	github.com/webitel/protos/storage v0.0.0-20220713103834-fe76774e06ae
+	github.com/webitel/protos/engine v0.0.0-20220713131618-90eb7b6cf3c7
+	github.com/webitel/protos/storage v0.0.0-20220713135526-7b70f3c96a3d
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	google.golang.org/api v0.86.0
 	google.golang.org/genproto v0.0.0-20220712132514-bdd2acd4974d

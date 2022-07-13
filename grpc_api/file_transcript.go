@@ -93,6 +93,19 @@ func (api *fileTranscript) GetFileTranscriptPhrases(ctx context.Context, in *sto
 	}, nil
 }
 
-func (api *fileTranscript) DeleteFileTranscript(context.Context, *storage.DeleteFileTranscriptRequest) (*storage.DeleteFileTranscriptResponse, error) {
-	panic(1)
+func (api *fileTranscript) DeleteFileTranscript(ctx context.Context, in *storage.DeleteFileTranscriptRequest) (*storage.DeleteFileTranscriptResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var ids []int64
+	ids, err = api.ctrl.DeleteTranscript(session, in.GetId(), in.GetUuid())
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.DeleteFileTranscriptResponse{
+		Items: ids,
+	}, nil
 }

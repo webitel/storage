@@ -147,6 +147,7 @@ type TranscriptFileStore interface {
 
 	CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError)
 	GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, *model.AppError)
+	Delete(domainId int64, ids []int64, uuid []string) ([]int64, *model.AppError)
 }
 
 type ImportTemplateStore interface {

@@ -41,8 +41,8 @@ where t.id = :Id and t.profile_id = :ProfileId`, map[string]interface{}{
 
 func (s SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, *model.AppError) {
 	err := s.GetMaster().SelectOne(&t, `with t as (
-    insert into storage.file_transcript (file_id, transcript, log, profile_id, locale, phrases, channels, uuid)
-    select :FileId, :Transcript, :Log, :ProfileId, :Locale, :Phrases, :Channels, f.uuid
+    insert into storage.file_transcript (file_id, transcript, log, profile_id, locale, phrases, channels, uuid, domain_id)
+    select :FileId, :Transcript, :Log, :ProfileId, :Locale, :Phrases, :Channels, f.uuid, f.domain_id
 	from storage.files f
 	where f.id = :FileId::int8
     returning storage.file_transcript.*
@@ -148,4 +148,23 @@ where id = :Id
 	}
 
 	return phrases, nil
+}
+
+func (s SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, *model.AppError) {
+	var res []int64
+	_, err := s.GetMaster().Select(&res, `delete
+from storage.file_transcript t
+where (id = any(:Ids::int8[]) or uuid = any(:Uuid::varchar[]))
+    and t.domain_id = :DomainId::int8
+returning t.id`, map[string]interface{}{
+		"DomainId": domainId,
+		"Ids":      pq.Array(ids),
+		"Uuid":     pq.Array(uuid),
+	})
+
+	if err != nil {
+		return nil, model.NewAppError("SqlTranscriptFileStore.Delete", "store.sql_stt_file.transcript.delete.error", nil, err.Error(), extractCodeFromErr(err))
+	}
+
+	return res, nil
 }
