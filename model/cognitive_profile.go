@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -28,6 +29,17 @@ type SearchCognitiveProfile struct {
 	Ids     []int64
 	Enabled bool
 	Service []string
+}
+
+func (c *CognitiveProfile) GetLocale(in *string) string {
+	if in != nil {
+		return *in
+	}
+	if v, ok := c.Properties["default_locale"]; ok {
+		return fmt.Sprintf("%v", v)
+	}
+
+	return "en-US"
 }
 
 func (CognitiveProfile) DefaultOrder() string {

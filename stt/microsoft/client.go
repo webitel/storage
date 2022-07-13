@@ -159,9 +159,10 @@ func (c *client) Transcript(ctx context.Context, id int64, fileUri, locale strin
 
 	res := model.FileTranscript{
 		Log:       data,
+		CreatedAt: time.Now(),
+		Locale:    locale,
 		Phrases:   ph,
 		Channels:  cs,
-		CreatedAt: time.Now(),
 	}
 
 	return res, nil

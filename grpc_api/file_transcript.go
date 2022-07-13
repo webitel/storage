@@ -26,14 +26,19 @@ func (api *fileTranscript) CreateFileTranscript(ctx context.Context, in *storage
 	}
 
 	ops := &model.TranscriptOptions{
-		Locale: in.GetLocale(),
+		FileIds: in.GetFileId(),
+		Uuid:    in.GetUuid(),
+	}
+
+	if in.GetLocale() != "" {
+		ops.Locale = &in.Locale
 	}
 
 	if in.GetProfile().GetId() > 0 {
 		ops.ProfileId = model.NewInt(int(in.GetProfile().GetId()))
 	}
 
-	list, err := api.ctrl.TranscriptFiles(session, in.GetFileId(), ops)
+	list, err := api.ctrl.TranscriptFiles(session, ops)
 	if err != nil {
 		return nil, err
 	}
@@ -86,4 +91,8 @@ func (api *fileTranscript) GetFileTranscriptPhrases(ctx context.Context, in *sto
 		Next:  !endOfList,
 		Items: items,
 	}, nil
+}
+
+func (api *fileTranscript) DeleteFileTranscript(context.Context, *storage.DeleteFileTranscriptRequest) (*storage.DeleteFileTranscriptResponse, error) {
+	panic(1)
 }

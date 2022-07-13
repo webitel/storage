@@ -26,11 +26,7 @@ func (s *SttJob) Execute() {
 
 	n := time.Now()
 
-	if p.Locale != "" && p.ProfileId != nil {
-		s.transcript(p)
-	} else {
-		wlog.Error(fmt.Sprintf("[stt] file %d, error: profile_id & locale is requered", s.file.FileId))
-	}
+	s.transcript(p)
 
 	err := s.app.Store.SyncFile().Remove(s.file.Id)
 	if err != nil {

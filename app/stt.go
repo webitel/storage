@@ -91,7 +91,7 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	//app.jobCallback.Add(fileId, cn)
 	//defer app.jobCallback.Remove(fileId)
 
-	if transcript, e := stt.Transcript(ctx, fileId, app.publicUri(fileUri), options.Locale); e != nil {
+	if transcript, e := stt.Transcript(ctx, fileId, app.publicUri(fileUri), p.GetLocale(options.Locale)); e != nil {
 		return nil, model.NewAppError("TranscriptFile", "app.stt.transcript.err", nil, e.Error(), http.StatusInternalServerError)
 	} else {
 		transcript.File = model.Lookup{
@@ -100,14 +100,13 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 		transcript.Profile = model.Lookup{
 			Id: int(p.Id),
 		}
-		transcript.Locale = options.Locale
 
 		return app.Store.TranscriptFile().Store(&transcript)
 	}
 }
 
-func (app *App) CreateTranscriptFilesJob(domainId int64, fileIds []int64, options *model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError) {
-	return app.Store.TranscriptFile().CreateJobs(domainId, fileIds, *options)
+func (app *App) CreateTranscriptFilesJob(domainId int64, options *model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError) {
+	return app.Store.TranscriptFile().CreateJobs(domainId, *options)
 }
 
 func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, bool, *model.AppError) {
