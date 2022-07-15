@@ -35,7 +35,7 @@ func (c *CognitiveProfile) GetLocale(in *string) string {
 	if in != nil {
 		return *in
 	}
-	if v, ok := c.Properties["default_locale"]; ok {
+	if v, ok := c.Properties["locale"]; ok {
 		return fmt.Sprintf("%v", v)
 	}
 
