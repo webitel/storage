@@ -85,7 +85,11 @@ func (er *AppError) SystemMessage(T goi18n.TranslateFunc) string {
 }
 
 func (er *AppError) ToJson() string {
-	//b, _ := json.Marshal(er)
+	b, _ := json.Marshal(er)
+	return string(b)
+}
+
+func (er *AppError) Text() string {
 	if er.DetailedError != "" {
 		return er.DetailedError
 	}

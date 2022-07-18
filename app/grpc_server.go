@@ -3,6 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"net"
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/webitel/engine/auth_manager"
 	"github.com/webitel/engine/utils"
 	"github.com/webitel/storage/model"
@@ -11,10 +16,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	"net"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 type GrpcServer struct {
@@ -45,7 +46,7 @@ func unaryInterceptor(ctx context.Context,
 		switch err.(type) {
 		case *model.AppError:
 			e := err.(*model.AppError)
-			return h, status.Error(httpCodeToGrpc(e.StatusCode), e.ToJson())
+			return h, status.Error(httpCodeToGrpc(e.StatusCode), e.Text())
 		default:
 			return h, err
 		}
@@ -66,6 +67,8 @@ func httpCodeToGrpc(c int) codes.Code {
 		return codes.Unauthenticated
 	case http.StatusForbidden:
 		return codes.PermissionDenied
+	case http.StatusNotFound:
+		return codes.NotFound
 	default:
 		return codes.Internal
 
