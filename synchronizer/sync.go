@@ -51,6 +51,11 @@ func (s *synchronizer) run() {
 		start:
 			var err *model.AppError
 			var jobs []*model.SyncJob
+
+			if err = s.App.RemoveFileJobErrors(); err != nil {
+				wlog.Error(err.Error())
+			}
+
 			if err = s.App.SetRemoveFileJobs(); err != nil {
 				wlog.Error(err.Error())
 			}

@@ -117,3 +117,31 @@ func (s SqlSyncFileStore) Remove(jobId int64) *model.AppError {
 
 	return nil
 }
+
+func (s SqlSyncFileStore) RemoveErrors() *model.AppError {
+	_, err := s.GetMaster().Exec(`delete
+from storage.file_jobs j
+where j.updated_at < now() - interval '1h' and j.state = 3`)
+	if err != nil {
+		return model.NewAppError("SqlSyncFileStore.RemoveErrors", "store.sql_sync_file_job.remove_err.app_error", nil, err.Error(), extractCodeFromErr(err))
+	}
+
+	return nil
+}
+
+func (s SqlSyncFileStore) SetError(jobId int64, e error) *model.AppError {
+	_, err := s.GetMaster().Exec(`update storage.file_jobs
+	set error = :Error ,
+		state = 3,
+		updated_at = now()
+	where id = :Id`, map[string]interface{}{
+		"Error": e.Error(),
+		"Id":    jobId,
+	})
+
+	if err != nil {
+		return model.NewAppError("SqlSyncFileStore.SetError", "store.sql_sync_file_job.set_err.app_error", nil, err.Error(), extractCodeFromErr(err))
+	}
+
+	return nil
+}

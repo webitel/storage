@@ -67,6 +67,9 @@ type SyncFileStore interface {
 	SetRemoveJobs(localExpDay int) *model.AppError
 	Clean(jobId int64) *model.AppError
 	Remove(jobId int64) *model.AppError
+
+	RemoveErrors() *model.AppError
+	SetError(jobId int64, e error) *model.AppError
 }
 
 type FileBackendProfileStore interface {

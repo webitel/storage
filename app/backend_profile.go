@@ -149,3 +149,6 @@ func (app *App) SetRemoveFileJobs() *model.AppError {
 func (app *App) FetchFileJobs(limit int) ([]*model.SyncJob, *model.AppError) {
 	return app.Store.SyncFile().FetchJobs(limit)
 }
+func (app *App) RemoveFileJobErrors() *model.AppError {
+	return app.Store.SyncFile().RemoveErrors()
+}
