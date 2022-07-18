@@ -50,7 +50,7 @@ func (s StringInterface) GetBool(name string) bool {
 
 type AppError struct {
 	Id            string `json:"id"`
-	Message       string `json:"message"`               // Message to be display to the end user without debugging information
+	Message       string `json:"detail"`                // Message to be display to the end user without debugging information
 	DetailedError string `json:"detailed_error"`        // Internal error string to help the developer
 	RequestId     string `json:"request_id,omitempty"`  // The RequestId that's also set in the header
 	StatusCode    int    `json:"status_code,omitempty"` // The http status code
@@ -85,8 +85,11 @@ func (er *AppError) SystemMessage(T goi18n.TranslateFunc) string {
 }
 
 func (er *AppError) ToJson() string {
-	b, _ := json.Marshal(er)
-	return string(b)
+	//b, _ := json.Marshal(er)
+	if er.DetailedError != "" {
+		return er.DetailedError
+	}
+	return er.Message
 }
 
 func (er *AppError) Translate(T goi18n.TranslateFunc) {
