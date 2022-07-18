@@ -76,35 +76,45 @@ from t
 
 func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError) {
 	var jobs []*model.FileTranscriptJob
-	_, err := s.GetMaster().Select(&jobs, `insert into storage.file_jobs (state, file_id, action, config)
-select 0 as state,
-       fid.id,
-       p.service,
-       json_build_object('locale', coalesce(:Locale::varchar, (p.properties->'default_locale')::varchar),
-           'profile_id', p.id,
-           'profile_sync_time', (extract(epoch from p.updated_at) * 1000 )::int8) as config
-from (select *
-from storage.cognitive_profile_services p
-where p.domain_id = :DomainId::int8
-    and p.enabled
-    and p.service = :Service::varchar
-    and case when :Id::int4 notnull  then p.id = :Id::int4 else p."default" is true end
-limit 1) p,
-     (select f.id
-from storage.files f
-where f.domain_id = :DomainId::int8
-    and (f.id = any((:FileIds)::int8[]) )
-    union distinct
-    select f.id
-    from storage.files f
-    where f.domain_id = :DomainId::int8
-        and f.uuid = any((:Uuid)::varchar[])
-        and not exists(select 1 from storage.file_transcript ft where ft.uuid = f.uuid)
-) fid
-returning storage.file_jobs.id,
-    storage.file_jobs.file_id,
-    (extract(epoch from storage.file_jobs.created_at) * 1000)::int8 as created_at,
-    storage.file_jobs.state`, map[string]interface{}{
+	_, err := s.GetMaster().Select(&jobs, `with trfiles as (
+		select 0 as state,
+			   fid.id,
+			   p.service,
+			   json_build_object('locale', coalesce(:Locale::varchar, (p.properties->'default_locale')::varchar),
+				   'profile_id', p.id,
+				   'profile_sync_time', (extract(epoch from p.updated_at) * 1000 )::int8) as config
+		from (select *
+		from storage.cognitive_profile_services p
+		where p.domain_id = :DomainId::int8
+			and p.enabled
+			and p.service = :Service::varchar
+			and case when :Id::int4 notnull  then p.id = :Id::int4 else p."default" is true end
+		limit 1) p,
+			 (select f.id
+		from storage.files f
+		where f.domain_id = :DomainId::int8
+			and (f.id = any((:FileIds)::int8[]) )
+			union distinct
+			select f.id
+			from storage.files f
+			where f.domain_id = :DomainId::int8
+				and f.uuid = any((:Uuid)::varchar[])
+				and not exists(select 1 from storage.file_transcript ft where ft.uuid = f.uuid)
+		) fid
+	),
+	delerr as (
+		delete
+		from storage.file_jobs fj
+		where fj.state = 3 and fj.file_id in (
+			select tf.id from trfiles tf
+		)
+	)
+	insert into storage.file_jobs (state, file_id, action, config)
+	select t.state, t.id, t.service, t.config
+	from trfiles t
+	returning storage.file_jobs.id,
+		storage.file_jobs.file_id,
+		(extract(epoch from storage.file_jobs.created_at) * 1000)::int8 as created_at;`, map[string]interface{}{
 		"DomainId": domainId,
 		"FileIds":  pq.Array(params.FileIds),
 		"Uuid":     pq.Array(params.Uuid),
@@ -135,8 +145,8 @@ from storage.file_transcript t
         offset :Offset
     ) p on true
 where id = :Id
-    and p notnull
-    and exists(select 1 from storage.files f where f.id = t.file_id and f.domain_id = :DomainId)`, map[string]interface{}{
+	and domain_id = :DomainId
+    and p notnull`, map[string]interface{}{
 		"Limit":    search.GetLimit(),
 		"Offset":   search.GetOffset(),
 		"Id":       id,
