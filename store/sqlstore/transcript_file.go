@@ -105,13 +105,14 @@ func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcri
 	delerr as (
 		delete
 		from storage.file_jobs fj
-		where fj.state = 3 and fj.file_id in (
-			select tf.id from trfiles tf
-		)
+        USING  trfiles i
+		where fj.state = 3 and fj.file_id = i.id
+		returning fj.*
 	)
 	insert into storage.file_jobs (state, file_id, action, config)
 	select t.state, t.id, t.service, t.config
 	from trfiles t
+	    left join  delerr d on d.file_id = t.id
 	returning storage.file_jobs.id,
 		storage.file_jobs.file_id,
 		(extract(epoch from storage.file_jobs.created_at) * 1000)::int8 as created_at;`, map[string]interface{}{
