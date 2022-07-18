@@ -1,6 +1,8 @@
 package sqlstore
 
 import (
+	"net/http"
+
 	"github.com/lib/pq"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -126,6 +128,10 @@ func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcri
 
 	if err != nil {
 		return nil, model.NewAppError("SqlTranscriptFileStore.CreateJobs", "store.sql_stt_file.create.jobs.app_error", nil, err.Error(), extractCodeFromErr(err))
+	}
+
+	if len(jobs) == 0 {
+		return nil, model.NewAppError("SqlTranscriptFileStore.CreateJobs", "store.sql_stt_file.create.jobs.not_found", nil, "Not found profile", http.StatusNotFound)
 	}
 
 	return jobs, nil
