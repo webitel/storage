@@ -115,6 +115,7 @@ func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcri
 	select t.state, t.id, t.service, t.config
 	from trfiles t
 	    left join  delerr d on d.file_id = t.id
+	for update
 	returning storage.file_jobs.id,
 		storage.file_jobs.file_id,
 		(extract(epoch from storage.file_jobs.created_at) * 1000)::int8 as created_at;`, map[string]interface{}{
