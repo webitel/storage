@@ -13,7 +13,7 @@ import (
 
 const (
 	TtsProfile   = ""
-	TtsPoly      = "Poly"
+	TtsPoly      = "Polly"
 	TtsMicrosoft = "Microsoft"
 	TtsGoogle    = "Google"
 	TtsYandex    = "Yandex"
