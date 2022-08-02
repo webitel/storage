@@ -10,10 +10,11 @@ import (
 
 type media struct {
 	ctrl *controller.Controller
+	storage.UnsafeMediaFileServiceServer
 }
 
-func NewMediaApi(api *controller.Controller) *media {
-	return &media{api}
+func NewMediaApi(c *controller.Controller) *media {
+	return &media{ctrl: c}
 }
 
 func (api *media) SearchMediaFile(ctx context.Context, in *storage.SearchMediaFileRequest) (*storage.ListMedia, error) {

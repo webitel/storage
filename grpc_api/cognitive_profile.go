@@ -13,10 +13,11 @@ import (
 
 type cognitiveProfile struct {
 	ctrl *controller.Controller
+	storage.UnsafeCognitiveProfileServiceServer
 }
 
-func NewCognitiveProfileApi(api *controller.Controller) *cognitiveProfile {
-	return &cognitiveProfile{api}
+func NewCognitiveProfileApi(c *controller.Controller) *cognitiveProfile {
+	return &cognitiveProfile{ctrl: c}
 }
 
 func (api *cognitiveProfile) CreateCognitiveProfile(ctx context.Context, in *storage.CreateCognitiveProfileRequest) (*storage.CognitiveProfile, error) {

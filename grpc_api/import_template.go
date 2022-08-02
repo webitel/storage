@@ -14,10 +14,11 @@ import (
 
 type importTemplate struct {
 	ctrl *controller.Controller
+	storage.UnsafeImportTemplateServiceServer
 }
 
-func NewImportTemplateApi(api *controller.Controller) *importTemplate {
-	return &importTemplate{api}
+func NewImportTemplateApi(c *controller.Controller) *importTemplate {
+	return &importTemplate{ctrl: c}
 }
 
 func (api *importTemplate) CreateImportTemplate(ctx context.Context, in *storage.CreateImportTemplateRequest) (*storage.ImportTemplate, error) {

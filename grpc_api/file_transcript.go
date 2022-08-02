@@ -11,11 +11,12 @@ import (
 
 type fileTranscript struct {
 	ctrl *controller.Controller
+	storage.UnsafeFileTranscriptServiceServer
 }
 
-func NewFileTranscriptApi(api *controller.Controller) *fileTranscript {
+func NewFileTranscriptApi(c *controller.Controller) *fileTranscript {
 	return &fileTranscript{
-		ctrl: api,
+		ctrl: c,
 	}
 }
 

@@ -15,6 +15,7 @@ import (
 type file struct {
 	ctrl *controller.Controller
 	curl *http.Client
+	storage.UnsafeFileServiceServer
 }
 
 func NewFileApi(proxy *string, api *controller.Controller) *file {

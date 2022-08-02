@@ -11,10 +11,11 @@ import (
 
 type backendProfiles struct {
 	ctrl *controller.Controller
+	storage.UnsafeBackendProfileServiceServer
 }
 
-func NewBackendProfileApi(api *controller.Controller) *backendProfiles {
-	return &backendProfiles{api}
+func NewBackendProfileApi(c *controller.Controller) *backendProfiles {
+	return &backendProfiles{ctrl: c}
 }
 
 func (api *backendProfiles) CreateBackendProfile(ctx context.Context, in *storage.CreateBackendProfileRequest) (*storage.BackendProfile, error) {
