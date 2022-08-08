@@ -5,9 +5,8 @@ import (
 
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/webitel/storage/model"
-
 	"github.com/webitel/protos/storage"
+	"github.com/webitel/storage/model"
 
 	"github.com/webitel/storage/controller"
 )
@@ -33,6 +32,10 @@ func (api *importTemplate) CreateImportTemplate(ctx context.Context, in *storage
 		SourceType:  in.GetSourceType().String(),
 		SourceId:    in.GetSourceId(),
 		Parameters:  in.GetParameters().AsMap(),
+	}
+
+	if in.GetSource() != nil {
+		template.SourceId = in.GetSource().GetId()
 	}
 
 	template, err = api.ctrl.CreateImportTemplate(session, template)

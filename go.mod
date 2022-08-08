@@ -15,11 +15,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine v0.0.0-20220802111312-9f84c9477ae9
-	github.com/webitel/protos/engine v0.0.0-20220802110038-1eb2981a9f2f
-	github.com/webitel/protos/storage v0.0.0-20220802110038-1eb2981a9f2f
+	github.com/webitel/protos/engine v0.0.0-20220804094954-3223f8c7bf23
+	github.com/webitel/protos/storage v0.0.0-20220808142325-467ad2483a44
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	google.golang.org/api v0.86.0
-	google.golang.org/genproto v0.0.0-20220801145646-83ce21fca29f
+	google.golang.org/genproto v0.0.0-20220808131553-a91ffa7f803e
 	google.golang.org/grpc v1.48.0
 	google.golang.org/protobuf v1.28.1
 )
@@ -53,9 +53,9 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.21.0 // indirect
-	golang.org/x/net v0.0.0-20220728211354-c7608f3a8462 // indirect
+	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
 	golang.org/x/oauth2 v0.0.0-20220630143837-2104d58473e0 // indirect
-	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
+	golang.org/x/sys v0.0.0-20220804214406-8e32c043e418 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
