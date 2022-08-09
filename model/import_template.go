@@ -29,11 +29,11 @@ func (ImportTemplate) DefaultOrder() string {
 }
 
 func (ImportTemplate) AllowFields() []string {
-	return []string{"id", "name", "description", "source_type", "source_id", "parameters"}
+	return []string{"id", "name", "description", "source_type", "source_id", "parameters", "source"}
 }
 
 func (ImportTemplate) DefaultFields() []string {
-	return []string{"id", "name", "description", "source_type", "source_id", "parameters"}
+	return []string{"id", "name", "description", "source_type", "source_id", "parameters", "source"}
 }
 
 func (ImportTemplate) EntityName() string {
