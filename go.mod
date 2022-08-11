@@ -14,8 +14,8 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20220802111312-9f84c9477ae9
-	github.com/webitel/protos/engine v0.0.0-20220804094954-3223f8c7bf23
+	github.com/webitel/engine v0.0.0-20220810110709-af3d3993b317
+	github.com/webitel/protos/engine v0.0.0-20220808142325-467ad2483a44
 	github.com/webitel/protos/storage v0.0.0-20220808142325-467ad2483a44
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	google.golang.org/api v0.86.0
