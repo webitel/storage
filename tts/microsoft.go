@@ -25,7 +25,6 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 	}
 
 	data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
-	<mstts:backgroundaudio src="https://actions.google.com/sounds/v1/crowds/battle_crowd_celebration.ogg" volume="0.7" fadein="3000" fadeout="4000"/>
 	<voice xml:lang='%s' xml:gender='%s' name='%s'>
 	%s
 	 </voice>
