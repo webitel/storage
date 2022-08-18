@@ -27,6 +27,8 @@ type TTSParams struct {
 	Language       string `json:"-"`
 	Text, TextType string `json:"-"`
 
+	Rate int `json:"-"`
+
 	//google
 	SpeakingRate     float64  `json:"-"`
 	Pitch            float64  `json:"-"`
@@ -57,8 +59,8 @@ func Poly(req TTSParams) (io.ReadCloser, *string, error) {
 		VoiceId:      aws.String(polly.VoiceIdEmma),
 	}
 
-	if req.SpeakingRate > 0 {
-		params.SampleRate = aws.String(fmt.Sprintf("%v", req.SpeakingRate))
+	if req.Rate > 0 {
+		params.SampleRate = aws.String(fmt.Sprintf("%v", req.Rate))
 	}
 
 	if req.Format == "ogg" || req.Format == "wav" {
