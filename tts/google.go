@@ -38,7 +38,7 @@ func Google(params TTSParams) (io.ReadCloser, *string, error) {
 		AudioConfig: &texttospeechpb.AudioConfig{
 			AudioEncoding: texttospeechpb.AudioEncoding_LINEAR16,
 			SpeakingRate:  1,
-			//Pitch:            0,
+			Pitch:         1,
 			//VolumeGainDb:     0,
 			SampleRateHertz: 8000,
 			//EffectsProfileId: nil,

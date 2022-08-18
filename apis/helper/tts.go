@@ -38,7 +38,7 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 	}
 
 	rate, _ := strconv.Atoi(query.Get("rate"))
-	params.SpeakingRate = float64(rate)
+	params.Rate = rate
 
 	if tmp = query.Get("speakingRate"); tmp != "" {
 		params.SpeakingRate, _ = strconv.ParseFloat(tmp, 32)
