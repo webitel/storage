@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/webitel/wlog"
+
 	"github.com/webitel/protos/storage"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
@@ -41,14 +43,20 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 
 	res, gErr := in.Recv()
 	if gErr != nil {
-
+		wlog.Error(gErr.Error())
 		return gErr
 	}
 
+	defer func() {
+		if gErr != nil && gErr != io.EOF {
+			wlog.Error(gErr.Error())
+		}
+	}()
+
 	metadata, ok := res.Data.(*storage.UploadFileRequest_Metadata_)
 	if !ok {
-		// bad request
-		return errors.New("bad metadata")
+		gErr = errors.New("bad metadata")
+		return gErr
 	}
 
 	var fileRequest model.JobUploadFile
@@ -63,12 +71,11 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		for {
 			res, gErr = in.Recv()
 			if gErr != nil {
-				//TODO
 				break
 			}
 
 			if chunk, ok = res.Data.(*storage.UploadFileRequest_Chunk); !ok {
-				//TODO
+				gErr = errors.New("streaming data error: bad UploadFileRequest_Chunk")
 				break
 			}
 
@@ -77,10 +84,6 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 			}
 
 			writer.Write(chunk.Chunk)
-		}
-
-		if gErr != nil {
-
 		}
 
 		writer.Close()
