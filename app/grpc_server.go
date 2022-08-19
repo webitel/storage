@@ -57,6 +57,28 @@ func unaryInterceptor(ctx context.Context,
 	return h, err
 }
 
+func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	start := time.Now()
+
+	err := handler(srv, ss)
+
+	if err != nil {
+		wlog.Error(fmt.Sprintf("method %s duration %s, error: %v", info.FullMethod, time.Since(start), err.Error()))
+
+		switch err.(type) {
+		case *model.AppError:
+			e := err.(*model.AppError)
+			return status.Error(httpCodeToGrpc(e.StatusCode), e.Text())
+		default:
+			return err
+		}
+	} else {
+		wlog.Debug(fmt.Sprintf("method %s duration %s", info.FullMethod, time.Since(start)))
+	}
+
+	return err
+}
+
 func httpCodeToGrpc(c int) codes.Code {
 	switch c {
 	case http.StatusBadRequest:
@@ -85,6 +107,7 @@ func NewGrpcServer(settings model.ServerSettings) *GrpcServer {
 		lis: lis,
 		srv: grpc.NewServer(
 			grpc.UnaryInterceptor(unaryInterceptor),
+			grpc.StreamInterceptor(streamInterceptor),
 		),
 	}
 }
