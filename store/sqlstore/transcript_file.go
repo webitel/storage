@@ -101,7 +101,7 @@ func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcri
 			from storage.files f
 			where f.domain_id = :DomainId::int8
 				and f.uuid = any((:Uuid)::varchar[])
-				and not exists(select 1 from storage.file_transcript ft where ft.uuid = f.uuid)
+				and not exists(select 1 from storage.file_transcript ft where ft.uuid = f.uuid and ft.file_id = f.id)
 		) fid
 	),
 	delerr as (
