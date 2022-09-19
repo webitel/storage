@@ -28,6 +28,12 @@ func (app *App) UpdateImportTemplate(domainId int64, template *model.ImportTempl
 	oldTemplate.Name = template.Name
 	oldTemplate.Description = template.Description
 	oldTemplate.Parameters = template.Parameters
+	oldTemplate.Source = template.Source
+	oldTemplate.SourceId = template.SourceId
+	oldTemplate.SourceType = template.SourceType
+	if template.Source != nil {
+		oldTemplate.SourceId = int64(template.Source.Id)
+	}
 
 	return app.Store.ImportTemplate().Update(domainId, oldTemplate)
 }

@@ -110,7 +110,9 @@ func (s SqlImportTemplateStore) Update(domainId int64, template *model.ImportTem
     update storage.import_template t
     set name = :Name,
         description = :Description,
-        parameters = :Parameters
+        parameters = :Parameters,
+        source_type = :SourceType,
+        source_id = :SourceId
     where t.domain_id = :DomainId and t.id = :Id
     returning *
 )
@@ -134,6 +136,8 @@ from t
 		"Name":        template.Name,
 		"Description": template.Description,
 		"Parameters":  model.StringInterfaceToJson(template.Parameters),
+		"SourceType":  template.SourceType,
+		"SourceId":    template.SourceId,
 	})
 
 	if err != nil {
