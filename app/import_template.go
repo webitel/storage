@@ -31,7 +31,7 @@ func (app *App) UpdateImportTemplate(domainId int64, template *model.ImportTempl
 	oldTemplate.Source = template.Source
 	oldTemplate.SourceId = template.SourceId
 	oldTemplate.SourceType = template.SourceType
-	if template.Source != nil {
+	if template.Source != nil && template.Source.Id > 0 {
 		oldTemplate.SourceId = int64(template.Source.Id)
 	}
 

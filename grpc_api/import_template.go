@@ -110,6 +110,12 @@ func (api *importTemplate) UpdateImportTemplate(ctx context.Context, in *storage
 		Parameters:  in.GetParameters().AsMap(),
 	}
 
+	if in.Source != nil {
+		template.Source = &model.Lookup{
+			Id: int(in.GetSource().GetId()),
+		}
+	}
+
 	template, err = api.ctrl.UpdateImportTemplate(session, template)
 	if err != nil {
 		return nil, err
