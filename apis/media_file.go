@@ -2,13 +2,14 @@ package apis
 
 import (
 	"fmt"
-	"github.com/webitel/storage/model"
 	"io"
 	"mime"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/webitel/storage/model"
 )
 
 func (api *API) InitMediaFile() {
@@ -108,7 +109,7 @@ func downloadMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=%s", file.Name))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.Name)))
 	w.Header().Set("Content-Type", file.MimeType)
 	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 

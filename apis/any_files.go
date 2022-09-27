@@ -2,11 +2,12 @@ package apis
 
 import (
 	"fmt"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/storage/utils"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 )
 
 func (api *API) InitAnyFile() {
@@ -139,7 +140,7 @@ func downloadAnyFile(c *Context, w http.ResponseWriter, _ *http.Request) {
 
 	defer reader.Close()
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=%s", file.Name))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.Name)))
 	w.Header().Set("Content-Type", file.MimeType)
 	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 
@@ -288,7 +289,7 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 
 	defer reader.Close()
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=%s", file.GetStoreName()))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.GetStoreName())))
 	w.Header().Set("Content-Type", file.GetMimeType())
 	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 

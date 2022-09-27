@@ -2,11 +2,12 @@ package apis
 
 import (
 	"fmt"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/storage/utils"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 )
 
 func (api *API) InitCallRecordingsFiles() {
@@ -112,7 +113,7 @@ func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		name = c.Params.Name
 	}
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=%s", name))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(name)))
 	w.Header().Set("Content-Type", file.MimeType)
 	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 

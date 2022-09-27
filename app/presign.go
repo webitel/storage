@@ -2,8 +2,9 @@ package app
 
 import (
 	"fmt"
-	"github.com/webitel/storage/model"
 	"net/http"
+
+	"github.com/webitel/storage/model"
 )
 
 func (a *App) ValidateSignature(plain, signature string) bool {
@@ -21,7 +22,7 @@ func (a *App) GenerateSignature(msg []byte) (string, *model.AppError) {
 
 func (a *App) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, *model.AppError) {
 	key := fmt.Sprintf("%s/%d/%s?domain_id=%d&expires=%d", resource, id, action, domainId,
-		(model.GetMillis() + a.Config().PreSignedTimeout))
+		model.GetMillis()+a.Config().PreSignedTimeout)
 
 	signature, err := a.GenerateSignature([]byte(key))
 	if err != nil {
