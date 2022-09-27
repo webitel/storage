@@ -106,6 +106,8 @@ type Task struct {
 		} `json:"error"`
 	} `json:"properties"`
 	CustomProperties map[string]interface{} `json:"customProperties"`
+	Code             *string                `json:"code"`
+	Message          *string                `json:"message"`
 }
 
 func NewClient(config Config) (*client, error) {
@@ -220,6 +222,14 @@ func (c *client) TranscriptJob(fileId int64, fileUrl string, locale string) (*Ta
 	err = json.Unmarshal(data, &t)
 	if err != nil {
 		return nil, err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if t.Message != nil {
+			return nil, errors.New(*t.Message)
+		} else {
+			return nil, errors.New(fmt.Sprintf("Unknown error, code = %d", res.StatusCode))
+		}
 	}
 
 	return &t, nil
