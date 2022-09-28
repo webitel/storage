@@ -224,7 +224,7 @@ func (c *client) TranscriptJob(fileId int64, fileUrl string, locale string) (*Ta
 		return nil, err
 	}
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode >= http.StatusMultipleChoices {
 		if t.Message != nil {
 			return nil, errors.New(*t.Message)
 		} else {
