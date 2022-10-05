@@ -2,14 +2,15 @@ package utils
 
 import (
 	"fmt"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"syscall"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/wlog"
 )
 
 type LocalFileBackend struct {
@@ -18,6 +19,10 @@ type LocalFileBackend struct {
 	directory   string
 	name        string
 }
+
+const (
+	ErrFileWriteExistsId = "utils.file.locally.exists.app_error"
+)
 
 func (self *LocalFileBackend) Name() string {
 	return self.name
@@ -39,7 +44,8 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.App
 
 	_, err = os.Stat(allPath)
 	if !os.IsNotExist(err) {
-		return 0, model.NewAppError("WriteFile", "utils.file.locally.exists.app_error", nil, "root="+root+" name="+file.GetStoreName(), http.StatusBadRequest)
+		file.SetPropertyString("directory", directory)
+		return 0, model.NewAppError("WriteFile", ErrFileWriteExistsId, nil, "root="+root+" name="+file.GetStoreName(), http.StatusBadRequest)
 	}
 
 	if err = os.MkdirAll(root, 0774); err != nil {

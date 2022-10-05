@@ -2,6 +2,9 @@ package uploader
 
 import (
 	"fmt"
+
+	"github.com/webitel/storage/utils"
+
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
@@ -51,7 +54,7 @@ func (u *UploadTask) Execute() {
 		},
 	}
 
-	if _, err = store.Write(r, f); err != nil {
+	if _, err = store.Write(r, f); err != nil && err.Id != utils.ErrFileWriteExistsId {
 		wlog.Critical(err.Error())
 		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
 		return
