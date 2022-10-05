@@ -15,14 +15,16 @@ import (
 )
 
 type file struct {
-	ctrl *controller.Controller
-	curl *http.Client
+	ctrl       *controller.Controller
+	curl       *http.Client
+	publicHost string
 	storage.UnsafeFileServiceServer
 }
 
-func NewFileApi(proxy *string, api *controller.Controller) *file {
+func NewFileApi(proxy *string, ph string, api *controller.Controller) *file {
 	c := &file{
-		ctrl: api,
+		ctrl:       api,
+		publicHost: ph,
 	}
 	if proxy != nil {
 		proxyUrl, err := url.Parse(*proxy)
@@ -105,6 +107,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		Size:    fileRequest.Size,
 		Code:    storage.UploadStatusCode_Ok,
 		FileUrl: publicUrl,
+		Server:  api.publicHost,
 	})
 }
 

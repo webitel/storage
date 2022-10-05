@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/webitel/storage/utils"
+
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 )
@@ -49,7 +51,7 @@ func (app *App) SyncUpload(src io.ReadCloser, file *model.JobUploadFile) *model.
 	}
 
 	size, err := app.DefaultFileStore.Write(src, f)
-	if err != nil {
+	if err != nil && err.Id != utils.ErrFileWriteExistsId {
 		return err
 	}
 	// fixme
