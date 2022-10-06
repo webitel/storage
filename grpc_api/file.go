@@ -111,6 +111,60 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	})
 }
 
+func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.FileService_DownloadFileServer) error {
+	var sFile io.ReadCloser
+	var err error
+	f, backend, appErr := api.ctrl.InsecureGetFileWithProfile(in.DomainId, in.Id)
+	if appErr != nil {
+		return appErr
+	}
+
+	sFile, appErr = backend.Reader(f, 0)
+	if appErr != nil {
+		return appErr
+	}
+
+	defer sFile.Close()
+
+	if in.Metadata {
+		err = stream.Send(&storage.StreamFile{
+			Data: &storage.StreamFile_Metadata_{
+				Metadata: &storage.StreamFile_Metadata{
+					Id:       f.Id,
+					Name:     f.Name,
+					MimeType: f.MimeType,
+					Uuid:     f.Uuid,
+					Size:     f.Size,
+				},
+			},
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	buf := make([]byte, 4*1024)
+	var n int
+	for {
+		n, err = sFile.Read(buf)
+		buf = buf[:n]
+		if err != nil {
+			break
+		}
+		err = stream.Send(&storage.StreamFile{
+			Data: &storage.StreamFile_Chunk{
+				Chunk: buf,
+			},
+		})
+		if err != nil {
+			break
+		}
+	}
+
+	return nil
+}
+
 func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlRequest) (*storage.UploadFileUrlResponse, error) {
 	var err *model.AppError
 	var publicUrl string

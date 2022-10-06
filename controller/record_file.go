@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"io"
+
 	"github.com/webitel/engine/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
-	"io"
 )
 
 func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId, id int64) (*model.File, utils.FileBackend, *model.AppError) {
@@ -23,4 +24,8 @@ func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFi
 
 func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, *model.AppError) {
 	return c.app.GeneratePreSignetResourceSignature(resource, action, id, domainId)
+}
+
+func (c *Controller) InsecureGetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, *model.AppError) {
+	return c.app.GetFileWithProfile(domainId, id)
 }
