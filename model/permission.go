@@ -7,3 +7,7 @@ const (
 
 	PermissionScopeCognitiveProfile = "cognitive_profile"
 )
+
+const (
+	PermissionActionAccessCallRecordings = "playback_record_file"
+)

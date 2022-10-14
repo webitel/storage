@@ -10,6 +10,8 @@ import (
 	"github.com/webitel/storage/utils"
 )
 
+var errNoPermissionRecordFile = model.NewAppError("Access", "call.recordings.access.forbidden", nil, "Not allow", http.StatusForbidden)
+
 func (api *API) InitCallRecordingsFiles() {
 	api.PublicRoutes.CallRecordingsFiles.Handle("/{id}/stream", api.ApiSessionRequired(streamRecordFile)).Methods("GET")
 	api.PublicRoutes.CallRecordingsFiles.Handle("/{id}/download", api.ApiSessionRequired(downloadRecordFile)).Methods("GET")
@@ -19,6 +21,11 @@ func streamRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 
 	if c.Err != nil {
+		return
+	}
+
+	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
+		c.Err = errNoPermissionRecordFile
 		return
 	}
 
@@ -79,6 +86,11 @@ func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 
 	if c.Err != nil {
+		return
+	}
+
+	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
+		c.Err = errNoPermissionRecordFile
 		return
 	}
 
