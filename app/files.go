@@ -48,3 +48,7 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 func (app *App) RemoveFiles(domainId int64, ids []int64) *model.AppError {
 	return app.Store.File().MarkRemove(domainId, ids)
 }
+
+func (app *App) MaxUploadFileSize() int64 {
+	return app.Config().MediaFileStoreSettings.MaxUploadFileSize
+}

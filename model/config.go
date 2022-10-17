@@ -81,10 +81,11 @@ type ServerSettings struct {
 }
 
 type MediaFileStoreSettings struct {
-	MaxSizeByte *int
-	AllowMime   []string
-	Directory   *string
-	PathPattern *string
+	MaxSizeByte       *int
+	AllowMime         []string
+	Directory         *string
+	PathPattern       *string
+	MaxUploadFileSize int64
 }
 
 type DefaultFileStore struct {

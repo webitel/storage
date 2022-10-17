@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/webitel/storage/utils"
+
 	"github.com/webitel/storage/model"
 )
 
@@ -26,6 +28,7 @@ var (
 	defaultFileStoreProps = flag.String("file_store_props", "", "Default file store props")
 	defaultFileExpireDay  = flag.Int("file_store_expire_day", 0, "Default file expire day (0 - never delete)")
 	allowMediaMime        = flag.String("allow_media", "video/mp4,audio/mp3,audio/wav,audio/mpeg", "Allow upload media mime type")
+	maxUploadFileSize     = flag.String("max_upload_file_size", "20MB", "Maximum upload file size")
 
 	presignedCertFile = flag.String("presigned_cert", "/opt/storage/key.pem", "Location to pre signed certificate")
 	presignedTimeout  = flag.Int64("presigned_timeout", 1000*60*15, "Pre signed timeout")
@@ -36,6 +39,11 @@ var (
 
 func loadConfig(fileName string) (*model.Config, *model.AppError) {
 	flag.Parse()
+
+	maxUploadSizeInByte, err := utils.FromHumanSize(*maxUploadFileSize)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	cfg := &model.Config{
 		TranslationsDirectory:        *translationsDirectory,
@@ -54,10 +62,11 @@ func loadConfig(fileName string) (*model.Config, *model.AppError) {
 			PublicHost:            *publicHost,
 		},
 		MediaFileStoreSettings: model.MediaFileStoreSettings{
-			MaxSizeByte: model.NewInt(100 * 1000000),
-			Directory:   mediaDirectory,
-			PathPattern: mediaStorePattern,
-			AllowMime:   strings.Split(*allowMediaMime, ","),
+			MaxSizeByte:       model.NewInt(100 * 1000000),
+			Directory:         mediaDirectory,
+			PathPattern:       mediaStorePattern,
+			AllowMime:         strings.Split(*allowMediaMime, ","),
+			MaxUploadFileSize: maxUploadSizeInByte,
 		},
 		SqlSettings: model.SqlSettings{
 			DriverName:                  model.NewString("postgres"),

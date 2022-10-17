@@ -2,9 +2,10 @@ package app
 
 import (
 	"fmt"
-	"github.com/webitel/storage/model"
 	"io"
 	"net/http"
+
+	"github.com/webitel/storage/model"
 )
 
 func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model.MediaFile, *model.AppError) {
@@ -15,9 +16,8 @@ func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model
 		return nil, err
 	}
 
-	if !model.StringInSlice(mediaFile.MimeType, app.Config().MediaFileStoreSettings.AllowMime) {
-		return nil, model.NewAppError("app.SaveMediaFile", "model.media_file.mime_type.app_error", nil,
-			fmt.Sprintf("Not allowed mime type %s", mediaFile.MimeType), http.StatusBadRequest)
+	if err = app.AllowMimeType(mediaFile.MimeType); err != nil {
+		return nil, err
 	}
 
 	size, err = app.MediaFileStore.Write(src, mediaFile)
@@ -41,6 +41,19 @@ func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model
 	} else {
 		return mediaFile, nil
 	}
+}
+
+func (app *App) AllowMimeType(mimeType string) *model.AppError {
+	allow := app.Config().MediaFileStoreSettings.AllowMime
+	if len(allow) == 0 {
+		return nil
+	}
+	if !model.StringInSlice(mimeType, app.Config().MediaFileStoreSettings.AllowMime) {
+		return model.NewAppError("app.SaveMediaFile", "model.media_file.mime_type.app_error", nil,
+			fmt.Sprintf("Not allowed mime type %s", mimeType), http.StatusBadRequest)
+	}
+
+	return nil
 }
 
 func (app *App) GetMediaFilePage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, *model.AppError) {

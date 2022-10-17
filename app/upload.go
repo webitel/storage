@@ -10,7 +10,7 @@ import (
 	"github.com/webitel/wlog"
 )
 
-func (app *App) AddUploadJobFile(src io.ReadCloser, file *model.JobUploadFile) *model.AppError {
+func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) *model.AppError {
 	size, err := app.FileCache.Write(src, file)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (app *App) AddUploadJobFile(src io.ReadCloser, file *model.JobUploadFile) *
 	return err
 }
 
-func (app *App) SyncUpload(src io.ReadCloser, file *model.JobUploadFile) *model.AppError {
+func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) *model.AppError {
 	if app.UseDefaultStore() {
 		// error
 	}

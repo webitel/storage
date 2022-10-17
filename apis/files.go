@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/webitel/storage/utils"
+
 	"github.com/webitel/storage/model"
 )
 
@@ -71,15 +73,15 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	if strings.HasPrefix(mediaType, "multipart/form-data") {
 		writer := multipart.NewReader(r.Body, params["boundary"])
+		var part *multipart.Part
 
 		for {
-			part, err := writer.NextPart()
+			part, err = writer.NextPart()
 			if err == io.EOF {
 				break
 			}
 
 			if err != nil {
-				//panic(err)
 				break //fixme
 			}
 
@@ -90,8 +92,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.Uuid = c.Params.Id
 
 			// TODO PERMISSION
-			if err := c.App.SyncUpload(part, file); err != nil {
-				c.Err = err
+			if c.Err = c.App.SyncUpload(utils.LimitReader(part, c.App.MaxUploadFileSize()), file); c.Err != nil {
 				return
 			}
 			sig, _ := c.App.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
@@ -113,8 +114,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.Uuid = c.Params.Id
 
 		// TODO PERMISSION
-		if err := c.App.SyncUpload(r.Body, file); err != nil {
-			c.Err = err
+		if c.Err = c.App.SyncUpload(utils.LimitReader(r.Body, c.App.MaxUploadFileSize()), file); c.Err != nil {
 			return
 		}
 

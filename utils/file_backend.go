@@ -19,9 +19,10 @@ var regCompileMask = regexp.MustCompile(`\$DOMAIN|\$Y|\$M|\$D|\$H|\$m`)
 
 type BaseFileBackend struct {
 	sync.RWMutex
-	syncTime  int64
-	writeSize float64
-	expireDay int
+	syncTime    int64
+	writeSize   float64
+	expireDay   int
+	maxFileSize float64
 }
 
 func (b *BaseFileBackend) GetSyncTime() int64 {

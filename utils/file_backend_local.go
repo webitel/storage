@@ -60,6 +60,9 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.App
 	defer fw.Close()
 	written, err := io.Copy(fw, src)
 	if err != nil {
+		if err == ErrorMaxLimit {
+			os.Remove(allPath)
+		}
 		return written, model.NewAppError("WriteFile", "utils.file.locally.writing.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 

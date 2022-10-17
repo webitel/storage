@@ -130,28 +130,35 @@ func (a *App) StartGrpcServer() error {
 	return nil
 }
 
+func tokenFromGrpcContext(ctx context.Context) (string, *model.AppError) {
+	if info, ok := metadata.FromIncomingContext(ctx); !ok {
+		return "", model.NewAppError("GetSessionFromCtx", "app.grpc.get_context", nil, "Not found", http.StatusUnauthorized)
+	} else {
+		token := info.Get(model.HEADER_TOKEN)
+		if len(token) < 1 {
+			return "", model.NewAppError("GetSessionFromCtx", "api.context.session_expired.app_error", nil, "token not found", http.StatusUnauthorized)
+		}
+		return token[0], nil
+	}
+}
+
 func (a *App) GetSessionFromCtx(ctx context.Context) (*auth_manager.Session, *model.AppError) {
 	var session *auth_manager.Session
 	var err *model.AppError
-	var token []string
+	var token string
 
-	if info, ok := metadata.FromIncomingContext(ctx); !ok {
-		return nil, model.NewAppError("GetSessionFromCtx", "app.grpc.get_context", nil, "Not found", http.StatusInternalServerError)
-	} else {
-		token = info.Get(model.HEADER_TOKEN)
+	token, err = tokenFromGrpcContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(token) < 1 {
-		return nil, model.NewAppError("GetSessionFromCtx", "api.context.session_expired.app_error", nil, "token not found", http.StatusUnauthorized)
-	}
-
-	session, err = a.GetSession(token[0])
+	session, err = a.GetSession(token)
 	if err != nil {
 		return nil, err
 	}
 
 	if session.IsExpired() {
-		return nil, model.NewAppError("GetSessionFromCtx", "api.context.session_expired.app_error", nil, "token="+token[0], http.StatusUnauthorized)
+		return nil, model.NewAppError("GetSessionFromCtx", "api.context.session_expired.app_error", nil, "token="+token, http.StatusUnauthorized)
 	}
 
 	return session, nil
