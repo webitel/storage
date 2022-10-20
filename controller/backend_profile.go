@@ -42,7 +42,7 @@ func (c *Controller) SearchBackendProfile(session *auth_manager.Session, domainI
 	var endOfList bool
 
 	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
-		list, err = c.app.GetFileBackendProfilePageByGroups(session.Domain(domainId), session.RoleIds, search)
+		list, endOfList, err = c.app.GetFileBackendProfilePageByGroups(session.Domain(domainId), session.RoleIds, search)
 	} else {
 		list, endOfList, err = c.app.SearchFileBackendProfiles(session.Domain(domainId), search)
 	}
@@ -82,10 +82,10 @@ func (c *Controller) UpdateBackendProfile(session *auth_manager.Session, profile
 
 	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_UPDATE, permission) {
 		var perm bool
-		if perm, err = c.app.FileBackendProfileCheckAccess(session.Domain(profile.DomainId), profile.Id, session.RoleIds, auth_manager.PERMISSION_ACCESS_READ); err != nil {
+		if perm, err = c.app.FileBackendProfileCheckAccess(session.Domain(profile.DomainId), profile.Id, session.RoleIds, auth_manager.PERMISSION_ACCESS_UPDATE); err != nil {
 			return nil, err
 		} else if !perm {
-			return nil, c.app.MakeResourcePermissionError(session, profile.Id, permission, auth_manager.PERMISSION_ACCESS_READ)
+			return nil, c.app.MakeResourcePermissionError(session, profile.Id, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
 		}
 	}
 
@@ -114,10 +114,10 @@ func (c *Controller) PatchBackendProfile(session *auth_manager.Session, domainId
 
 	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_UPDATE, permission) {
 		var perm bool
-		if perm, err = c.app.FileBackendProfileCheckAccess(session.Domain(domainId), id, session.RoleIds, auth_manager.PERMISSION_ACCESS_READ); err != nil {
+		if perm, err = c.app.FileBackendProfileCheckAccess(session.Domain(domainId), id, session.RoleIds, auth_manager.PERMISSION_ACCESS_UPDATE); err != nil {
 			return nil, err
 		} else if !perm {
-			return nil, c.app.MakeResourcePermissionError(session, id, permission, auth_manager.PERMISSION_ACCESS_READ)
+			return nil, c.app.MakeResourcePermissionError(session, id, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
 		}
 	}
 

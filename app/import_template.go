@@ -1,6 +1,13 @@
 package app
 
-import "github.com/webitel/storage/model"
+import (
+	"github.com/webitel/engine/auth_manager"
+	"github.com/webitel/storage/model"
+)
+
+func (app *App) ImportTemplateCheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, *model.AppError) {
+	return app.Store.ImportTemplate().CheckAccess(domainId, id, groups, access)
+}
 
 func (app *App) CreateImportTemplate(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError) {
 	return app.Store.ImportTemplate().Create(domainId, template)
@@ -8,6 +15,15 @@ func (app *App) CreateImportTemplate(domainId int64, template *model.ImportTempl
 
 func (app *App) SearchImportTemplates(domainId int64, search *model.SearchImportTemplate) ([]*model.ImportTemplate, bool, *model.AppError) {
 	res, err := app.Store.ImportTemplate().GetAllPage(domainId, search)
+	if err != nil {
+		return nil, false, err
+	}
+	search.RemoveLastElemIfNeed(&res)
+	return res, search.EndOfList(), nil
+}
+
+func (app *App) SearchImportTemplatesByGroup(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, bool, *model.AppError) {
+	res, err := app.Store.ImportTemplate().GetAllPageByGroups(domainId, groups, search)
 	if err != nil {
 		return nil, false, err
 	}
@@ -34,6 +50,8 @@ func (app *App) UpdateImportTemplate(domainId int64, template *model.ImportTempl
 	if template.Source != nil && template.Source.Id > 0 {
 		oldTemplate.SourceId = int64(template.Source.Id)
 	}
+	oldTemplate.UpdatedAt = template.UpdatedAt
+	oldTemplate.UpdatedBy = template.UpdatedBy
 
 	return app.Store.ImportTemplate().Update(domainId, oldTemplate)
 }

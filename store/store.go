@@ -154,8 +154,10 @@ type TranscriptFileStore interface {
 }
 
 type ImportTemplateStore interface {
+	CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, *model.AppError)
 	Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError)
 	GetAllPage(domainId int64, req *model.SearchImportTemplate) ([]*model.ImportTemplate, *model.AppError)
+	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, *model.AppError)
 	Get(domainId int64, id int32) (*model.ImportTemplate, *model.AppError)
 	Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError)
 	Delete(domainId int64, id int32) *model.AppError

@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type ImportTemplate struct {
 	Id          int32           `json:"id" db:"id"`
 	Name        string          `json:"name" db:"name"`
@@ -8,6 +10,10 @@ type ImportTemplate struct {
 	SourceId    int64           `json:"source_id" db:"source_id"`
 	Parameters  StringInterface `json:"parameters" db:"parameters"`
 	Source      *Lookup         `json:"source" db:"source"`
+	CreatedAt   *time.Time      `json:"created_at" db:"created_at"`
+	CreatedBy   *Lookup         `json:"created_by" db:"created_by"`
+	UpdatedAt   *time.Time      `json:"updated_at" db:"updated_at"`
+	UpdatedBy   *Lookup         `json:"updated_by" db:"updated_by"`
 }
 
 type ImportTemplatePatch struct {
@@ -17,6 +23,9 @@ type ImportTemplatePatch struct {
 	SourceId    *int64                 `json:"source_id" db:"source_id"`
 	Parameters  map[string]interface{} `json:"parameters" db:"parameters"`
 	Source      *Lookup                `json:"source" db:"source"`
+
+	UpdatedBy Lookup
+	UpdatedAt time.Time
 }
 
 type SearchImportTemplate struct {
@@ -29,7 +38,8 @@ func (ImportTemplate) DefaultOrder() string {
 }
 
 func (ImportTemplate) AllowFields() []string {
-	return []string{"id", "name", "description", "source_type", "source_id", "parameters", "source"}
+	return []string{"id", "name", "description", "source_type", "source_id", "parameters", "source", "updated_at",
+		"updated_by", "created_at", "created_at"}
 }
 
 func (ImportTemplate) DefaultFields() []string {
@@ -45,6 +55,9 @@ func (i *ImportTemplate) IsValid() *AppError {
 }
 
 func (i *ImportTemplate) Path(path *ImportTemplatePatch) {
+	i.UpdatedBy = &path.UpdatedBy
+	i.UpdatedAt = &path.UpdatedAt
+
 	if path.Name != nil {
 		i.Name = *path.Name
 	}

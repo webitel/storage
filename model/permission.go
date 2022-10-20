@@ -6,6 +6,7 @@ const (
 	PERMISSION_SCOPE_RECORD_FILE     = "record_file"
 
 	PermissionScopeCognitiveProfile = "cognitive_profile"
+	PermissionScopeImportTemplate   = "import_template"
 )
 
 const (

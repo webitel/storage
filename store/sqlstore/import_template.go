@@ -3,6 +3,8 @@ package sqlstore
 import (
 	"fmt"
 
+	"github.com/webitel/engine/auth_manager"
+
 	"github.com/lib/pq"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -17,10 +19,29 @@ func NewSqlImportTemplateStore(sqlStore SqlStore) store.ImportTemplateStore {
 	return us
 }
 
+func (s SqlImportTemplateStore) CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, *model.AppError) {
+
+	res, err := s.GetReplica().SelectNullInt(`select 1
+		where exists(
+          select 1
+          from storage.import_template_acl a
+          where a.dc = :DomainId
+            and a.object = :Id
+            and a.subject = any (:Groups::int[])
+            and a.access & :Access = :Access
+        )`, map[string]interface{}{"DomainId": domainId, "Id": id, "Groups": pq.Array(groups), "Access": access.Value()})
+
+	if err != nil {
+		return false, nil
+	}
+
+	return res.Valid && res.Int64 == 1, nil
+}
+
 func (s SqlImportTemplateStore) Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError) {
 	err := s.GetMaster().SelectOne(&template, `with t as (
-    insert into storage.import_template (domain_id, name, description, source_type, source_id, parameters)
-    values (:DomainId, :Name, :Description, :SourceType, :SourceId, :Parameters)
+    insert into storage.import_template (domain_id, name, description, source_type, source_id, parameters, created_at, created_by, updated_at, updated_by)
+    values (:DomainId, :Name, :Description, :SourceType, :SourceId, :Parameters, :CreatedAt, :CreatedBy, :UpdatedAt, :UpdatedBy)
     returning *
 )
 select
@@ -30,8 +51,14 @@ select
     t.source_type,
     t.source_id,
     t.parameters,
-    jsonb_build_object('id', s.id, 'name', s.name) as source
-from  t
+    jsonb_build_object('id', s.id, 'name', s.name) as source,
+    t.created_at,
+    storage.get_lookup(c.id, COALESCE(c.name, c.username::text)::character varying) AS created_by,
+    t.updated_at,
+    storage.get_lookup(u.id, COALESCE(u.name, u.username::text)::character varying) AS updated_by
+from t
+    LEFT JOIN directory.wbt_user c ON c.id = t.created_by
+    LEFT JOIN directory.wbt_user u ON u.id = t.updated_by
     left join lateral (
         select q.id, q.name
         from call_center.cc_queue q
@@ -44,6 +71,10 @@ from  t
 		"SourceType":  template.SourceType,
 		"SourceId":    template.SourceId,
 		"Parameters":  model.StringInterfaceToJson(template.Parameters),
+		"CreatedAt":   template.CreatedAt,
+		"CreatedBy":   template.CreatedBy.GetSafeId(),
+		"UpdatedAt":   template.UpdatedAt,
+		"UpdatedBy":   template.UpdatedBy.GetSafeId(),
 	})
 
 	if err != nil {
@@ -75,6 +106,35 @@ func (s SqlImportTemplateStore) GetAllPage(domainId int64, search *model.SearchI
 
 	return templates, nil
 }
+func (s SqlImportTemplateStore) GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, *model.AppError) {
+	var templates []*model.ImportTemplate
+
+	f := map[string]interface{}{
+		"DomainId": domainId,
+		"Ids":      pq.Array(search.Ids),
+		"Q":        search.GetQ(),
+		"Groups":   pq.Array(groups),
+		"Access":   auth_manager.PERMISSION_ACCESS_READ.Value(),
+	}
+
+	err := s.ListQuery(&templates, search.ListRequest,
+		`domain_id = :DomainId
+				and (:Ids::int[] isnull or id = any(:Ids))
+				and (:Q::varchar isnull or (name ilike :Q::varchar ))
+				and exists(select 1
+				  from storage.import_template_acl a
+				  where a.dc = p.domain_id and a.object = p.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
+				and (:Ids::int[] isnull or id = any(:Ids))
+				and (:Q::varchar isnull or (name ilike :Q::varchar ))`,
+		model.ImportTemplate{}, f)
+
+	if err != nil {
+		return nil, model.NewAppError("SqlImportTemplateStore.GetAllPageByGroups", "store.sql_import_template.get_all.finding.app_error",
+			nil, err.Error(), extractCodeFromErr(err))
+	}
+
+	return templates, nil
+}
 func (s SqlImportTemplateStore) Get(domainId int64, id int32) (*model.ImportTemplate, *model.AppError) {
 	var template *model.ImportTemplate
 	err := s.GetReplica().SelectOne(&template, `select
@@ -84,8 +144,14 @@ func (s SqlImportTemplateStore) Get(domainId int64, id int32) (*model.ImportTemp
     t.source_type,
     t.source_id,
     t.parameters,
-    jsonb_build_object('id', s.id, 'name', s.name) as source
+    jsonb_build_object('id', s.id, 'name', s.name) as source,
+    t.created_at,
+    storage.get_lookup(c.id, COALESCE(c.name, c.username::text)::character varying) AS created_by,
+    t.updated_at,
+    storage.get_lookup(u.id, COALESCE(u.name, u.username::text)::character varying) AS updated_by
 from storage.import_template t
+    LEFT JOIN directory.wbt_user c ON c.id = t.created_by
+    LEFT JOIN directory.wbt_user u ON u.id = t.updated_by
     left join lateral (
         select q.id, q.name
         from call_center.cc_queue q
@@ -112,7 +178,9 @@ func (s SqlImportTemplateStore) Update(domainId int64, template *model.ImportTem
         description = :Description,
         parameters = :Parameters,
         source_type = :SourceType,
-        source_id = :SourceId
+        source_id = :SourceId,
+	    updated_at = :UpdatedAt,
+		updated_by = :UpdatedBy
     where t.domain_id = :DomainId and t.id = :Id
     returning *
 )
@@ -123,14 +191,20 @@ select
     t.source_type,
     t.source_id,
     t.parameters,
-    jsonb_build_object('id', s.id, 'name', s.name) as source
+    jsonb_build_object('id', s.id, 'name', s.name) as source,
+    t.created_at,
+    storage.get_lookup(c.id, COALESCE(c.name, c.username::text)::character varying) AS created_by,
+    t.updated_at,
+    storage.get_lookup(u.id, COALESCE(u.name, u.username::text)::character varying) AS updated_by
 from t
+    LEFT JOIN directory.wbt_user c ON c.id = t.created_by
+    LEFT JOIN directory.wbt_user u ON u.id = t.updated_by
     left join lateral (
         select q.id, q.name
         from call_center.cc_queue q
         where q.id = t.source_id and q.domain_id = t.domain_id
         limit 1
-    ) s on true;`, map[string]interface{}{
+    ) s on true`, map[string]interface{}{
 		"DomainId":    domainId,
 		"Id":          template.Id,
 		"Name":        template.Name,
@@ -138,6 +212,8 @@ from t
 		"Parameters":  model.StringInterfaceToJson(template.Parameters),
 		"SourceType":  template.SourceType,
 		"SourceId":    template.SourceId,
+		"UpdatedBy":   template.UpdatedBy.GetSafeId(),
+		"UpdatedAt":   template.UpdatedAt,
 	})
 
 	if err != nil {

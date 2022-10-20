@@ -26,8 +26,13 @@ func (app *App) SearchFileBackendProfiles(domainId int64, search *model.SearchFi
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) GetFileBackendProfilePageByGroups(domainId int64, groups []int, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, *model.AppError) {
-	return app.Store.FileBackendProfile().GetAllPageByGroups(domainId, groups, search)
+func (app *App) GetFileBackendProfilePageByGroups(domainId int64, groups []int, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, *model.AppError) {
+	res, err := app.Store.FileBackendProfile().GetAllPageByGroups(domainId, groups, search)
+	if err != nil {
+		return nil, false, err
+	}
+	search.RemoveLastElemIfNeed(&res)
+	return res, search.EndOfList(), nil
 }
 
 func (app *App) GetFileBackendProfile(id, domain int64) (*model.FileBackendProfile, *model.AppError) {
