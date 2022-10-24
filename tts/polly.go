@@ -27,13 +27,27 @@ type TTSParams struct {
 	Language       string `json:"-"`
 	Text, TextType string `json:"-"`
 
-	Rate int `json:"-"`
-
+	Rate       int `json:"-"`
+	Background *struct {
+		FileUri string
+		Volume  float64
+		FadeIn  int64
+		FadeOut int64
+	}
 	//google
 	SpeakingRate     float64  `json:"-"`
 	Pitch            float64  `json:"-"`
 	VolumeGainDb     float64  `json:"-"`
 	EffectsProfileId []string `json:"-"`
+}
+
+func (p TTSParams) BackgroundNode() string {
+	if p.Background != nil {
+		return fmt.Sprintf(`<mstts:backgroundaudio src="%s" volume="%f" fadein="%d" fadeout="%d"/>`,
+			p.Background.FileUri, p.Background.Volume, p.Background.FadeIn, p.Background.FadeOut)
+	}
+
+	return ""
 }
 
 func Poly(req TTSParams) (io.ReadCloser, *string, error) {

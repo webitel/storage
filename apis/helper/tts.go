@@ -56,6 +56,25 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 		params.EffectsProfileId = strings.Split(tmp, ",")
 	}
 
+	if tmp = query.Get("bg_url"); tmp != "" {
+		params.Background = &struct {
+			FileUri string
+			Volume  float64
+			FadeIn  int64
+			FadeOut int64
+		}{FileUri: tmp, Volume: 0.7, FadeIn: 3000, FadeOut: 4000}
+
+		if tmp = query.Get("bg_vol"); tmp != "" {
+			params.Background.Volume, _ = strconv.ParseFloat(tmp, 32)
+		}
+		if tmp = query.Get("bg_fin"); tmp != "" {
+			params.Background.FadeIn, _ = strconv.ParseInt(tmp, 10, 64)
+		}
+		if tmp = query.Get("bg_fout"); tmp != "" {
+			params.Background.FadeOut, _ = strconv.ParseInt(tmp, 10, 64)
+		}
+	}
+
 	params.KeyLocation = query.Get("keyLocation")
 
 	return params
