@@ -23,8 +23,8 @@ type fileResponse struct {
 }
 
 func (api *API) InitFile() {
-	api.PublicRoutes.Files.Handle("/{id}/stream", api.ApiSessionRequired(streamRecordFile)).Methods("GET")
-	api.PublicRoutes.Files.Handle("/{id}/download", api.ApiSessionRequired(downloadRecordFile)).Methods("GET")
+	api.PublicRoutes.Files.Handle("/{id}/stream", api.ApiSessionRequired(streamFile)).Methods("GET")
+	api.PublicRoutes.Files.Handle("/{id}/download", api.ApiSessionRequired(downloadFile)).Methods("GET")
 	api.PublicRoutes.Files.Handle("/{id}/upload", api.ApiSessionRequired(uploadAnyFile)).Methods("POST")
 	api.PublicRoutes.Files.Handle("/{id}/transcript", api.ApiSessionRequired(transcriptFile)).Methods("GET")
 }

@@ -18,14 +18,28 @@ func (api *API) InitCallRecordingsFiles() {
 }
 
 func streamRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
-	c.RequireId()
-
-	if c.Err != nil {
+	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
+		c.Err = errNoPermissionRecordFile
 		return
 	}
 
+	streamFile(c, w, r)
+}
+
+func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
 		c.Err = errNoPermissionRecordFile
+		return
+	}
+
+	downloadFile(c, w, r)
+}
+
+func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
+
+	c.RequireId()
+
+	if c.Err != nil {
 		return
 	}
 
@@ -82,15 +96,10 @@ func streamRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	io.CopyN(w, reader, sendSize)
 }
 
-func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
+func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 
 	if c.Err != nil {
-		return
-	}
-
-	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
-		c.Err = errNoPermissionRecordFile
 		return
 	}
 
