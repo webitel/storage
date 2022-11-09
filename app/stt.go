@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/webitel/storage/stt/google"
+
 	"github.com/webitel/storage/stt"
 
 	"github.com/webitel/storage/stt/microsoft"
@@ -49,13 +51,18 @@ func (app *App) GetSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfi
 		return
 	}
 
+	var err error
 	switch p.Provider {
 	case microsoft.ClientName:
-		var err error
 
 		if p.Instance, err = microsoft.NewClient(microsoft.ConfigFromJson(*id, app.JobCallbackUri(p.Id), p.JsonProperties())); err != nil {
 			// TODO
 		}
+	case google.ClientName:
+		if p.Instance, err = google.New(google.ConfigFromJson(p.JsonProperties())); err != nil {
+
+		}
+
 	default:
 		//todo error
 	}
@@ -72,9 +79,9 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 		return nil, err
 	}
 
-	if !p.Enabled {
-		return nil, model.NewAppError("TranscriptFile", "app.stt.transcript.valid", nil, "Profile is disabled", http.StatusInternalServerError)
-	}
+	//if !p.Enabled {
+	//	return nil, model.NewAppError("TranscriptFile", "app.stt.transcript.valid", nil, "Profile is disabled", http.StatusInternalServerError)
+	//}
 
 	stt, ok := p.Instance.(stt.Stt)
 	if !ok {

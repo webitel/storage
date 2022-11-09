@@ -1,1 +1,1 @@
-CGO_CFLAGS="-I/usr/include/x86_64-linux-gnu -g -O2 -Wdeprecated-declarations" go build -buildmode=plugin  audio.go
+CGO_CFLAGS="-I/usr/include/x86_64-linux-gnu -g -O2 " go build -buildmode=plugin  audio.go

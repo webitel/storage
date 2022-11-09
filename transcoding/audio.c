@@ -15,24 +15,16 @@ typedef struct {
   const char *path;
 } transcodingConfig;
 
-typedef struct {
-  int channels;
-  int len;
-  float* data;
-} audioBuffer;
+
+void goFrameHandler(uintptr_t ctx, uint8_t *samples, int len, int channels);
+
 
 static void initTranscoding() {
 //    av_register_all();
-    av_log_set_level(AV_LOG_TRACE);
+//    av_log_set_level(AV_LOG_TRACE);
     avformat_network_init();
 }
 
-static void clean_audio_buffer(void *b) {
-    audioBuffer *buf = (audioBuffer*)b;
-    free(buf->data);
-    buf->data = NULL;
-    buf->len = 0;
-}
 
 /**
  * Print an error string describing the errorCode to stderr.
@@ -120,45 +112,45 @@ static float getSample(const AVCodecContext* codecCtx, uint8_t* buffer, int samp
 /**
  * Write the frame to an output file.
  */
-static void handleFrame(audioBuffer *buf, transcodingConfig *conf, const AVCodecContext* codecCtx, const AVFrame* frame, SwrContext *swr ) {
-    if(av_sample_fmt_is_planar(codecCtx->sample_fmt) == 1) {
-        // This means that the data of each channel is in its own buffer.
-        // => frame->extended_data[i] contains data for the i-th channel.
-        for(int s = 0; s < frame->nb_samples; ++s) {
-            for(int c = 0; c < codecCtx->channels; ++c) {
-                float sample = getSample(codecCtx, frame->extended_data[c], s);
-//                fwrite(&sample, sizeof(float), 1, outFile); // TODO CALLBACK
+static void handleFrame(uintptr_t ctx, transcodingConfig *conf, const AVCodecContext* codecCtx, const AVFrame* frame, SwrContext *swr ) {
+        if(av_sample_fmt_is_planar(codecCtx->sample_fmt) == 1) {
+            // This means that the data of each channel is in its own buffer.
+            // => frame->extended_data[i] contains data for the i-th channel.
+            for(int s = 0; s < frame->nb_samples; ++s) {
+                for(int c = 0; c < codecCtx->channels; ++c) {
+                    float sample = getSample(codecCtx, frame->extended_data[c], s);
+    //                fwrite(&sample, sizeof(float), 1, outFile); // TODO CALLBACK
+                }
             }
-        }
-    } else {
-        //Externally supplied data
-        const uint8_t* in_samples = frame->extended_data[0];
-        int in_num_samples = frame->nb_samples;
-        int in_samplerate = frame->sample_rate;
-        int out_samplerate = conf->rate;
-        int out_num_channels = frame->channels;
+        } else {
+            //Externally supplied data
+            const uint8_t* in_samples = frame->extended_data[0];
+            int in_num_samples = frame->nb_samples;
+            int in_samplerate = frame->sample_rate;
+            int out_samplerate = conf->rate;
+            int out_num_channels = frame->channels;
 
-        //Perform the resample
-        uint8_t* out_samples;
-        int out_num_samples = av_rescale_rnd(swr_get_delay(swr, in_samplerate) + in_num_samples, out_samplerate, in_samplerate, AV_ROUND_UP);
-        av_samples_alloc(&out_samples, NULL, out_num_channels, out_num_samples, AV_SAMPLE_FMT_FLT, 0);
-        out_num_samples = swr_convert(swr, &out_samples, out_num_samples, &in_samples, in_num_samples);
+            //Perform the resample
+            uint8_t* out_samples;
+            int out_num_samples = av_rescale_rnd(swr_get_delay(swr, in_samplerate) + in_num_samples, out_samplerate, in_samplerate, AV_ROUND_UP);
+            av_samples_alloc(&out_samples, NULL, out_num_channels, out_num_samples, AV_SAMPLE_FMT_FLT, 0);
+            out_num_samples = swr_convert(swr, &out_samples, out_num_samples, &in_samples, in_num_samples);
 
 
-        float *result = malloc(sizeof(float) * out_num_channels * out_num_samples);
+            float *result = malloc(sizeof(float) * out_num_channels * out_num_samples);
 
-        for(int s = 0; s < out_num_samples; ++s) {
-            for(int c = 0; c < codecCtx->channels; ++c) {
-                float sample = getSample(codecCtx, &out_samples[0], s*codecCtx->channels+c); //frame->extended_data[0]
-                result[s*codecCtx->channels+c] = sample;
+            for(int s = 0; s < out_num_samples; ++s) {
+                for(int c = 0; c < codecCtx->channels; ++c) {
+                    float sample = getSample(codecCtx, &out_samples[0], s*codecCtx->channels+c); //frame->extended_data[0]
+                    result[s*codecCtx->channels+c] = sample;
+                }
             }
+//            buf->data = (float *) realloc(buf->data, (buf->len + (out_num_channels * out_num_samples)) * sizeof(float));
+//            memcpy(buf->data + buf->len, result, ((out_num_channels * out_num_samples)) * sizeof(float));
+//            buf->len += out_num_channels * out_num_samples;
+    //        ChunkCallback(buf, result, out_num_channels * out_num_samples, out_num_channels);
+            free(result);
         }
-        buf->data = (float *) realloc(buf->data, (buf->len + (out_num_channels * out_num_samples)) * sizeof(float));
-        memcpy(buf->data + buf->len, result, ((out_num_channels * out_num_samples)) * sizeof(float));
-        buf->len += out_num_channels * out_num_samples;
-//        ChunkCallback(buf, result, out_num_channels * out_num_samples, out_num_channels);
-        free(result);
-    }
 }
 
 /**
@@ -180,13 +172,13 @@ static int findAudioStream(const AVFormatContext* formatCtx) {
 /**
  * Receive as many frames as available and handle them.
  */
-static int receiveAndHandle(audioBuffer *buf, transcodingConfig *conf, AVCodecContext* codecCtx, AVFrame* frame, SwrContext *swr) {
+static int receiveAndHandle(uintptr_t ctx, transcodingConfig *conf, AVCodecContext* codecCtx, AVFrame* frame, SwrContext *swr) {
     int err = 0;
     // Read the packets from the decoder.
     // NOTE: Each packet may generate more than one frame, depending on the codec.
     while((err = avcodec_receive_frame(codecCtx, frame)) == 0) {
         // Let's handle the frame in a function.
-        handleFrame(buf, conf, codecCtx, frame, swr);
+        handleFrame(ctx, conf, codecCtx, frame, swr);
         // Free any buffers and reset the fields to default values.
         av_frame_unref(frame);
     }
@@ -197,12 +189,12 @@ static int receiveAndHandle(audioBuffer *buf, transcodingConfig *conf, AVCodecCo
 /*
  * Drain any buffered frames.
  */
-static void drainDecoder(audioBuffer *buf, transcodingConfig *conf, AVCodecContext* codecCtx, AVFrame* frame, SwrContext *swr ) {
+static void drainDecoder(uintptr_t ctx, transcodingConfig *conf, AVCodecContext* codecCtx, AVFrame* frame, SwrContext *swr ) {
     int err = 0;
     // Some codecs may buffer frames. Sending NULL activates drain-mode.
     if((err = avcodec_send_packet(codecCtx, NULL)) == 0) {
         // Read the remaining packets from the decoder.
-        err = receiveAndHandle(buf, conf, codecCtx, frame, swr);
+        err = receiveAndHandle(ctx, conf, codecCtx, frame, swr);
         if(err != AVERROR(EAGAIN) && err != AVERROR_EOF) {
             // Neither EAGAIN nor EOF => Something went wrong.
             printError("Receive error.", err);
@@ -213,9 +205,8 @@ static void drainDecoder(audioBuffer *buf, transcodingConfig *conf, AVCodecConte
     }
 }
 
-static int transcode(const void *context, const char *path, int rate) {
+static int transcode(uintptr_t context, const char *path, int rate) {
     int err = 0;
-    audioBuffer *buf = (audioBuffer*)context;
     transcodingConfig conf;
     conf.path = path;
     conf.rate = rate;
@@ -306,8 +297,6 @@ static int transcode(const void *context, const char *path, int rate) {
         return -1;
     }
 
-    buf->channels = codecCtx->channels;
-
     while ((err = av_read_frame(formatCtx, &packet)) != AVERROR_EOF) {
         if(err != 0) {
             // Something went wrong.
@@ -335,7 +324,7 @@ static int transcode(const void *context, const char *path, int rate) {
 
         // Receive and handle frames.
         // EAGAIN means we need to send before receiving again. So thats not an error.
-        if((err = receiveAndHandle(buf, &conf, codecCtx, frame, swr)) != AVERROR(EAGAIN)) {
+        if((err = receiveAndHandle(context, &conf, codecCtx, frame, swr)) != AVERROR(EAGAIN)) {
             // Not EAGAIN => Something went wrong.
             printError("Receive error.", err);
             break; // Don't return, so we can clean up nicely.

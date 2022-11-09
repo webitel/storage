@@ -4,89 +4,99 @@ package main
 //#include "audio.c"
 import "C"
 import (
+	"bytes"
+	"context"
+	"encoding/binary"
+	"fmt"
+	"io"
+	"os"
 	"reflect"
+	"runtime"
+	"runtime/cgo"
 	"unsafe"
 )
 
-type audioBuffer struct {
-	channels C.int
-	len      C.int
-	data     *C.float
-}
+/*
+	TODO
+	1. Read from memory https://stackoverflow.com/questions/19785254/play-a-video-from-memorystream-using-ffmpeg
+*/
 
 type transcoding struct {
-	buffer *audioBuffer
+	rate int
+	w    io.WriteCloser
 }
 
-func (e *transcoding) Decode(path string) {
-	var rate C.int = 16000
-
-	buf := &audioBuffer{}
-	C.transcode(unsafe.Pointer(buf), C.CString(path), rate)
-
-	e.buffer = buf
-}
-
-func (e *transcoding) Close() {
-	if e.buffer != nil {
-		C.clean_audio_buffer(unsafe.Pointer(e.buffer))
-		e.buffer = nil
+func New(w io.WriteCloser, rate int) *transcoding {
+	return &transcoding{
+		rate: rate,
+		w:    w,
 	}
 }
 
-func (e *transcoding) Channels() [][]float32 {
-	res := make([][]float32, e.buffer.channels, e.buffer.channels)
-	channels := (int)(e.buffer.channels)
-	bufLen := (int)(e.buffer.len)
-	length := bufLen / channels
+func (t *transcoding) Write(data []byte) (int, error) {
+	return t.w.Write(data)
+}
 
-	var list []C.float
+//export goFrameHandler
+func goFrameHandler(ctx C.uintptr_t, samples *C.uint8_t, clen C.int, cchannels C.int) {
+	if clen == 0 || cchannels == 0 {
+		return
+	}
+
+	h := cgo.Handle(ctx)
+	v := h.Value()
+	tr, ok := v.(*transcoding)
+	if !ok {
+		panic(1)
+	}
+
+	//res := make([][]float32, cchannels, cchannels)
+	bufLen := (int)(clen)
+	//length := (int)(clen / cchannels)
+	//channels := (int)(cchannels)
+
+	var list []C.uint8_t
 	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&list))
 	sliceHeader.Cap = bufLen
 	sliceHeader.Len = bufLen
-	sliceHeader.Data = uintptr(unsafe.Pointer(e.buffer.data))
-
-	for i := 0; i < channels; i++ {
-		res[i] = make([]float32, length, length)
-	}
-
-	for k, v := range list {
-		res[k%channels][(k-(k%channels))/channels] = (float32)(v)
-	}
-
-	list = nil
-
-	return res
-}
-
-var Transcoding transcoding
-
-//export ChunkCallback
-func ChunkCallback(ctx *C.void, samples *C.float, len int, channels int) {
-	var list []C.float
-	sliceHeader := (*reflect.SliceHeader)(unsafe.Pointer(&list))
-	sliceHeader.Cap = len
-	sliceHeader.Len = len
 	sliceHeader.Data = uintptr(unsafe.Pointer(samples))
 
-	//r := make([]C.float, 0, len/2)
-	//for i := 1; i < len; i = i + 2 {
-	//	r = append(r, list[i])
+	//for i := 0; i < (int)(channels); i++ {
+	//	res[i] = make([]float32, length, length)
+	//}
+	//
+	//for k, sample := range list {
+	//	res[k%channels][(k-(k%channels))/channels] = (float32)(sample)
 	//}
 
-	//binary.Write(gfile, binary.LittleEndian, list)
+	buf := new(bytes.Buffer)
+	binary.Write(buf, binary.LittleEndian, list)
+	tr.Write(buf.Bytes())
+	fmt.Println("W ", len(buf.Bytes()))
+}
+
+func (e *transcoding) Decode(ctx context.Context, path string) {
+	h := cgo.NewHandle(e)
+	C.transcode(C.uintptr_t(h), C.CString(path), C.int(e.rate))
+	h.Delete()
+	e.w.Close()
+}
+
+func init() {
+	C.initTranscoding()
 }
 
 func main() {
-	C.initTranscoding()
 
-	//var t transcoding
-	//t.Decode("https://cloud.webitel.ua/api/storage/recordings/444552/stream?access_token=gdpiujx3oiftxg5j8ewrheb13h")
-	//c := t.Channels()
-	//buf := new(bytes.Buffer)
-	//binary.Write(buf, binary.LittleEndian, c[1])
-	//gfile.Write(buf.Bytes())
-	//
-	//gfile.Close()
-	//runtime.GC()
+	gfile, err := os.OpenFile("./out.pcm", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	t := New(gfile, 16000)
+
+	t.Decode(context.TODO(), "https://dev.webitel.com/api/storage/recordings/69904/stream?access_token=ira4d61g4jb1jm7647eysbhohr")
+
+	gfile.Close()
+	runtime.GC()
 }
