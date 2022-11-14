@@ -61,8 +61,9 @@ inner join lateral (
         and f.created_at < p.exp
         and not exists(select 1 from storage.file_jobs j where j.file_id = f.id)
     order by f.created_at
+	limit 1000
 	for update skip locked
-) f on true
+) f on p.exp notnull
 union all
 select id, :Action
 from (
@@ -71,6 +72,7 @@ from (
     where f.removed
         and not exists(select 1 from storage.file_jobs j where j.file_id = f.id)
     order by f.created_at
+	limit 1000
 	for update skip locked
 ) t`, map[string]interface{}{
 		"LocalExpire": localExpDay,
