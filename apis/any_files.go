@@ -140,7 +140,7 @@ func downloadAnyFile(c *Context, w http.ResponseWriter, _ *http.Request) {
 
 	defer reader.Close()
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.Name)))
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.GetViewName())))
 	w.Header().Set("Content-Type", file.MimeType)
 	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 

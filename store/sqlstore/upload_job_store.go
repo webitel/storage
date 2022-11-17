@@ -1,9 +1,10 @@
 package sqlstore
 
 import (
+	"net/http"
+
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
-	"net/http"
 )
 
 type SqlUploadJobStore struct {
@@ -22,8 +23,8 @@ func (self *SqlUploadJobStore) CreateIndexesIfNotExists() {
 func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, *model.AppError) {
 	job.PreSave()
 	id, err := self.GetMaster().SelectInt(`insert into storage.upload_file_jobs (name, uuid, mime_type, size, instance,
-                                      created_at, updated_at, domain_id)
-values (:Name, :Uuid, :Mime, :Size, :Instance, :CreatedAt, :UpdatedAt, :DomainId)
+                                      created_at, updated_at, domain_id, view_name)
+values (:Name, :Uuid, :Mime, :Size, :Instance, :CreatedAt, :UpdatedAt, :DomainId, :VName)
 returning id
 `, map[string]interface{}{
 		"Name":      job.Name,
@@ -34,6 +35,7 @@ returning id
 		"CreatedAt": job.CreatedAt,
 		"UpdatedAt": job.UpdatedAt,
 		"DomainId":  job.DomainId,
+		"VName":     job.ViewName,
 	})
 
 	if err != nil {

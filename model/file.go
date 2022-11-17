@@ -6,6 +6,7 @@ import (
 
 type BaseFile struct {
 	Name       string          `db:"name" json:"name"`
+	ViewName   *string         `db:"view_name" json:"view_name"`
 	Size       int64           `db:"size" json:"size"`
 	MimeType   string          `db:"mime_type" json:"mime_type"`
 	Properties StringInterface `db:"properties" json:"properties"`
@@ -33,6 +34,14 @@ func (f *BaseFile) GetSize() int64 {
 
 func (f *BaseFile) GetMimeType() string {
 	return f.MimeType
+}
+
+func (f *BaseFile) GetViewName() string {
+	if f.ViewName != nil {
+		return *f.ViewName
+	}
+
+	return f.Name
 }
 
 type RemoveFile struct {

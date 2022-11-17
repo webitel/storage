@@ -5,19 +5,20 @@ import (
 )
 
 type JobUploadFile struct {
-	Id        int64  `db:"id"`
-	State     int    `db:"state"`
-	Name      string `db:"name"`
-	Uuid      string `db:"uuid"`
-	DomainId  int64  `db:"domain_id"`
-	MimeType  string `db:"mime_type"`
-	Size      int64  `db:"size"`
-	EmailMsg  string `db:"email_msg"`
-	EmailSub  string `db:"email_sub"`
-	Instance  string `db:"instance"`
-	CreatedAt int64  `db:"created_at"`
-	UpdatedAt int64  `db:"updated_at"`
-	Attempts  int    `db:"attempts,default:0" json:"attempts"`
+	Id        int64   `db:"id"`
+	State     int     `db:"state"`
+	Name      string  `db:"name"`
+	ViewName  *string `db:"view_name"`
+	Uuid      string  `db:"uuid"`
+	DomainId  int64   `db:"domain_id"`
+	MimeType  string  `db:"mime_type"`
+	Size      int64   `db:"size"`
+	EmailMsg  string  `db:"email_msg"`
+	EmailSub  string  `db:"email_sub"`
+	Instance  string  `db:"instance"`
+	CreatedAt int64   `db:"created_at"`
+	UpdatedAt int64   `db:"updated_at"`
+	Attempts  int     `db:"attempts,default:0" json:"attempts"`
 }
 
 type JobUploadFileWithProfile struct {
@@ -43,6 +44,14 @@ func (f *JobUploadFile) GetMimeType() string {
 
 func (self *JobUploadFile) GetStoreName() string {
 	return fmt.Sprintf("%s_%s", self.Uuid, self.Name)
+}
+
+func (self *JobUploadFile) GetViewName() string {
+	if self.ViewName != nil {
+		return *self.ViewName
+	}
+
+	return self.Name
 }
 
 //TODO

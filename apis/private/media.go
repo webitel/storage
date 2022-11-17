@@ -1,11 +1,12 @@
 package private
 
 import (
-	"github.com/webitel/storage/apis/helper"
-	"github.com/webitel/storage/model"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/webitel/storage/apis/helper"
+	"github.com/webitel/storage/model"
 )
 
 func (api *API) InitMedia() {

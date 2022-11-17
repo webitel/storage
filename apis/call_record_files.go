@@ -129,7 +129,7 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
-	var name = file.Name
+	var name = file.GetViewName()
 	if c.Params.Name != "" {
 		name = c.Params.Name
 	}

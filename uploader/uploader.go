@@ -2,14 +2,15 @@ package uploader
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/pool"
 	"github.com/webitel/storage/store"
 	"github.com/webitel/wlog"
-	"sync"
-	"time"
 )
 
 type UploaderInterfaceImpl struct {

@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"github.com/webitel/storage/model"
 	"net/http"
 	"strings"
+
+	"github.com/webitel/storage/model"
 )
 
 func CheckOrigin(r *http.Request, allowedOrigins string) bool {

@@ -1,9 +1,10 @@
 package private
 
 import (
-	"github.com/webitel/storage/model"
 	"net/http"
 	"strconv"
+
+	"github.com/webitel/storage/model"
 )
 
 func (api *API) InitFile() {
@@ -32,6 +33,7 @@ func putRecordCallFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	fileRequest.DomainId = int64(domainId)
 	fileRequest.Uuid = r.URL.Query().Get("id")
 	fileRequest.Name = r.URL.Query().Get("name")
+	fileRequest.ViewName = &fileRequest.Name
 	fileRequest.MimeType = r.Header.Get("Content-Type")
 
 	if r.URL.Query().Get("email_msg") != "" && r.URL.Query().Get("email_msg") != "none" {

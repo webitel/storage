@@ -2,13 +2,14 @@ package utils
 
 import (
 	"fmt"
-	"github.com/nicksnyder/go-i18n/i18n"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/nicksnyder/go-i18n/i18n"
+	"github.com/webitel/storage/model"
+	"github.com/webitel/wlog"
 )
 
 var T i18n.TranslateFunc

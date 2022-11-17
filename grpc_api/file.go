@@ -64,6 +64,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	var fileRequest model.JobUploadFile
 	fileRequest.DomainId = metadata.Metadata.DomainId
 	fileRequest.Name = metadata.Metadata.Name
+
 	fileRequest.MimeType = metadata.Metadata.MimeType
 	fileRequest.Uuid = metadata.Metadata.Uuid
 
@@ -183,6 +184,7 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	var fileRequest model.JobUploadFile
 	fileRequest.DomainId = in.GetDomainId()
 	fileRequest.Name = model.NewId() + "_" + in.GetName()
+	fileRequest.ViewName = model.NewString(in.GetName())
 	fileRequest.MimeType = res.Header.Get("Content-Type")
 	fileRequest.Uuid = in.GetUuid()
 	fileRequest.Size = res.ContentLength

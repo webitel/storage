@@ -44,6 +44,7 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) *model.AppE
 		BaseFile: model.BaseFile{
 			Size:       file.Size,
 			Name:       file.Name,
+			ViewName:   file.ViewName,
 			MimeType:   file.MimeType,
 			Properties: model.StringInterface{},
 			Instance:   app.GetInstanceId(),

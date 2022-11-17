@@ -2,9 +2,10 @@ package sqlstore
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/lib/pq"
 	"github.com/webitel/storage/model"
-	"strings"
 )
 
 type Filter map[string][]interface{}

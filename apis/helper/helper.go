@@ -3,10 +3,11 @@ package helper
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/webitel/storage/model"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/webitel/storage/model"
 )
 
 type HttpRange struct {

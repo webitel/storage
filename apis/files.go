@@ -86,7 +86,9 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			}
 
 			file := &model.JobUploadFile{}
-			file.Name = model.NewId() + "_" + part.FileName()
+			name := part.FileName()
+			file.ViewName = &name
+			file.Name = model.NewId() + "_" + name
 			file.MimeType = part.Header.Get("Content-Type")
 			file.DomainId = c.Session.DomainId
 			file.Uuid = c.Params.Id
@@ -99,7 +101,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 			files = append(files, &fileResponse{
 				Id:        file.Id,
-				Name:      file.Name,
+				Name:      file.GetViewName(),
 				Size:      file.Size,
 				MimeType:  file.MimeType,
 				SharedUrl: sig,
@@ -108,7 +110,9 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		file := &model.JobUploadFile{}
-		file.Name = model.NewId() + "_" + r.URL.Query().Get("name")
+		name := r.URL.Query().Get("name")
+		file.ViewName = &name
+		file.Name = model.NewId() + "_" + name
 		file.MimeType = r.Header.Get("Content-Type")
 		file.DomainId = c.Session.DomainId
 		file.Uuid = c.Params.Id
@@ -121,7 +125,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		sig, _ := c.App.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
 		files = append(files, &fileResponse{
 			Id:        file.Id,
-			Name:      file.Name,
+			Name:      file.GetViewName(),
 			Size:      file.Size,
 			MimeType:  file.MimeType,
 			SharedUrl: sig,
