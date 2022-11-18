@@ -95,6 +95,9 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 			// TODO PERMISSION
 			if c.Err = c.App.SyncUpload(utils.LimitReader(part, c.App.MaxUploadFileSize()), file); c.Err != nil {
+				if c.Err.Id == utils.ErrMaxLimitId {
+					c.Err.DetailedError = utils.BytesSize(float64(c.App.MaxUploadFileSize()))
+				}
 				return
 			}
 			sig, _ := c.App.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
@@ -119,6 +122,9 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 		// TODO PERMISSION
 		if c.Err = c.App.SyncUpload(utils.LimitReader(r.Body, c.App.MaxUploadFileSize()), file); c.Err != nil {
+			if c.Err.Id == utils.ErrMaxLimitId {
+				c.Err.DetailedError = utils.BytesSize(float64(c.App.MaxUploadFileSize()))
+			}
 			return
 		}
 

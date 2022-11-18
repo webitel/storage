@@ -28,11 +28,33 @@ const (
 type unitMap map[byte]int64
 
 var (
-	binaryMap = unitMap{'k': KiB, 'm': MiB, 'g': GiB, 't': TiB, 'p': PiB}
+	binaryMap   = unitMap{'k': KiB, 'm': MiB, 'g': GiB, 't': TiB, 'p': PiB}
+	binaryAbbrs = []string{"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"}
 )
 
 func FromHumanSize(size string) (int64, error) {
 	return parseSize(size, binaryMap)
+}
+
+func getSizeAndUnit(size float64, base float64, _map []string) (float64, string) {
+	i := 0
+	unitsLimit := len(_map) - 1
+	for size >= base && i < unitsLimit {
+		size = size / base
+		i++
+	}
+	return size, _map[i]
+}
+
+// CustomSize returns a human-readable approximation of a size
+// using custom format.
+func CustomSize(format string, size float64, base float64, _map []string) string {
+	size, unit := getSizeAndUnit(size, base, _map)
+	return fmt.Sprintf(format, size, unit)
+}
+
+func BytesSize(size float64) string {
+	return CustomSize("%.4g%s", size, 1024.0, binaryAbbrs)
 }
 
 // Parses the human-readable size string into the amount it represents.

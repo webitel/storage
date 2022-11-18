@@ -22,6 +22,7 @@ type LocalFileBackend struct {
 
 const (
 	ErrFileWriteExistsId = "utils.file.locally.exists.app_error"
+	ErrMaxLimitId        = "utils.file.locally.writing.limit"
 )
 
 func (self *LocalFileBackend) Name() string {
@@ -54,6 +55,9 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.App
 
 	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
+		if err == ErrorMaxLimit {
+			return 0, model.NewAppError("WriteFile", ErrMaxLimitId, nil, err.Error(), http.StatusBadRequest)
+		}
 		return 0, model.NewAppError("WriteFile", "utils.file.locally.writing.app_error", nil, err.Error(), http.StatusInternalServerError)
 	}
 
