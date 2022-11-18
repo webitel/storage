@@ -36,6 +36,10 @@
     "translation": "Encountered an error writing to local server storage"
   },
   {
+    "id": "utils.file.locally.writing.limit",
+    "translation": "This file is too large."
+  },
+  {
     "id": "utils.file.locally.removing.app_error",
     "translation": "Encountered an error removing file from local server storage."
   },
