@@ -55,7 +55,12 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 	if fn, ok := ttsEngine[provider]; ok {
 		out, t, ttsErr = fn(params)
 		if ttsErr != nil {
-			err = model.NewAppError("TTS", "tts.app_error", nil, ttsErr.Error(), http.StatusInternalServerError)
+			switch ttsErr.(type) {
+			case *model.AppError:
+				err = ttsErr.(*model.AppError)
+			default:
+				err = model.NewAppError("TTS", "tts.app_error", nil, ttsErr.Error(), http.StatusInternalServerError)
+			}
 		}
 	} else {
 		return nil, nil, model.NewAppError("TTS", "tts.valid.not_found", nil, "Not found provider", http.StatusNotFound)

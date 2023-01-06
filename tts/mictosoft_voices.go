@@ -1083,6 +1083,14 @@ const listVoices = `{
         "Male": [
             "zu-ZA-ThembaNeural"
         ]
+    },
+    "az-AZ": {
+        "Female": [
+            "az-AZ-BanuNeural"
+        ],
+        "Male": [
+            "az-AZ-BabekNeural"
+        ]
     }
 }`
 

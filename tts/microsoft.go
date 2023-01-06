@@ -53,6 +53,9 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 
 	if result.StatusCode != http.StatusOK {
 		e, _ := ioutil.ReadAll(result.Body)
+		if (len(e)) == 0 {
+			e = []byte("empty response")
+		}
 		if e != nil {
 			wlog.Error("[tts] microsoft error: " + string(e))
 
