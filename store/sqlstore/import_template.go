@@ -123,7 +123,7 @@ func (s SqlImportTemplateStore) GetAllPageByGroups(domainId int64, groups []int,
 				and (:Q::varchar isnull or (name ilike :Q::varchar ))
 				and exists(select 1
 				  from storage.import_template_acl a
-				  where a.dc = p.domain_id and a.object = p.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
+				  where a.dc = t.domain_id and a.object = t.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
 				and (:Ids::int[] isnull or id = any(:Ids))
 				and (:Q::varchar isnull or (name ilike :Q::varchar ))`,
 		model.ImportTemplate{}, f)
