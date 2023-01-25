@@ -128,7 +128,7 @@ func (s SqlCognitiveProfileStore) GetAllPageByGroups(domainId int64, groups []in
 		`domain_id = :DomainId
 				and exists(select 1
 				  from storage.cognitive_profile_services_acl a
-				  where a.dc = p.domain_id and a.object = p.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
+				  where a.dc = t.domain_id and a.object = t.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
 				and (not :Enabled::bool or enabled)
 				and (:Ids::int[] isnull or id = any(:Ids))
 				and (:Service::varchar[] isnull or service = any(:Service))
