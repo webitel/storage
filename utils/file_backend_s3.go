@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/awserr"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -80,18 +78,6 @@ func (self *S3FileBackend) TestConnection() *model.AppError {
 	self.sess = sess
 	self.svc = s3.New(sess)
 	self.uploader = s3manager.NewUploader(sess)
-
-	if _, err := self.svc.CreateBucket(&s3.CreateBucketInput{
-		Bucket: aws.String(self.bucket),
-	}); err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			if aerr.Code() != s3.ErrCodeBucketAlreadyOwnedByYou && aerr.Code() != s3.ErrCodeBucketAlreadyExists && (aerr.Code() != "BucketNameUnavailable" && self.endpoint == GoogleStorage) {
-				return model.NewAppError("S3FileBackend", "utils.file.s3.test_connection.app_error", nil, err.Error(), http.StatusInternalServerError)
-			}
-		} else {
-			return model.NewAppError("S3FileBackend", "utils.file.s3.test_connection.app_error", nil, err.Error(), http.StatusInternalServerError)
-		}
-	}
 
 	return nil
 }
