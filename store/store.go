@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"time"
 
 	"github.com/webitel/engine/auth_manager"
@@ -93,6 +94,7 @@ type FileStore interface {
 
 	GetAllPageByDomain(domain string, offset, limit int) StoreChannel
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) StoreChannel
+	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, *model.AppError)
 }
 
 type MediaFileStore interface {

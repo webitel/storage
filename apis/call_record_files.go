@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/webitel/engine/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
+	"github.com/webitel/storage/web"
 )
 
 var errNoPermissionRecordFile = model.NewAppError("Access", "call.recordings.access.forbidden", nil, "Not allow", http.StatusForbidden)
@@ -18,21 +20,26 @@ func (api *API) InitCallRecordingsFiles() {
 }
 
 func streamRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
-	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
-		c.Err = errNoPermissionRecordFile
+	isAccessible, err := checkCallRecordPermission(c, r)
+	if err != nil {
+		c.Err = err
 		return
 	}
-
-	streamFile(c, w, r)
+	if isAccessible {
+		streamFile(c, w, r)
+	}
 }
 
 func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
-	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
-		c.Err = errNoPermissionRecordFile
+	isAccessible, err := checkCallRecordPermission(c, r)
+	if err != nil {
+		c.Err = err
 		return
 	}
+	if isAccessible {
+		downloadFile(c, w, r)
+	}
 
-	downloadFile(c, w, r)
 }
 
 func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -140,4 +147,29 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(code)
 	io.Copy(w, reader)
+}
+
+func checkCallRecordPermission(c *Context, r *http.Request) (bool, *model.AppError) {
+	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
+		session := c.Session
+		permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
+		if !permission.CanRead() {
+			return false, errNoPermissionRecordFile
+		}
+		if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
+			id, err := strconv.Atoi(c.Params.Id)
+			if err != nil {
+				return false, web.NewInvalidUrlParamError("id")
+			}
+			isAccessible, appErr := c.App.CheckCallRecordPermissions(r.Context(), id, session.UserId, session.DomainId, session.RoleIds)
+			if appErr != nil {
+				return false, appErr
+			}
+			return isAccessible, nil
+
+		}
+	}
+
+	return true, nil
+
 }
