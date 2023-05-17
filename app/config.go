@@ -27,7 +27,7 @@ var (
 	defaultFileStoreType  = flag.String("file_store_type", "", "Default file store type")
 	defaultFileStoreProps = flag.String("file_store_props", "", "Default file store props")
 	defaultFileExpireDay  = flag.Int("file_store_expire_day", 0, "Default file expire day (0 - never delete)")
-	allowMediaMime        = flag.String("allow_media", "video/mp4,audio/mp3,audio/wav,audio/mpeg", "Allow upload media mime type")
+	allowMediaMime        = flag.String("allow_media", "all,video/mp4,audio/mp3,audio/wav,audio/mpeg", "Allow upload media mime type")
 	maxUploadFileSize     = flag.String("max_upload_file_size", "20MB", "Maximum upload file size")
 
 	presignedCertFile = flag.String("presigned_cert", "/opt/storage/key.pem", "Location to pre signed certificate")
