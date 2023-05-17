@@ -137,13 +137,3 @@ func (a *App) LoadConfig(configFile string) *model.AppError {
 	a.config.Store(cfg)
 	return nil
 }
-
-func isFlagPassed(name string) bool {
-	found := false
-	flag.Visit(func(f *flag.Flag) {
-		if f.Name == name {
-			found = true
-		}
-	})
-	return found
-}
