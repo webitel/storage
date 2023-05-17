@@ -48,11 +48,9 @@ func (app *App) AllowMimeType(mimeType string) *model.AppError {
 	if len(allow) == 0 {
 		return nil
 	}
-	if !model.StringInSlice("all", app.Config().MediaFileStoreSettings.AllowMime) {
-		if !model.StringInSlice(mimeType, app.Config().MediaFileStoreSettings.AllowMime) {
-			return model.NewAppError("app.SaveMediaFile", "model.media_file.mime_type.app_error", nil,
-				fmt.Sprintf("Not allowed mime type %s", mimeType), http.StatusBadRequest)
-		}
+	if !model.StringInSlice(mimeType, app.Config().MediaFileStoreSettings.AllowMime) {
+		return model.NewAppError("app.SaveMediaFile", "model.media_file.mime_type.app_error", nil,
+			fmt.Sprintf("Not allowed mime type %s", mimeType), http.StatusBadRequest)
 	}
 
 	return nil
