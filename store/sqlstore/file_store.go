@@ -1,10 +1,12 @@
 package sqlstore
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/lib/pq"
+	"github.com/webitel/engine/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -64,7 +66,7 @@ where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
 	return nil
 }
 
-//TODO reference tables ?
+// TODO reference tables ?
 func (self SqlFileStore) MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		_, err := self.GetMaster().Exec(`with del as (
@@ -80,6 +82,40 @@ from del`, jobId, profileId, properties.ToJson())
 			result.Err = model.NewAppError("SqlFileStore.MoveFromJob", "store.sql_file.move_from_job.app_error", nil, err.Error(), http.StatusInternalServerError)
 		}
 	})
+}
+
+// get permissions of the call record for user
+func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId int, userId int64, domainId int64, groups []int) (bool, *model.AppError) {
+
+	exists, err := self.GetReplica().WithContext(ctx).SelectInt(`
+		select exists(select 1
+		from call_center.cc_calls_history t
+		where t.id = (select uuid
+					  from storage.files f
+					  where id = :FileId
+					  limit 1)
+		  and (
+			(t.user_id = any (call_center.cc_calls_rbac_users(:Domain::int8, :CurrentUserId::int8) || :Groups::int[])
+				or t.queue_id = any (call_center.cc_calls_rbac_queues(:Domain::int8, :CurrentUserId::int8, :Groups::int[]))
+				or (t.user_ids notnull and t.user_ids::int[] &&
+										   call_center.rbac_users_from_group(:Class::varchar, :Domain::int8, :Access::int2,
+																					  :Groups::int[]))
+				or (t.grantee_id = any (:Groups::int[]))
+				)
+			)
+		)::int`, map[string]interface{}{
+		"CurrentUserId": userId,
+		"FileId":        fileId,
+		"Domain":        domainId,
+		"Groups":        pq.Array(groups),
+		"Access":        auth_manager.PERMISSION_ACCESS_READ.Value(),
+		"Class":         model.PERMISSION_SCOPE_RECORD_FILE,
+	})
+	if err != nil {
+		return false, model.NewAppError("SqlFileStore.CheckCallRecordExistense", "store.sql_file.check_call_record_permissions.app_error", nil, err.Error(), http.StatusInternalServerError)
+	}
+	return exists == 1, nil
+
 }
 
 func (self SqlFileStore) GetAllPageByDomain(domain string, offset, limit int) store.StoreChannel {

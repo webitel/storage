@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 )
@@ -11,6 +13,11 @@ func (app *App) ListFiles(domain string, page, perPage int) ([]*model.File, *mod
 	} else {
 		return result.Data.([]*model.File), nil
 	}
+}
+
+func (app *App) CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, *model.AppError) {
+	return app.Store.File().CheckCallRecordPermissions(ctx, fileId, currentUserId, domainId, groups)
+
 }
 
 func (app *App) GetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, *model.AppError) {

@@ -74,7 +74,7 @@ func setDebug() {
 	//debug.SetGCPercent(-1)
 
 	go func() {
-		wlog.Info("Start debug server on :8090")
+		wlog.Info("Start debug server on http://localhost:8090/debug/pprof/")
 		err := http.ListenAndServe(":8090", nil)
 		if err != nil {
 			wlog.Critical(err.Error())
