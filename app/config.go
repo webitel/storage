@@ -27,7 +27,7 @@ var (
 	defaultFileStoreType  = flag.String("file_store_type", "", "Default file store type")
 	defaultFileStoreProps = flag.String("file_store_props", "", "Default file store props")
 	defaultFileExpireDay  = flag.Int("file_store_expire_day", 0, "Default file expire day (0 - never delete)")
-	allowMediaMime        = flag.String("allow_media", "video/mp4,audio/mp3,audio/wav,audio/mpeg", "Allow upload media mime type")
+	allowMediaMime        = flag.String("allow_media", "", "Allow upload media mime type")
 	maxUploadFileSize     = flag.String("max_upload_file_size", "20MB", "Maximum upload file size")
 
 	presignedCertFile = flag.String("presigned_cert", "/opt/storage/key.pem", "Location to pre signed certificate")
@@ -39,6 +39,10 @@ var (
 
 func loadConfig(fileName string) (*model.Config, *model.AppError) {
 	flag.Parse()
+	var mimeTypes []string
+	if *allowMediaMime != "" {
+		mimeTypes = strings.Split(*allowMediaMime, ",")
+	}
 
 	maxUploadSizeInByte, err := utils.FromHumanSize(*maxUploadFileSize)
 	if err != nil {
@@ -65,7 +69,7 @@ func loadConfig(fileName string) (*model.Config, *model.AppError) {
 			MaxSizeByte:       model.NewInt(100 * 1000000),
 			Directory:         mediaDirectory,
 			PathPattern:       mediaStorePattern,
-			AllowMime:         strings.Split(*allowMediaMime, ","),
+			AllowMime:         mimeTypes,
 			MaxUploadFileSize: maxUploadSizeInByte,
 		},
 		SqlSettings: model.SqlSettings{
