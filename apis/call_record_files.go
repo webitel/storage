@@ -25,9 +25,12 @@ func streamRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		c.Err = err
 		return
 	}
-	if isAccessible {
-		streamFile(c, w, r)
+	if !isAccessible {
+		c.Err = errNoPermissionRecordFile
+		return
 	}
+	streamFile(c, w, r)
+
 }
 
 func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -36,9 +39,11 @@ func downloadRecordFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		c.Err = err
 		return
 	}
-	if isAccessible {
-		downloadFile(c, w, r)
+	if !isAccessible {
+		c.Err = errNoPermissionRecordFile
+		return
 	}
+	downloadFile(c, w, r)
 
 }
 
