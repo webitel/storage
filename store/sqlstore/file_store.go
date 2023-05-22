@@ -93,7 +93,7 @@ func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId 
 		where t.id = (select uuid
 					  from storage.files f
 					  where id = :FileId
-					  limit 1)
+					  limit 1)::uuid
 		  and (
 			(t.user_id = any (call_center.cc_calls_rbac_users(:Domain::int8, :CurrentUserId::int8) || :Groups::int[])
 				or t.queue_id = any (call_center.cc_calls_rbac_queues(:Domain::int8, :CurrentUserId::int8, :Groups::int[]))
