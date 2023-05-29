@@ -203,6 +203,8 @@ func getProvider(p string) storage.ProviderType {
 	switch p {
 	case storage.ProviderType_Microsoft.String():
 		return storage.ProviderType_Microsoft
+	case storage.ProviderType_Google.String():
+		return storage.ProviderType_Google
 	default:
 		return storage.ProviderType_DefaultProvider
 	}
