@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/webitel/storage/tts"
+
 	"github.com/webitel/storage/utils"
 
 	"github.com/webitel/storage/model"
@@ -35,6 +37,8 @@ var (
 
 	proxyUpload = flag.String("proxy_upload", "", "Proxy upload url")
 	publicHost  = flag.String("public_host", "https://dev.webitel.com/", "Public host")
+
+	wbtTTSEndpoint = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
 )
 
 func loadConfig(fileName string) (*model.Config, *model.AppError) {
@@ -110,6 +114,10 @@ func loadConfig(fileName string) (*model.Config, *model.AppError) {
 
 	if strings.HasSuffix(cfg.ServiceSettings.PublicHost, "/") {
 		cfg.ServiceSettings.PublicHost = cfg.ServiceSettings.PublicHost[:len(cfg.ServiceSettings.PublicHost)-1]
+	}
+
+	if wbtTTSEndpoint != nil && len(*wbtTTSEndpoint) != 0 {
+		tts.SetWbtTTSEndpoint(*wbtTTSEndpoint) // TODO
 	}
 
 	return cfg, nil

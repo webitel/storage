@@ -12,10 +12,6 @@ import (
 	"github.com/webitel/wlog"
 )
 
-const (
-	genderFemale = "Female"
-)
-
 func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 	var request *http.Request
 	var data string
