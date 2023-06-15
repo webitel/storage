@@ -33,6 +33,9 @@ func (l *Lookup) GetSafeId() *int {
 }
 
 func (s *StringInterface) ToJson() string {
+	if s == nil {
+		return ""
+	}
 	b, _ := json.Marshal(s)
 	return string(b)
 }

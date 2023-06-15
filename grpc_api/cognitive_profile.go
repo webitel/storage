@@ -1,10 +1,15 @@
 package grpc_api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"time"
 
+	"github.com/golang/protobuf/jsonpb"
+
 	"github.com/webitel/storage/model"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/webitel/protos/storage"
 
@@ -28,7 +33,7 @@ func (api *cognitiveProfile) CreateCognitiveProfile(ctx context.Context, in *sto
 
 	profile := &model.CognitiveProfile{
 		Provider:    in.Provider.String(),
-		Properties:  toStorageBackendProperties(in.GetProperties()),
+		Properties:  MarshalJsonpbToMap(in.GetProperties()),
 		Enabled:     in.Enabled,
 		Name:        in.GetName(),
 		Description: in.GetDescription(),
@@ -113,7 +118,7 @@ func (api *cognitiveProfile) UpdateCognitiveProfile(ctx context.Context, in *sto
 		Id:          in.Id,
 		DomainId:    session.Domain(0),
 		Provider:    in.Provider.String(),
-		Properties:  toStorageBackendProperties(in.GetProperties()),
+		Properties:  MarshalJsonpbToMap(in.GetProperties()),
 		Enabled:     in.Enabled,
 		Name:        in.GetName(),
 		Description: in.GetDescription(),
@@ -143,7 +148,7 @@ func (api *cognitiveProfile) PatchCognitiveProfile(ctx context.Context, in *stor
 		case "provider":
 			patch.Provider = model.NewString(in.Provider.String())
 		case "properties":
-			p := toStorageBackendProperties(in.GetProperties())
+			p := MarshalJsonpbToMap(in.GetProperties())
 			patch.Properties = &p
 
 		case "enabled":
@@ -190,7 +195,7 @@ func toGrpcCognitiveProfile(src *model.CognitiveProfile) *storage.CognitiveProfi
 		UpdatedAt:   getTimestamp(src.UpdatedAt),
 		UpdatedBy:   GetProtoLookup(src.UpdatedBy),
 		Provider:    getProvider(src.Provider),
-		Properties:  toFrpcBackendProperties(src.Properties), //FIXME allow proto json
+		Properties:  UnmarshalJsonpb([]byte(src.Properties.ToJson())),
 		Enabled:     src.Enabled,
 		Name:        src.Name,
 		Description: src.Description,
@@ -226,4 +231,70 @@ func getTimestamp(t *time.Time) int64 {
 	}
 
 	return 0
+}
+
+var (
+	jsonpbCodec = struct {
+		jsonpb.Unmarshaler
+		jsonpb.Marshaler
+	}{
+		Unmarshaler: jsonpb.Unmarshaler{
+
+			// Whether to allow messages to contain unknown fields, as opposed to
+			// failing to unmarshal.
+			AllowUnknownFields: false, // bool
+
+			// A custom URL resolver to use when unmarshaling Any messages from JSON.
+			// If unset, the default resolution strategy is to extract the
+			// fully-qualified type name from the type URL and pass that to
+			// proto.MessageType(string).
+			AnyResolver: nil,
+		},
+		Marshaler: jsonpb.Marshaler{
+
+			// Whether to render enum values as integers, as opposed to string values.
+			EnumsAsInts: false, // bool
+
+			// Whether to render fields with zero values.
+			EmitDefaults: true, // bool
+
+			// A string to indent each level by. The presence of this field will
+			// also cause a space to appear between the field separator and
+			// value, and for newlines to be appear between fields and array
+			// elements.
+			Indent: "", // string
+
+			// Whether to use the original (.proto) name for fields.
+			OrigName: true, // bool
+
+			// A custom URL resolver to use when marshaling Any messages to JSON.
+			// If unset, the default resolution strategy is to extract the
+			// fully-qualified type name from the type URL and pass that to
+			// proto.MessageType(string).
+			AnyResolver: nil,
+		},
+	}
+)
+
+func UnmarshalJsonpb(data []byte) *structpb.Value {
+	var pb structpb.Value
+	rd := bytes.NewReader(data)
+	err := jsonpbCodec.Unmarshal(rd, &pb)
+	if err != nil {
+		return nil
+	}
+	return &pb
+}
+
+func MarshalJsonpbToMap(src *structpb.Value) model.StringInterface {
+	var buf bytes.Buffer
+	err := jsonpbCodec.Marshal(&buf, src)
+	if err != nil {
+		return nil
+	}
+
+	res := make(model.StringInterface)
+
+	json.Unmarshal(buf.Bytes(), &res)
+	return res
 }
