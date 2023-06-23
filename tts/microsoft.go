@@ -15,7 +15,7 @@ import (
 func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 	var request *http.Request
 	var data string
-	token, err := microsoftToken(req.Key, req.Region)
+	token, err := microsoftToken(string(req.Key), req.Region)
 	if err != nil {
 		return nil, nil, err
 	}

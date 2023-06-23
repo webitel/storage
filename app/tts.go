@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/webitel/wlog"
+
 	"github.com/webitel/storage/model"
 
 	tts2 "github.com/webitel/storage/tts"
@@ -35,7 +37,7 @@ var (
 func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err *model.AppError) {
 	var ttsErr error
 
-	if params.ProfileId > 0 && params.Key == "" {
+	if params.ProfileId > 0 && len(params.Key) == 0 {
 		var ttsProfile *model.TtsProfile
 		ttsProfile, err = a.Store.CognitiveProfile().SearchTtsProfile(int64(params.DomainId), params.ProfileId)
 		if err != nil {
@@ -51,7 +53,10 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 
 		provider = ttsProfile.Provider
 
-		json.Unmarshal(ttsProfile.Properties, &params)
+		if jErr := json.Unmarshal(ttsProfile.Properties, &params); jErr != nil {
+			wlog.Error(jErr.Error())
+		}
+
 	}
 	provider = strings.ToLower(provider)
 	if fn, ok := ttsEngine[provider]; ok {

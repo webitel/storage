@@ -27,7 +27,7 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 		DomainId:  domainId,
 		ProfileId: profileId,
 
-		Key:      query.Get("key"),
+		Key:      []byte(query.Get("key")),
 		Token:    query.Get("token"),
 		Format:   query.Get("format"),
 		Voice:    query.Get("voice"),

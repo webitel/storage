@@ -17,11 +17,16 @@ func Google(params TTSParams) (io.ReadCloser, *string, error) {
 	var err error
 	var client *texttospeech.Client
 
-	if params.KeyLocation != "" {
-		client, err = texttospeech.NewClient(ctx, option.WithCredentialsFile(params.KeyLocation))
-	} else {
-		client, err = texttospeech.NewClient(ctx)
+	options := make([]option.ClientOption, 0, 1)
+
+	if len(params.Key) != 0 {
+		options = append(options, option.WithCredentialsJSON(params.Key))
+	} else if params.KeyLocation != "" {
+		options = append(options, option.WithCredentialsFile(params.KeyLocation))
 	}
+
+	client, err = texttospeech.NewClient(ctx, options...)
+
 	if err != nil {
 		return nil, nil, err
 	}
