@@ -2,7 +2,8 @@ package model
 
 import (
 	"encoding/json"
-	"net/http"
+
+	engine "github.com/webitel/engine/model"
 )
 
 type MediaFile struct {
@@ -32,28 +33,28 @@ func (a MediaFile) EntityName() string {
 	return "media_files_view"
 }
 
-func (self *MediaFile) PreSave() *AppError {
+func (self *MediaFile) PreSave() engine.AppError {
 	self.CreatedAt = GetMillis()
 	self.UpdatedAt = self.CreatedAt
 	return nil
 }
 
-func (f *MediaFile) IsValid() *AppError {
+func (f *MediaFile) IsValid() engine.AppError {
 	if len(f.Name) < 3 {
-		return NewAppError("MediaFile.IsValid", "model.media.is_valid.name.app_error", nil, "name="+f.Name, http.StatusBadRequest)
+		return engine.NewBadRequestError("model.media.is_valid.name.app_error", "name="+f.Name)
 	}
 
 	if len(f.MimeType) < 3 {
-		return NewAppError("MediaFile.IsValid", "model.media.is_valid.mime_type.app_error", nil, "name="+f.Name, http.StatusBadRequest)
+		return engine.NewBadRequestError("model.media.is_valid.mime_type.app_error", "name="+f.Name)
 	}
 
 	if f.DomainId == 0 {
-		return NewAppError("MediaFile.IsValid", "model.media.is_valid.domain_id.app_error", nil, "name="+f.Name, http.StatusBadRequest)
+		return engine.NewBadRequestError("model.media.is_valid.domain_id.app_error", "name="+f.Name)
 	}
 
 	if f.Size == 0 {
 		//FIXME
-		//return NewAppError("MediaFile.IsValid", "model.media.is_valid.size.app_error", nil, "name="+f.Name, http.StatusBadRequest)
+		//return NewBadRequestError("model.media.is_valid.size.app_error", "name="+f.Name)
 	}
 	return nil
 }

@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	engine "github.com/webitel/engine/model"
+)
 
 type ImportTemplate struct {
 	Id          int32           `json:"id" db:"id"`
@@ -50,7 +54,7 @@ func (ImportTemplate) EntityName() string {
 	return "import_template_view"
 }
 
-func (i *ImportTemplate) IsValid() *AppError {
+func (i *ImportTemplate) IsValid() engine.AppError {
 	return nil
 }
 

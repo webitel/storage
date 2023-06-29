@@ -2,10 +2,10 @@ package app
 
 import (
 	"context"
-	"net/http"
 	"strconv"
 	"time"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/stt/google"
 
 	"github.com/webitel/storage/stt"
@@ -16,7 +16,7 @@ import (
 	"github.com/webitel/wlog"
 )
 
-func (app *App) GetSttProfileById(id int) (*model.CognitiveProfile, *model.AppError) {
+func (app *App) GetSttProfileById(id int) (*model.CognitiveProfile, engine.AppError) {
 	return app.Store.CognitiveProfile().GetById(int64(id))
 }
 
@@ -24,12 +24,12 @@ func (app *App) JobCallbackUri(profileId int64) string {
 	return app.Config().ServiceSettings.PublicHost + "/api/storage/jobs/callback?profile_id=" + strconv.Itoa(int(profileId))
 }
 
-func (app *App) GetSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfile, appError *model.AppError) {
+func (app *App) GetSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfile, appError engine.AppError) {
 	var ok bool
 	var cache interface{}
 
 	if id == nil {
-		return nil, model.NewAppError("GetSttProfile", "", nil, "", http.StatusInternalServerError)
+		return nil, engine.NewInternalError("", "")
 	}
 
 	cache, ok = app.sttProfilesCache.Get(*id)
@@ -72,7 +72,7 @@ func (app *App) GetSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfi
 	return p, nil
 }
 
-func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*model.FileTranscript, *model.AppError) {
+func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*model.FileTranscript, engine.AppError) {
 	var fileUri string
 	p, err := app.GetSttProfile(options.ProfileId, options.ProfileSyncTime)
 	if err != nil {
@@ -80,12 +80,12 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	}
 
 	//if !p.Enabled {
-	//	return nil, model.NewAppError("TranscriptFile", "app.stt.transcript.valid", nil, "Profile is disabled", http.StatusInternalServerError)
+	//	return nil, engine.NewInternalError("app.stt.transcript.valid", "Profile is disabled")
 	//}
 
 	stt, ok := p.Instance.(stt.Stt)
 	if !ok {
-		return nil, model.NewAppError("TranscriptFile", "app.stt.transcript.valid", nil, "Bad client interface", http.StatusInternalServerError)
+		return nil, engine.NewInternalError("app.stt.transcript.valid", "Bad client interface")
 	}
 
 	fileUri, err = app.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", fileId, p.DomainId)
@@ -99,7 +99,7 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	//defer app.jobCallback.Remove(fileId)
 
 	if transcript, e := stt.Transcript(ctx, fileId, app.publicUri(fileUri), p.GetLocale(options.Locale)); e != nil {
-		return nil, model.NewAppError("TranscriptFile", "app.stt.transcript.err", nil, e.Error(), http.StatusInternalServerError)
+		return nil, engine.NewInternalError("app.stt.transcript.err", e.Error())
 	} else {
 		transcript.File = model.Lookup{
 			Id: int(fileId),
@@ -112,11 +112,11 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	}
 }
 
-func (app *App) CreateTranscriptFilesJob(domainId int64, options *model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError) {
+func (app *App) CreateTranscriptFilesJob(domainId int64, options *model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError) {
 	return app.Store.TranscriptFile().CreateJobs(domainId, *options)
 }
 
-func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, bool, *model.AppError) {
+func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, bool, engine.AppError) {
 	phrases, err := app.Store.TranscriptFile().GetPhrases(domainId, id, search)
 	if err != nil {
 		return nil, false, err
@@ -126,7 +126,7 @@ func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequ
 	return phrases, search.EndOfList(), nil
 }
 
-func (app *App) RemoveTranscript(domainId int64, ids []int64, uuid []string) ([]int64, *model.AppError) {
+func (app *App) RemoveTranscript(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
 	return app.Store.TranscriptFile().Delete(domainId, ids, uuid)
 }
 

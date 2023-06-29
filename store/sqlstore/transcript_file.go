@@ -1,9 +1,8 @@
 package sqlstore
 
 import (
-	"net/http"
-
 	"github.com/lib/pq"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -17,7 +16,7 @@ func NewSqlTranscriptFileStore(sqlStore SqlStore) store.TranscriptFileStore {
 	return us
 }
 
-func (s SqlTranscriptFileStore) GetByFileId(fileId int64, profileId int64) (*model.FileTranscript, *model.AppError) {
+func (s SqlTranscriptFileStore) GetByFileId(fileId int64, profileId int64) (*model.FileTranscript, engine.AppError) {
 	var t model.FileTranscript
 	err := s.GetReplica().SelectOne(&t, `select t.id,
        storage.get_lookup(f.id, f.name) as file,
@@ -35,13 +34,13 @@ where t.id = :Id and t.profile_id = :ProfileId`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, model.NewAppError("SqlTranscriptFileStore.GetByFileId", "store.sql_stt_file.get.app_error", nil, err.Error(), extractCodeFromErr(err))
+		return nil, engine.NewCustomCodeError("store.sql_stt_file.get.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return &t, nil
 }
 
-func (s SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, *model.AppError) {
+func (s SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, engine.AppError) {
 	err := s.GetMaster().SelectOne(&t, `with t as (
     insert into storage.file_transcript (file_id, transcript, log, profile_id, locale, phrases, channels, uuid, domain_id)
     select :FileId, :Transcript, :Log, :ProfileId, :Locale, :Phrases, :Channels, f.uuid, f.domain_id
@@ -70,13 +69,13 @@ from t
 	})
 
 	if err != nil {
-		return nil, model.NewAppError("SqlTranscriptFileStore.Store", "store.sql_stt_file.store.app_error", nil, err.Error(), extractCodeFromErr(err))
+		return nil, engine.NewCustomCodeError("store.sql_stt_file.store.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return t, nil
 }
 
-func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError) {
+func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError) {
 	var jobs []*model.FileTranscriptJob
 	_, err := s.GetMaster().Select(&jobs, `with trfiles as (
 		select 0 as state,
@@ -128,17 +127,17 @@ func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcri
 	})
 
 	if err != nil {
-		return nil, model.NewAppError("SqlTranscriptFileStore.CreateJobs", "store.sql_stt_file.create.jobs.app_error", nil, err.Error(), extractCodeFromErr(err))
+		return nil, engine.NewCustomCodeError("store.sql_stt_file.create.jobs.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	if len(jobs) == 0 {
-		return nil, model.NewAppError("SqlTranscriptFileStore.CreateJobs", "store.sql_stt_file.create.jobs.not_found", nil, "Not found profile", http.StatusNotFound)
+		return nil, engine.NewNotFoundError("store.sql_stt_file.create.jobs.not_found", "Not found profile")
 	}
 
 	return jobs, nil
 }
 
-func (s SqlTranscriptFileStore) GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, *model.AppError) {
+func (s SqlTranscriptFileStore) GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, engine.AppError) {
 	var phrases []*model.TranscriptPhrase
 	_, err := s.GetReplica().Select(&phrases, `select p->'start_sec' as start_sec,
        p->'end_sec' as end_sec,
@@ -162,13 +161,13 @@ where id = :Id
 	})
 
 	if err != nil {
-		return nil, model.NewAppError("SqlTranscriptFileStore.GetPhrases", "store.sql_stt_file.transcript.phrases.error", nil, err.Error(), extractCodeFromErr(err))
+		return nil, engine.NewCustomCodeError("store.sql_stt_file.transcript.phrases.error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return phrases, nil
 }
 
-func (s SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, *model.AppError) {
+func (s SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
 	var res []int64
 	_, err := s.GetMaster().Select(&res, `delete
 from storage.file_transcript t
@@ -181,7 +180,7 @@ returning t.id`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, model.NewAppError("SqlTranscriptFileStore.Delete", "store.sql_stt_file.transcript.delete.error", nil, err.Error(), extractCodeFromErr(err))
+		return nil, engine.NewCustomCodeError("store.sql_stt_file.transcript.delete.error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return res, nil

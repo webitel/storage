@@ -3,13 +3,12 @@ package utils
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"syscall"
 
-	"github.com/webitel/storage/model"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/wlog"
 )
 
@@ -33,11 +32,11 @@ func (self *LocalFileBackend) GetStoreDirectory(domain int64) string {
 	return path.Join(parseStorePattern(self.pathPattern, domain))
 }
 
-func (self *LocalFileBackend) TestConnection() *model.AppError {
+func (self *LocalFileBackend) TestConnection() engine.AppError {
 	return nil
 }
 
-func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.AppError) {
+func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.AppError) {
 	directory := self.GetStoreDirectory(file.Domain())
 	root := path.Join(self.directory, directory)
 	allPath := path.Join(root, file.GetStoreName())
@@ -46,16 +45,16 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.App
 	_, err = os.Stat(allPath)
 	if !os.IsNotExist(err) {
 		file.SetPropertyString("directory", directory)
-		return 0, model.NewAppError("WriteFile", ErrFileWriteExistsId, nil, "root="+root+" name="+file.GetStoreName(), http.StatusBadRequest)
+		return 0, engine.NewBadRequestError(ErrFileWriteExistsId, "root="+root+" name="+file.GetStoreName())
 	}
 
 	if err = os.MkdirAll(root, 0774); err != nil {
-		return 0, model.NewAppError("WriteFile", "utils.file.locally.create_dir.app_error", nil, "root="+root+", err="+err.Error(), http.StatusInternalServerError)
+		return 0, engine.NewInternalError("utils.file.locally.create_dir.app_error", "root="+root+", err="+err.Error())
 	}
 
 	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
-		return 0, model.NewAppError("WriteFile", "utils.file.locally.writing.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return 0, engine.NewInternalError("utils.file.locally.writing.app_error", err.Error())
 	}
 
 	defer fw.Close()
@@ -63,9 +62,9 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.App
 	if err != nil {
 		if err == ErrorMaxLimit {
 			os.Remove(allPath)
-			return 0, model.NewAppError("WriteFile", ErrMaxLimitId, nil, err.Error(), http.StatusBadRequest)
+			return 0, engine.NewBadRequestError(ErrMaxLimitId, err.Error())
 		}
-		return written, model.NewAppError("WriteFile", "utils.file.locally.writing.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return written, engine.NewInternalError("utils.file.locally.writing.app_error", err.Error())
 	}
 
 	self.setWriteSize(written)
@@ -75,28 +74,28 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, *model.App
 	return written, nil
 }
 
-func (self *LocalFileBackend) Remove(file File) *model.AppError {
+func (self *LocalFileBackend) Remove(file File) engine.AppError {
 	if err := os.Remove(path.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
 		e, ok := err.(*os.PathError)
 		if ok && e.Err == syscall.ENOENT {
-			return model.NewAppError("RemoveFile", "utils.file.locally.removing.not_found", nil, err.Error(), http.StatusNotFound)
+			return engine.NewNotFoundError("utils.file.locally.removing.not_found", err.Error())
 		} else {
-			return model.NewAppError("RemoveFile", "utils.file.locally.removing.app_error", nil, err.Error(), http.StatusInternalServerError)
+			return engine.NewInternalError("utils.file.locally.removing.app_error", err.Error())
 		}
 	}
 	return nil
 }
 
-func (self *LocalFileBackend) RemoveFile(directory, name string) *model.AppError {
+func (self *LocalFileBackend) RemoveFile(directory, name string) engine.AppError {
 	if err := os.Remove(path.Join(self.directory, directory, name)); err != nil {
-		return model.NewAppError("RemoveFile", "utils.file.locally.removing.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return engine.NewInternalError("utils.file.locally.removing.app_error", err.Error())
 	}
 	return nil
 }
 
-func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, *model.AppError) {
+func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, engine.AppError) {
 	if f, err := os.Open(filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
-		return nil, model.NewAppError("Reader", "api.file.reader.reading_local.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, engine.NewInternalError("api.file.reader.reading_local.app_error", err.Error())
 	} else {
 		if offset > 0 {
 			f.Seek(offset, 0)

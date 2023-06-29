@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	engine "github.com/webitel/engine/model"
 )
 
 type CognitiveProfile struct {
@@ -60,7 +62,7 @@ func (CognitiveProfile) EntityName() string {
 	return "cognitive_profile_services_view"
 }
 
-func (c *CognitiveProfile) IsValid() *AppError {
+func (c *CognitiveProfile) IsValid() engine.AppError {
 	return nil
 }
 

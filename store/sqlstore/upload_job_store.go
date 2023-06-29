@@ -1,8 +1,7 @@
 package sqlstore
 
 import (
-	"net/http"
-
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -20,7 +19,7 @@ func (self *SqlUploadJobStore) CreateIndexesIfNotExists() {
 
 }
 
-func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, *model.AppError) {
+func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, engine.AppError) {
 	job.PreSave()
 	id, err := self.GetMaster().SelectInt(`insert into storage.upload_file_jobs (name, uuid, mime_type, size, instance,
                                       created_at, updated_at, domain_id, view_name)
@@ -39,7 +38,7 @@ returning id
 	})
 
 	if err != nil {
-		return nil, model.NewAppError("SqlUploadJobStore.Save", "store.sql_upload_job.save.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, engine.NewInternalError("store.sql_upload_job.save.app_error", err.Error())
 	}
 
 	job.Id = id
@@ -53,7 +52,7 @@ func (self *SqlUploadJobStore) GetAllPageByInstance(limit int, instance string) 
 		res, err := self.GetReplica().Query("SELECT id, name, uuid, domain_id, mime_type, size, email_msg, email_sub, instance, attempts "+
 			"		FROM storage.upload_file_jobs LIMIT $1", limit)
 		if err != nil {
-			result.Err = model.NewAppError("SqlUploadJobStore.List", "store.sql_upload_job.list.app_error", nil, err.Error(), http.StatusInternalServerError)
+			result.Err = engine.NewInternalError("store.sql_upload_job.list.app_error", err.Error())
 			return
 		}
 		defer res.Close()
@@ -62,7 +61,7 @@ func (self *SqlUploadJobStore) GetAllPageByInstance(limit int, instance string) 
 			job := new(model.JobUploadFile)
 			err = res.Scan(&job.Id, &job.Name, &job.Uuid, &job.DomainId, &job.MimeType, &job.Size, &job.EmailMsg, &job.EmailSub, &job.Instance, &job.Attempts)
 			if err != nil {
-				result.Err = model.NewAppError("SqlUploadJobStore.List", "store.sql_upload_job.list.app_error", nil, err.Error(), http.StatusInternalServerError)
+				result.Err = engine.NewInternalError("store.sql_upload_job.list.app_error", err.Error())
 				return
 			}
 			jobs = append(jobs, job)
@@ -117,7 +116,7 @@ returning tmp.*`, map[string]interface{}{
 			"UpdatedAt": model.GetMillis() - betweenAttemptSec,
 		})
 		if err != nil {
-			result.Err = model.NewAppError("SqlUploadJobStore.UpdateWithProfile", "store.sql_upload_job.update_with_profile.app_error", nil, err.Error(), http.StatusInternalServerError)
+			result.Err = engine.NewInternalError("store.sql_upload_job.update_with_profile.app_error", err.Error())
 			return
 		}
 

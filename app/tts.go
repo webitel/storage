@@ -3,11 +3,11 @@ package app
 import (
 	"encoding/json"
 	"io"
-	"net/http"
 	"strings"
 
 	"github.com/webitel/wlog"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 
 	tts2 "github.com/webitel/storage/tts"
@@ -34,7 +34,7 @@ var (
 	}
 )
 
-func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err *model.AppError) {
+func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err engine.AppError) {
 	var ttsErr error
 
 	if params.ProfileId > 0 && len(params.Key) == 0 {
@@ -46,7 +46,7 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 		}
 
 		if !ttsProfile.Enabled {
-			err = model.NewAppError("TTS", "tts.profile.disabled", nil, "Profile is disabled", http.StatusBadRequest)
+			err = engine.NewBadRequestError("tts.profile.disabled", "Profile is disabled")
 
 			return
 		}
@@ -63,14 +63,14 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 		out, t, ttsErr = fn(params)
 		if ttsErr != nil {
 			switch ttsErr.(type) {
-			case *model.AppError:
-				err = ttsErr.(*model.AppError)
+			case engine.AppError:
+				err = ttsErr.(engine.AppError)
 			default:
-				err = model.NewAppError("TTS", "tts.app_error", nil, ttsErr.Error(), http.StatusInternalServerError)
+				err = engine.NewInternalError("tts.app_error", ttsErr.Error())
 			}
 		}
 	} else {
-		return nil, nil, model.NewAppError("TTS", "tts.valid.not_found", nil, "Not found provider", http.StatusNotFound)
+		return nil, nil, engine.NewNotFoundError("tts.valid.not_found", "Not found provider")
 	}
 
 	return

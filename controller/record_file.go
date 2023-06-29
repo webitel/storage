@@ -4,11 +4,12 @@ import (
 	"io"
 
 	"github.com/webitel/engine/auth_manager"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 )
 
-func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId, id int64) (*model.File, utils.FileBackend, *model.AppError) {
+func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId, id int64) (*model.File, utils.FileBackend, engine.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
 	if !permission.CanRead() {
 		//FIXME
@@ -18,14 +19,14 @@ func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId,
 	return c.app.GetFileWithProfile(session.Domain(domainId), id)
 }
 
-func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFile) *model.AppError {
+func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFile) engine.AppError {
 	return c.app.SyncUpload(src, file)
 }
 
-func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, *model.AppError) {
+func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, engine.AppError) {
 	return c.app.GeneratePreSignetResourceSignature(resource, action, id, domainId)
 }
 
-func (c *Controller) InsecureGetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, *model.AppError) {
+func (c *Controller) InsecureGetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, engine.AppError) {
 	return c.app.GetFileWithProfile(domainId, id)
 }

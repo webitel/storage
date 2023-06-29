@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/webitel/engine/auth_manager"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/engine/utils"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
@@ -44,9 +45,16 @@ func unaryInterceptor(ctx context.Context,
 		wlog.Error(fmt.Sprintf("method %s duration %s, error: %v", info.FullMethod, time.Since(start), err.Error()))
 
 		switch err.(type) {
-		case *model.AppError:
-			e := err.(*model.AppError)
-			return h, status.Error(httpCodeToGrpc(e.StatusCode), e.Text())
+		case engine.AppError:
+			e := err.(engine.AppError)
+			// ! TODO: e.Text() was here -->
+			// func (er *AppError) Text() string {
+			// 	if er.DetailedError != "" {
+			// 		return er.DetailedError
+			// 	}
+			// 	return er.Message
+			// }
+			return h, status.Error(httpCodeToGrpc(e.GetStatusCode()), e.GetDetailedError())
 		default:
 			return h, err
 		}
@@ -66,9 +74,9 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 		wlog.Error(fmt.Sprintf("method %s duration %s, error: %v", info.FullMethod, time.Since(start), err.Error()))
 
 		switch err.(type) {
-		case *model.AppError:
-			e := err.(*model.AppError)
-			return status.Error(httpCodeToGrpc(e.StatusCode), e.Text())
+		case engine.AppError:
+			e := err.(engine.AppError)
+			return status.Error(httpCodeToGrpc(e.GetStatusCode()), e.GetDetailedError())
 		default:
 			return err
 		}
@@ -130,21 +138,21 @@ func (a *App) StartGrpcServer() error {
 	return nil
 }
 
-func tokenFromGrpcContext(ctx context.Context) (string, *model.AppError) {
+func tokenFromGrpcContext(ctx context.Context) (string, engine.AppError) {
 	if info, ok := metadata.FromIncomingContext(ctx); !ok {
-		return "", model.NewAppError("GetSessionFromCtx", "app.grpc.get_context", nil, "Not found", http.StatusUnauthorized)
+		return "", engine.NewInternalError("app.grpc.get_context", "Not found")
 	} else {
 		token := info.Get(model.HEADER_TOKEN)
 		if len(token) < 1 {
-			return "", model.NewAppError("GetSessionFromCtx", "api.context.session_expired.app_error", nil, "token not found", http.StatusUnauthorized)
+			return "", engine.NewInternalError("api.context.session_expired.app_error", "token not found")
 		}
 		return token[0], nil
 	}
 }
 
-func (a *App) GetSessionFromCtx(ctx context.Context) (*auth_manager.Session, *model.AppError) {
+func (a *App) GetSessionFromCtx(ctx context.Context) (*auth_manager.Session, engine.AppError) {
 	var session *auth_manager.Session
-	var err *model.AppError
+	var err engine.AppError
 	var token string
 
 	token, err = tokenFromGrpcContext(ctx)
@@ -158,7 +166,7 @@ func (a *App) GetSessionFromCtx(ctx context.Context) (*auth_manager.Session, *mo
 	}
 
 	if session.IsExpired() {
-		return nil, model.NewAppError("GetSessionFromCtx", "api.context.session_expired.app_error", nil, "token="+token, http.StatusUnauthorized)
+		return nil, engine.NewInternalError("api.context.session_expired.app_error", "token="+token)
 	}
 
 	return session, nil

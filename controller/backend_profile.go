@@ -2,11 +2,12 @@ package controller
 
 import (
 	"github.com/webitel/engine/auth_manager"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) CreateBackendProfile(session *auth_manager.Session, profile *model.FileBackendProfile) (*model.FileBackendProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) CreateBackendProfile(session *auth_manager.Session, profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_BACKEND_PROFILE)
 	if !permission.CanCreate() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_CREATE)
@@ -31,14 +32,14 @@ func (c *Controller) CreateBackendProfile(session *auth_manager.Session, profile
 	return c.app.CreateFileBackendProfile(profile)
 }
 
-func (c *Controller) SearchBackendProfile(session *auth_manager.Session, domainId int64, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, *model.AppError) {
+func (c *Controller) SearchBackendProfile(session *auth_manager.Session, domainId int64, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, engine.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_BACKEND_PROFILE)
 	if !permission.CanRead() {
 		return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	}
 
 	var list []*model.FileBackendProfile
-	var err *model.AppError
+	var err engine.AppError
 	var endOfList bool
 
 	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
@@ -50,8 +51,8 @@ func (c *Controller) SearchBackendProfile(session *auth_manager.Session, domainI
 	return list, endOfList, err
 }
 
-func (c *Controller) GetBackendProfile(session *auth_manager.Session, id int64, domainId int64) (*model.FileBackendProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) GetBackendProfile(session *auth_manager.Session, id int64, domainId int64) (*model.FileBackendProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_BACKEND_PROFILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -69,8 +70,8 @@ func (c *Controller) GetBackendProfile(session *auth_manager.Session, id int64, 
 	return c.app.GetFileBackendProfile(id, session.Domain(domainId))
 }
 
-func (c *Controller) UpdateBackendProfile(session *auth_manager.Session, profile *model.FileBackendProfile) (*model.FileBackendProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) UpdateBackendProfile(session *auth_manager.Session, profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_BACKEND_PROFILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -101,8 +102,8 @@ func (c *Controller) UpdateBackendProfile(session *auth_manager.Session, profile
 	return c.app.UpdateFileBackendProfile(profile)
 }
 
-func (c *Controller) PatchBackendProfile(session *auth_manager.Session, domainId, id int64, patch *model.FileBackendProfilePath) (*model.FileBackendProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) PatchBackendProfile(session *auth_manager.Session, domainId, id int64, patch *model.FileBackendProfilePath) (*model.FileBackendProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_BACKEND_PROFILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -129,8 +130,8 @@ func (c *Controller) PatchBackendProfile(session *auth_manager.Session, domainId
 	return c.app.PatchFileBackendProfile(session.Domain(domainId), id, patch)
 }
 
-func (c *Controller) DeleteBackendProfile(session *auth_manager.Session, domainId, id int64) (*model.FileBackendProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) DeleteBackendProfile(session *auth_manager.Session, domainId, id int64) (*model.FileBackendProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_BACKEND_PROFILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)

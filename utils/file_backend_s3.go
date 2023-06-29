@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"io"
-	"net/http"
 	"path"
 	"strconv"
 	"strings"
@@ -13,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/webitel/storage/model"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/wlog"
 )
 
@@ -59,7 +58,7 @@ func isS3ForcePathStyle(name string) bool {
 	return name == GoogleStorage || strings.HasSuffix(name, SelCDN)
 }
 
-func (self *S3FileBackend) TestConnection() *model.AppError {
+func (self *S3FileBackend) TestConnection() engine.AppError {
 	config := &aws.Config{
 		Region:      aws.String(strings.ToLower(self.region)),
 		Endpoint:    self.getEndpoint(),
@@ -72,7 +71,7 @@ func (self *S3FileBackend) TestConnection() *model.AppError {
 
 	sess, err := session.NewSession(config)
 	if err != nil {
-		return model.NewAppError("S3FileBackend", "utils.file.s3.test_connection.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return engine.NewInternalError("utils.file.s3.test_connection.app_error", err.Error())
 	}
 
 	self.sess = sess
@@ -82,7 +81,7 @@ func (self *S3FileBackend) TestConnection() *model.AppError {
 	return nil
 }
 
-func (self *S3FileBackend) Write(src io.Reader, file File) (int64, *model.AppError) {
+func (self *S3FileBackend) Write(src io.Reader, file File) (int64, engine.AppError) {
 	directory := self.GetStoreDirectory(file.Domain())
 	location := path.Join(directory, file.GetStoreName())
 
@@ -95,7 +94,7 @@ func (self *S3FileBackend) Write(src io.Reader, file File) (int64, *model.AppErr
 	res, err := self.uploader.Upload(params)
 
 	if err != nil {
-		return 0, model.NewAppError("WriteFile", "utils.file.s3.writing.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
 	}
 	file.SetPropertyString("location", location)
 	wlog.Debug(fmt.Sprintf("[%s] create new file %s", self.name, res.Location))
@@ -114,7 +113,7 @@ func (self *S3FileBackend) Write(src io.Reader, file File) (int64, *model.AppErr
 	return s, nil
 }
 
-func (self *S3FileBackend) Remove(file File) *model.AppError {
+func (self *S3FileBackend) Remove(file File) engine.AppError {
 	directory := self.GetStoreDirectory(file.Domain())
 	location := path.Join(directory, file.GetStoreName())
 
@@ -124,13 +123,13 @@ func (self *S3FileBackend) Remove(file File) *model.AppError {
 	})
 
 	if err != nil {
-		return model.NewAppError("Remove", "utils.file.s3.remove.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return engine.NewInternalError("utils.file.s3.remove.app_error", err.Error())
 	}
 
 	return nil
 }
 
-func (self *S3FileBackend) RemoveFile(directory, name string) *model.AppError {
+func (self *S3FileBackend) RemoveFile(directory, name string) engine.AppError {
 	location := path.Join(directory, name)
 
 	_, err := self.svc.DeleteObject(&s3.DeleteObjectInput{
@@ -139,12 +138,12 @@ func (self *S3FileBackend) RemoveFile(directory, name string) *model.AppError {
 	})
 
 	if err != nil {
-		return model.NewAppError("RemoveFile", "utils.file.s3.remove.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return engine.NewInternalError("utils.file.s3.remove.app_error", err.Error())
 	}
 	return nil
 }
 
-func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, *model.AppError) {
+func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, engine.AppError) {
 	var rng *string = nil
 	if offset > 0 {
 		rng = aws.String("bytes=" + strconv.FormatInt(offset, 10) + "-")
@@ -158,7 +157,7 @@ func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, *mode
 
 	out, err := self.svc.GetObject(params)
 	if err != nil {
-		return nil, model.NewAppError("S3FileBackend.Reader", "utils.file.s3.reader.app_error", nil, err.Error(), http.StatusInternalServerError)
+		return nil, engine.NewInternalError("utils.file.s3.reader.app_error", err.Error())
 	}
 
 	return out.Body, nil

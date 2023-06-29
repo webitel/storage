@@ -1,21 +1,22 @@
 package web
 
 import (
+	"net/http"
+
 	goi18n "github.com/nicksnyder/go-i18n/i18n"
 	"github.com/webitel/engine/auth_manager"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
-	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
-	"net/http"
 )
 
 type Context struct {
 	App           *app.App
 	Log           *wlog.Logger
 	Session       auth_manager.Session
-	Err           *model.AppError
+	Err           engine.AppError
 	T             goi18n.TranslateFunc
 	Params        *Params
 	Ctrl          *controller.Controller
@@ -25,46 +26,43 @@ type Context struct {
 	siteURLHeader string
 }
 
-func (c *Context) LogError(err *model.AppError) {
+func (c *Context) LogError(err engine.AppError) {
 	// Filter out 404s, endless reconnects and browser compatibility errors
-	if err.StatusCode == http.StatusNotFound {
+	if err.GetStatusCode() == http.StatusNotFound {
 		c.LogDebug(err)
 	} else {
 		c.Log.Error(
 			err.SystemMessage(utils.TDefault),
-			wlog.String("err_where", err.Where),
-			wlog.Int("http_code", err.StatusCode),
-			wlog.String("err_details", err.DetailedError),
+			wlog.Int("http_code", err.GetStatusCode()),
+			wlog.String("err_details", err.GetDetailedError()),
 		)
 	}
 }
 
-func (c *Context) LogInfo(err *model.AppError) {
+func (c *Context) LogInfo(err engine.AppError) {
 	// Filter out 401s
-	if err.StatusCode == http.StatusUnauthorized {
+	if err.GetStatusCode() == http.StatusUnauthorized {
 		c.LogDebug(err)
 	} else {
 		c.Log.Info(
 			err.SystemMessage(utils.TDefault),
-			wlog.String("err_where", err.Where),
-			wlog.Int("http_code", err.StatusCode),
-			wlog.String("err_details", err.DetailedError),
+			wlog.Int("http_code", err.GetStatusCode()),
+			wlog.String("err_details", err.GetDetailedError()),
 		)
 	}
 }
 
-func (c *Context) LogDebug(err *model.AppError) {
+func (c *Context) LogDebug(err engine.AppError) {
 	c.Log.Debug(
 		err.SystemMessage(utils.TDefault),
-		wlog.String("err_where", err.Where),
-		wlog.Int("http_code", err.StatusCode),
-		wlog.String("err_details", err.DetailedError),
+		wlog.Int("http_code", err.GetStatusCode()),
+		wlog.String("err_details", err.GetDetailedError()),
 	)
 }
 
 func (c *Context) SessionRequired() {
 	if c.Session.UserId == 0 {
-		c.Err = model.NewAppError("", "api.context.session_expired.app_error", nil, "UserRequired", http.StatusUnauthorized)
+		c.Err = engine.NewInternalError("api.context.session_expired.app_error", "UserRequired")
 		return
 	}
 }
@@ -77,13 +75,13 @@ func (c *Context) SetInvalidUrlParam(parameter string) {
 	c.Err = NewInvalidUrlParamError(parameter)
 }
 
-func NewInvalidParamError(parameter string) *model.AppError {
-	err := model.NewAppError("Context", "api.context.invalid_body_param.app_error", map[string]interface{}{"Name": parameter}, "", http.StatusBadRequest)
+func NewInvalidParamError(parameter string) engine.AppError {
+	err := engine.NewBadRequestError("api.context.invalid_body_param.app_error", "").SetTranslationParams(map[string]interface{}{"Name": parameter})
 	return err
 }
 
-func NewInvalidUrlParamError(parameter string) *model.AppError {
-	err := model.NewAppError("Context", "api.context.invalid_url_param.app_error", map[string]interface{}{"Name": parameter}, "", http.StatusBadRequest)
+func NewInvalidUrlParamError(parameter string) engine.AppError {
+	err := engine.NewBadRequestError("api.context.invalid_url_param.app_error", "").SetTranslationParams(map[string]interface{}{"Name": parameter})
 	return err
 }
 
@@ -122,11 +120,11 @@ func (c *Context) RequireExpire() *Context {
 }
 
 func (c *Context) SetSessionExpire() {
-	c.Err = model.NewAppError("ServeHTTP", "api.context.session_expired.app_error", nil, "", http.StatusUnauthorized)
+	c.Err = engine.NewInternalError("api.context.session_expired.app_error", "")
 }
 
 func (c *Context) SetSessionErrSignature() {
-	c.Err = model.NewAppError("ServeHTTP", "api.context.session_signature.app_error", nil, "", http.StatusUnauthorized)
+	c.Err = engine.NewInternalError("api.context.session_signature.app_error", "")
 }
 
 func (c *Context) RequireSignature() *Context {

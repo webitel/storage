@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
@@ -49,7 +50,7 @@ func (s *synchronizer) run() {
 		case <-s.schedule:
 		case <-time.After(s.pollingInterval):
 		start:
-			var err *model.AppError
+			var err engine.AppError
 			var jobs []*model.SyncJob
 
 			if err = s.App.RemoveFileJobErrors(); err != nil {

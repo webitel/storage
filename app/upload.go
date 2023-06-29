@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"io"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/utils"
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 )
 
-func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) *model.AppError {
+func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engine.AppError {
 	size, err := app.FileCache.Write(src, file)
 	if err != nil {
 		return err
@@ -32,7 +33,7 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) *mode
 	return err
 }
 
-func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) *model.AppError {
+func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppError {
 	if app.UseDefaultStore() {
 		// error
 	}
@@ -52,7 +53,7 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) *model.AppE
 	}
 
 	size, err := app.DefaultFileStore.Write(src, f)
-	if err != nil && err.Id != utils.ErrFileWriteExistsId {
+	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
 		return err
 	}
 	// fixme
@@ -70,6 +71,6 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) *model.AppE
 	return nil
 }
 
-func (app *App) RemoveUploadJob(id int) *model.AppError {
+func (app *App) RemoveUploadJob(id int) engine.AppError {
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/webitel/wlog"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/protos/storage"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
@@ -93,7 +94,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 
 	}(pipeWriter)
 
-	var err *model.AppError
+	var err engine.AppError
 	var publicUrl string
 	if err = api.ctrl.UploadFileStream(pipeReader, &fileRequest); err != nil {
 		return err
@@ -167,7 +168,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 }
 
 func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlRequest) (*storage.UploadFileUrlResponse, error) {
-	var err *model.AppError
+	var err engine.AppError
 	var publicUrl string
 
 	if in.Url == "" || in.DomainId == 0 || in.Name == "" {
