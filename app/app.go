@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/webitel/engine/auth_manager"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/engine/presign"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
@@ -85,7 +86,7 @@ func New(options ...string) (outApp *App, outErr error) {
 		}
 	}
 
-	model.AppErrorInit(utils.T)
+	engine.AppErrorInit(utils.T)
 
 	app.Log = wlog.NewLogger(&wlog.LoggerConfiguration{
 		EnableConsole: true,
@@ -141,8 +142,8 @@ func New(options ...string) (outApp *App, outErr error) {
 	return app, outErr
 }
 
-func (app *App) initLocalFileStores() *model.AppError {
-	var appErr *model.AppError
+func (app *App) initLocalFileStores() engine.AppError {
+	var appErr engine.AppError
 	mediaSettings := app.Config().MediaFileStoreSettings
 	fileSettings := app.Config().DefaultFileStore
 
@@ -196,7 +197,7 @@ func (app *App) Shutdown() {
 }
 
 func (a *App) Handle404(w http.ResponseWriter, r *http.Request) {
-	err := model.NewAppError("Handle404", "api.context.404.app_error", nil, r.URL.String(), http.StatusNotFound)
+	err := engine.NewNotFoundError("api.context.404.app_error", r.URL.String())
 	wlog.Debug(fmt.Sprintf("%v: code=404 ip=%v", r.URL.Path, utils.GetIpAddress(r)))
 	utils.RenderWebAppError(a.Config(), w, r, err)
 }

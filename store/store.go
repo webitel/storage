@@ -6,12 +6,13 @@ import (
 
 	"github.com/webitel/engine/auth_manager"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
 type StoreResult struct {
 	Data interface{}
-	Err  *model.AppError
+	Err  engine.AppError
 }
 
 type StoreChannel chan StoreResult
@@ -56,7 +57,7 @@ type StoreData interface {
 }
 
 type UploadJobStore interface {
-	Create(job *model.JobUploadFile) (*model.JobUploadFile, *model.AppError)
+	Create(job *model.JobUploadFile) (*model.JobUploadFile, engine.AppError)
 	//Save(job *model.JobUploadFile) StoreChannel
 	GetAllPageByInstance(limit int, instance string) StoreChannel
 	UpdateWithProfile(limit int, instance string, betweenAttemptSec int64, defStore bool) StoreChannel
@@ -64,44 +65,44 @@ type UploadJobStore interface {
 }
 
 type SyncFileStore interface {
-	FetchJobs(limit int) ([]*model.SyncJob, *model.AppError)
-	SetRemoveJobs(localExpDay int) *model.AppError
-	Clean(jobId int64) *model.AppError
-	Remove(jobId int64) *model.AppError
+	FetchJobs(limit int) ([]*model.SyncJob, engine.AppError)
+	SetRemoveJobs(localExpDay int) engine.AppError
+	Clean(jobId int64) engine.AppError
+	Remove(jobId int64) engine.AppError
 
-	RemoveErrors() *model.AppError
-	SetError(jobId int64, e error) *model.AppError
+	RemoveErrors() engine.AppError
+	SetError(jobId int64, e error) engine.AppError
 }
 
 type FileBackendProfileStore interface {
-	CheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, *model.AppError)
-	Create(profile *model.FileBackendProfile) (*model.FileBackendProfile, *model.AppError)
-	GetAllPage(domainId int64, req *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, *model.AppError)
-	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, *model.AppError)
-	Get(id, domainId int64) (*model.FileBackendProfile, *model.AppError)
-	GetById(id int) (*model.FileBackendProfile, *model.AppError)
-	Update(profile *model.FileBackendProfile) (*model.FileBackendProfile, *model.AppError)
-	Delete(domainId, id int64) *model.AppError
+	CheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError)
+	Create(profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError)
+	GetAllPage(domainId int64, req *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, engine.AppError)
+	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, engine.AppError)
+	Get(id, domainId int64) (*model.FileBackendProfile, engine.AppError)
+	GetById(id int) (*model.FileBackendProfile, engine.AppError)
+	Update(profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError)
+	Delete(domainId, id int64) engine.AppError
 
 	GetAllPageByDomain(domain string, limit, offset int) StoreChannel
 }
 
 type FileStore interface {
 	Create(file *model.File) StoreChannel
-	GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, *model.AppError)
-	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, *model.AppError)
-	MarkRemove(domainId int64, ids []int64) *model.AppError
+	GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, engine.AppError)
+	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, engine.AppError)
+	MarkRemove(domainId int64, ids []int64) engine.AppError
 
 	GetAllPageByDomain(domain string, offset, limit int) StoreChannel
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) StoreChannel
-	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, *model.AppError)
+	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError)
 }
 
 type MediaFileStore interface {
-	Create(file *model.MediaFile) (*model.MediaFile, *model.AppError)
-	GetAllPage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, *model.AppError)
-	Get(domainId int64, id int) (*model.MediaFile, *model.AppError)
-	Delete(domainId, id int64) *model.AppError
+	Create(file *model.MediaFile) (*model.MediaFile, engine.AppError)
+	GetAllPage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, engine.AppError)
+	Get(domainId int64, id int) (*model.MediaFile, engine.AppError)
+	Delete(domainId, id int64) engine.AppError
 
 	Save(file *model.MediaFile) StoreChannel
 	GetAllByDomain(domain string, offset, limit int) StoreChannel
@@ -118,7 +119,7 @@ type ScheduleStore interface {
 }
 
 type JobStore interface {
-	Save(job *model.Job) (*model.Job, *model.AppError)
+	Save(job *model.Job) (*model.Job, engine.AppError)
 	UpdateOptimistically(job *model.Job, currentStatus string) StoreChannel
 	UpdateStatus(id string, status string) StoreChannel
 	UpdateStatusOptimistically(id string, currentStatus string, newStatus string) StoreChannel
@@ -134,33 +135,33 @@ type JobStore interface {
 }
 
 type CognitiveProfileStore interface {
-	CheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, *model.AppError)
-	Create(profile *model.CognitiveProfile) (*model.CognitiveProfile, *model.AppError)
-	GetAllPage(domainId int64, req *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, *model.AppError)
-	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, *model.AppError)
-	Get(id, domainId int64) (*model.CognitiveProfile, *model.AppError)
-	Update(profile *model.CognitiveProfile) (*model.CognitiveProfile, *model.AppError)
-	Delete(domainId, id int64) *model.AppError
-	GetById(id int64) (*model.CognitiveProfile, *model.AppError)
+	CheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError)
+	Create(profile *model.CognitiveProfile) (*model.CognitiveProfile, engine.AppError)
+	GetAllPage(domainId int64, req *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, engine.AppError)
+	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, engine.AppError)
+	Get(id, domainId int64) (*model.CognitiveProfile, engine.AppError)
+	Update(profile *model.CognitiveProfile) (*model.CognitiveProfile, engine.AppError)
+	Delete(domainId, id int64) engine.AppError
+	GetById(id int64) (*model.CognitiveProfile, engine.AppError)
 
-	SearchTtsProfile(domainId int64, profileId int) (*model.TtsProfile, *model.AppError)
+	SearchTtsProfile(domainId int64, profileId int) (*model.TtsProfile, engine.AppError)
 }
 
 type TranscriptFileStore interface {
-	GetByFileId(fileId int64, profileId int64) (*model.FileTranscript, *model.AppError)
-	Store(t *model.FileTranscript) (*model.FileTranscript, *model.AppError)
+	GetByFileId(fileId int64, profileId int64) (*model.FileTranscript, engine.AppError)
+	Store(t *model.FileTranscript) (*model.FileTranscript, engine.AppError)
 
-	CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, *model.AppError)
-	GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, *model.AppError)
-	Delete(domainId int64, ids []int64, uuid []string) ([]int64, *model.AppError)
+	CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError)
+	GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, engine.AppError)
+	Delete(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError)
 }
 
 type ImportTemplateStore interface {
-	CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, *model.AppError)
-	Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError)
-	GetAllPage(domainId int64, req *model.SearchImportTemplate) ([]*model.ImportTemplate, *model.AppError)
-	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, *model.AppError)
-	Get(domainId int64, id int32) (*model.ImportTemplate, *model.AppError)
-	Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, *model.AppError)
-	Delete(domainId int64, id int32) *model.AppError
+	CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError)
+	Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError)
+	GetAllPage(domainId int64, req *model.SearchImportTemplate) ([]*model.ImportTemplate, engine.AppError)
+	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, engine.AppError)
+	Get(domainId int64, id int32) (*model.ImportTemplate, engine.AppError)
+	Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError)
+	Delete(domainId int64, id int32) engine.AppError
 }

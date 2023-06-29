@@ -54,7 +54,7 @@ func (u *UploadTask) Execute() {
 		},
 	}
 
-	if _, err = store.Write(r, f); err != nil && err.Id != utils.ErrFileWriteExistsId {
+	if _, err = store.Write(r, f); err != nil && err.GetId() != utils.ErrFileWriteExistsId {
 		wlog.Critical(err.Error())
 		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
 		return

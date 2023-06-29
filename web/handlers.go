@@ -2,12 +2,14 @@ package web
 
 import (
 	"fmt"
+	"net/http"
+
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
-	"net/http"
 )
 
 type Handler struct {
@@ -45,10 +47,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		session, err := c.App.GetSession(token)
 		if err != nil {
 			c.Log.Info("Invalid session", wlog.Err(err))
-			if err.StatusCode == http.StatusInternalServerError {
+			if err.GetStatusCode() == http.StatusInternalServerError {
 				c.Err = err
 			} else {
-				c.Err = model.NewAppError("ServeHTTP", "api.context.session_expired.app_error", nil, "token="+token, http.StatusUnauthorized)
+				c.Err = engine.NewInternalError("api.context.session_expired.app_error", "token="+token)
 			}
 		} else {
 			c.Session = *session
@@ -74,17 +76,15 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Handle errors that have occurred
 	if c.Err != nil {
 		c.Err.Translate(c.T)
-		c.Err.RequestId = c.RequestId
+		c.Err.SetRequestId(c.RequestId)
 
-		if c.Err.Id == "api.context.session_expired.app_error" {
+		if c.Err.GetId() == "api.context.session_expired.app_error" {
 			c.LogInfo(c.Err)
 		} else {
 			c.LogError(c.Err)
 		}
 
-		c.Err.Where = r.URL.Path
-
-		w.WriteHeader(c.Err.StatusCode)
+		w.WriteHeader(c.Err.GetStatusCode())
 		w.Write([]byte(c.Err.ToJson()))
 	}
 }

@@ -10,6 +10,7 @@ import (
 
 	"github.com/webitel/storage/utils"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
@@ -41,7 +42,7 @@ var (
 	wbtTTSEndpoint = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
 )
 
-func loadConfig(fileName string) (*model.Config, *model.AppError) {
+func loadConfig(fileName string) (*model.Config, engine.AppError) {
 	flag.Parse()
 	var mimeTypes []string
 	if *allowMediaMime != "" {
@@ -130,7 +131,7 @@ func (a *App) Config() *model.Config {
 	return &model.Config{}
 }
 
-func (a *App) LoadConfig(configFile string) *model.AppError {
+func (a *App) LoadConfig(configFile string) engine.AppError {
 	cfg, err := loadConfig(configFile)
 	if err != nil {
 		return err

@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/webitel/engine/auth_manager"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) CreateCognitiveProfile(session *auth_manager.Session, profile *model.CognitiveProfile) (*model.CognitiveProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) CreateCognitiveProfile(session *auth_manager.Session, profile *model.CognitiveProfile) (*model.CognitiveProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
 	if !permission.CanCreate() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_CREATE)
@@ -30,14 +31,14 @@ func (c *Controller) CreateCognitiveProfile(session *auth_manager.Session, profi
 	return c.app.CreateCognitiveProfile(profile)
 }
 
-func (c *Controller) SearchCognitiveProfile(session *auth_manager.Session, domainId int64, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, bool, *model.AppError) {
+func (c *Controller) SearchCognitiveProfile(session *auth_manager.Session, domainId int64, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, bool, engine.AppError) {
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
 	if !permission.CanRead() {
 		return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	}
 
 	var list []*model.CognitiveProfile
-	var err *model.AppError
+	var err engine.AppError
 	var endOfList bool
 
 	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
@@ -49,8 +50,8 @@ func (c *Controller) SearchCognitiveProfile(session *auth_manager.Session, domai
 	return list, endOfList, err
 }
 
-func (c *Controller) GetCognitiveProfile(session *auth_manager.Session, id int64, domainId int64) (*model.CognitiveProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) GetCognitiveProfile(session *auth_manager.Session, id int64, domainId int64) (*model.CognitiveProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -68,8 +69,8 @@ func (c *Controller) GetCognitiveProfile(session *auth_manager.Session, id int64
 	return c.app.GetCognitiveProfile(id, session.Domain(domainId))
 }
 
-func (c *Controller) UpdateCognitiveProfile(session *auth_manager.Session, profile *model.CognitiveProfile) (*model.CognitiveProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) UpdateCognitiveProfile(session *auth_manager.Session, profile *model.CognitiveProfile) (*model.CognitiveProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -100,8 +101,8 @@ func (c *Controller) UpdateCognitiveProfile(session *auth_manager.Session, profi
 	return c.app.UpdateCognitiveProfile(profile)
 }
 
-func (c *Controller) PatchCognitiveProfile(session *auth_manager.Session, domainId, id int64, patch *model.CognitiveProfilePath) (*model.CognitiveProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) PatchCognitiveProfile(session *auth_manager.Session, domainId, id int64, patch *model.CognitiveProfilePath) (*model.CognitiveProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -128,8 +129,8 @@ func (c *Controller) PatchCognitiveProfile(session *auth_manager.Session, domain
 	return c.app.PatchCognitiveProfile(session.Domain(domainId), id, patch)
 }
 
-func (c *Controller) DeleteCognitiveProfile(session *auth_manager.Session, domainId, id int64) (*model.CognitiveProfile, *model.AppError) {
-	var err *model.AppError
+func (c *Controller) DeleteCognitiveProfile(session *auth_manager.Session, domainId, id int64) (*model.CognitiveProfile, engine.AppError) {
+	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)

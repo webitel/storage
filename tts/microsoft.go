@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/webitel/storage/model"
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/wlog"
 )
 
@@ -55,7 +55,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 		if e != nil {
 			wlog.Error("[tts] microsoft error: " + string(e))
 
-			return nil, nil, model.NewAppError("Microsoft", "tts.microsoft", nil, string(e), result.StatusCode)
+			return nil, nil, engine.NewCustomCodeError("tts.microsoft", string(e), result.StatusCode)
 		}
 	}
 

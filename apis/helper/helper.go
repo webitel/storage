@@ -3,11 +3,10 @@ package helper
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/webitel/storage/model"
+	engine "github.com/webitel/engine/model"
 )
 
 type HttpRange struct {
@@ -23,10 +22,10 @@ func (r HttpRange) ContentRange(size int64) string {
 	return fmt.Sprintf("bytes %d-%d/%d", r.Start, r.Start+r.Length-1, size)
 }
 
-var errFailedToOverlapRange = model.NewAppError("parseRange", "api.helper.parse_range.failed_to_overlap.app_error", nil, "", http.StatusBadRequest)
-var errFailedRange = model.NewAppError("parseRange", "api.helper.parse_range.failed_range.app_error", nil, "", http.StatusBadRequest)
+var errFailedToOverlapRange = engine.NewBadRequestError("api.helper.parse_range.failed_to_overlap.app_error", "")
+var errFailedRange = engine.NewBadRequestError("api.helper.parse_range.failed_range.app_error", "")
 
-func ParseRange(s string, size int64) ([]HttpRange, *model.AppError) {
+func ParseRange(s string, size int64) ([]HttpRange, engine.AppError) {
 	if s == "" {
 		return nil, nil // header not present
 	}

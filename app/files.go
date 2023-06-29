@@ -3,11 +3,12 @@ package app
 import (
 	"context"
 
+	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 )
 
-func (app *App) ListFiles(domain string, page, perPage int) ([]*model.File, *model.AppError) {
+func (app *App) ListFiles(domain string, page, perPage int) ([]*model.File, engine.AppError) {
 	if result := <-app.Store.File().GetAllPageByDomain(domain, page*perPage, perPage); result.Err != nil {
 		return nil, result.Err
 	} else {
@@ -15,15 +16,15 @@ func (app *App) ListFiles(domain string, page, perPage int) ([]*model.File, *mod
 	}
 }
 
-func (app *App) CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, *model.AppError) {
+func (app *App) CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError) {
 	return app.Store.File().CheckCallRecordPermissions(ctx, fileId, currentUserId, domainId, groups)
 
 }
 
-func (app *App) GetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, *model.AppError) {
+func (app *App) GetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, engine.AppError) {
 	var file *model.FileWithProfile
 	var backend utils.FileBackend
-	var err *model.AppError
+	var err engine.AppError
 
 	if file, err = app.Store.File().GetFileWithProfile(domainId, id); err != nil {
 		return nil, nil, err
@@ -36,10 +37,10 @@ func (app *App) GetFileWithProfile(domainId, id int64) (*model.File, utils.FileB
 	return &file.File, backend, nil
 }
 
-func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.File, utils.FileBackend, *model.AppError) {
+func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.File, utils.FileBackend, engine.AppError) {
 	var file *model.FileWithProfile
 	var backend utils.FileBackend
-	var err *model.AppError
+	var err engine.AppError
 
 	if file, err = app.Store.File().GetFileByUuidWithProfile(domainId, uuid); err != nil {
 		return nil, nil, err
@@ -52,7 +53,7 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 	return &file.File, backend, nil
 }
 
-func (app *App) RemoveFiles(domainId int64, ids []int64) *model.AppError {
+func (app *App) RemoveFiles(domainId int64, ids []int64) engine.AppError {
 	return app.Store.File().MarkRemove(domainId, ids)
 }
 

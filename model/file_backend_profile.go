@@ -3,7 +3,8 @@ package model
 import (
 	"encoding/json"
 	"io"
-	"net/http"
+
+	engine "github.com/webitel/engine/model"
 )
 
 const (
@@ -135,14 +136,14 @@ func (f *FileBackendProfile) PreSave() {
 	f.UpdatedAt = f.CreatedAt
 }
 
-func (f *FileBackendProfile) IsValid() *AppError {
+func (f *FileBackendProfile) IsValid() engine.AppError {
 	if len(f.Name) == 0 {
-		return NewAppError("FileBackendProfile.IsValid", "model.file_backend_profile.name.app_error", nil, "", http.StatusBadRequest)
+		return engine.NewBadRequestError("model.file_backend_profile.name.app_error", "")
 	}
 
 	//FIXME
 	//if f.TypeId != 1 {
-	//	return NewAppError("FileBackendProfile.IsValid", "model.file_backend_profile.type_id.app_error", nil, "", http.StatusBadRequest)
+	//	return NewBadRequestError("model.file_backend_profile.type_id.app_error", "")
 	//}
 	return nil
 }
