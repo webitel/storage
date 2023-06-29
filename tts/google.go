@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"strings"
 
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
 	"google.golang.org/api/option"
@@ -65,7 +66,7 @@ func Google(params TTSParams) (io.ReadCloser, *string, error) {
 	if params.EffectsProfileId != nil {
 		req.AudioConfig.EffectsProfileId = params.EffectsProfileId
 	}
-
+	params.Voice = strings.ToUpper(params.Voice)
 	switch params.Voice {
 	case "MALE":
 		req.Voice.SsmlGender = texttospeechpb.SsmlVoiceGender_MALE
