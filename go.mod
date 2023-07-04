@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go/texttospeech v1.6.0
 	github.com/aws/aws-sdk-go v1.44.48
 	github.com/go-gorp/gorp v2.2.0+incompatible
+	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jmoiron/sqlx v1.3.5
@@ -16,8 +17,8 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20230629100810-ae20529a9003
-	github.com/webitel/protos/engine v0.0.0-20230616110506-be80e4068593
+	github.com/webitel/engine v0.0.0-20230703094743-5887b3524b1c
+	github.com/webitel/protos/engine v0.0.0-20230703080039-6817128fa8bb
 	github.com/webitel/protos/storage v0.0.0-20230615085102-95d96d3bd4d4
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	google.golang.org/api v0.114.0
@@ -37,7 +38,6 @@ require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/uuid v1.3.0 // indirect
