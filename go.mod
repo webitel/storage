@@ -17,7 +17,7 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20230703094743-5887b3524b1c
+	github.com/webitel/engine v0.0.0-20230704152753-2cdac2bbb69a
 	github.com/webitel/protos/engine v0.0.0-20230703080039-6817128fa8bb
 	github.com/webitel/protos/storage v0.0.0-20230615085102-95d96d3bd4d4
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
