@@ -47,7 +47,7 @@ func (self *S3FileBackend) GetStoreDirectory(domain int64) string {
 
 func (self *S3FileBackend) getEndpoint() *string {
 	if self.endpoint == "amazonaws.com" {
-		return nil
+		return &self.endpoint
 	} else if self.region != "" && !isS3ForcePathStyle(self.endpoint) && !self.forcePathStyle {
 		return aws.String(fmt.Sprintf("%s.%s", self.region, self.endpoint))
 	} else {
