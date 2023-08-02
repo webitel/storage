@@ -26,7 +26,7 @@ func (s *SttJob) Execute() {
 
 	n := time.Now()
 
-	wlog.Debug(fmt.Sprintf("[stt] job_id: %d, file_id: %d start transcript to %s", s.file.Id, s.file.FileId, p.Locale))
+	wlog.Debug(fmt.Sprintf("[stt] job_id: %d, file_id: %d start transcript to %v", s.file.Id, s.file.FileId, p.Locale))
 	t, err := s.app.TranscriptFile(s.file.FileId, p)
 	if err != nil {
 		wlog.Error(err.Error())

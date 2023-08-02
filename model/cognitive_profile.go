@@ -24,6 +24,7 @@ type CognitiveProfile struct {
 	Service     string          `json:"service" db:"service"`
 	Default     bool            `json:"default" db:"default"`
 	Instance    interface{}     `json:"-" db:"-"`
+	SyncTag     int64           `json:"-" db:"-"`
 }
 
 type SearchCognitiveProfile struct {
@@ -112,8 +113,8 @@ func (f *CognitiveProfile) Path(path *CognitiveProfilePath) {
 	}
 }
 
-func (c *CognitiveProfile) GetSyncTime() int64 {
-	return c.UpdatedAt.UnixNano()
+func (c *CognitiveProfile) GetSyncTag() int64 {
+	return c.SyncTag
 }
 
 func (c *CognitiveProfile) JsonProperties() []byte {

@@ -2,11 +2,13 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/stt/google"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/webitel/storage/stt"
 
@@ -14,6 +16,10 @@ import (
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
+)
+
+var (
+	sttGroup singleflight.Group
 )
 
 func (app *App) GetSttProfileById(id int) (*model.CognitiveProfile, engine.AppError) {
@@ -24,26 +30,47 @@ func (app *App) JobCallbackUri(profileId int64) string {
 	return app.Config().ServiceSettings.PublicHost + "/api/storage/jobs/callback?profile_id=" + strconv.Itoa(int(profileId))
 }
 
-func (app *App) GetSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfile, appError engine.AppError) {
+func (app *App) GetSttProfile(id *int, syncTime *int64) (*model.CognitiveProfile, engine.AppError) {
+	if id == nil {
+		return nil, engine.NewInternalError("app.stt.valid.id", "Profile ID is required")
+	}
+
+	p, err, _ := sttGroup.Do(fmt.Sprintf("stt-%d", *id), func() (interface{}, error) {
+		return app.getSttProfile(id, syncTime)
+	})
+
+	if err != nil {
+		switch err.(type) {
+		case engine.AppError:
+			return nil, err.(engine.AppError)
+		default:
+			return nil, engine.NewInternalError("app.stt.app_err", err.Error())
+		}
+	}
+
+	return p.(*model.CognitiveProfile), nil
+}
+
+func (app *App) getSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfile, appError engine.AppError) {
 	var ok bool
 	var cache interface{}
-
-	if id == nil {
-		return nil, engine.NewInternalError("", "")
-	}
 
 	cache, ok = app.sttProfilesCache.Get(*id)
 	if ok {
 		p = cache.(*model.CognitiveProfile)
-		if syncTime != nil && p.GetSyncTime() == *syncTime {
+		if syncTime != nil && p.GetSyncTag() == *syncTime {
 			return
 		}
 	}
+	p = nil
 
 	if p == nil || syncTime == nil {
 		p, appError = app.GetSttProfileById(*id)
 		if appError != nil {
 			return
+		}
+		if syncTime != nil {
+			p.SyncTag = *syncTime
 		}
 	}
 
