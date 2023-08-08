@@ -12,10 +12,26 @@ import (
 	"github.com/webitel/wlog"
 )
 
+func fixKey(key []byte) string {
+	if len(key) < 3 {
+		return ""
+	}
+	if key[0] == '"' {
+		key = key[1:]
+	}
+	l := len(key)
+
+	if key[l-1] == '"' {
+		key = key[:l-1]
+	}
+
+	return string(key)
+}
+
 func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 	var request *http.Request
 	var data string
-	token, err := microsoftToken(string(req.Key), req.Region)
+	token, err := microsoftToken(fixKey(req.Key), req.Region)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -69,6 +85,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 }
 
 func microsoftToken(key, region string) (string, error) {
+	//key = "d0e999ae940347e99d496f3d8acb7f99"
 	req, err := http.NewRequest("POST", fmt.Sprintf("https://%s.api.cognitive.microsoft.com/sts/v1.0/issueToken", region), nil)
 	if err != nil {
 		return "", err
