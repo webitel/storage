@@ -38,7 +38,7 @@ returning id
 	})
 
 	if err != nil {
-		return nil, engine.NewInternalError("store.sql_upload_job.save.app_error", err.Error())
+		return job, engine.NewInternalError("store.sql_upload_job.save.app_error", err.Error())
 	}
 
 	job.Id = id
