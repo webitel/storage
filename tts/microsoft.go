@@ -15,7 +15,7 @@ import (
 func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 	var request *http.Request
 	var data string
-	token, err := microsoftToken(string(req.Key), req.Region)
+	token, err := microsoftToken(fixKey(req.Key), req.Region)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -93,4 +93,20 @@ func microsoftToken(key, region string) (string, error) {
 	}
 
 	return string(data), nil
+}
+
+func fixKey(key []byte) string {
+	if len(key) < 3 {
+		return ""
+	}
+	if key[0] == '"' {
+		key = key[1:]
+	}
+	l := len(key)
+
+	if key[l-1] == '"' {
+		key = key[:l-1]
+	}
+
+	return string(key)
 }
