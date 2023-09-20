@@ -71,6 +71,11 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	domainId, _ = strconv.Atoi(c.Params.Domain)
 
+	if source := sourceFromRequest(r); source == "media" {
+		streamMediaFile(c, w, r)
+		return
+	}
+
 	if file, backend, c.Err = c.Ctrl.GetFileWithProfile(&c.Session, int64(domainId), int64(id)); c.Err != nil {
 		return
 	}
@@ -129,6 +134,11 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	domainId, _ = strconv.Atoi(c.Params.Domain)
 
+	if source := sourceFromRequest(r); source == "media" {
+		downloadMediaFile(c, w, r)
+		return
+	}
+
 	if file, backend, c.Err = c.Ctrl.GetFileWithProfile(&c.Session, int64(domainId), int64(id)); c.Err != nil {
 		return
 	}
@@ -178,4 +188,9 @@ func checkCallRecordPermission(c *Context, r *http.Request) (bool, engine.AppErr
 
 	return true, nil
 
+}
+
+func sourceFromRequest(r *http.Request) string {
+	q := r.URL.Query()
+	return q.Get("source")
 }
