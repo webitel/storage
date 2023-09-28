@@ -1,6 +1,8 @@
 package model
 
 var versions = []string{
+	"23.09",
+	"23.07",
 	"23.05",
 	"23.02",
 	"22.12",

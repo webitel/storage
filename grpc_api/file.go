@@ -211,6 +211,7 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 		Url:  publicUrl,
 		Size: fileRequest.Size,
 		Mime: fileRequest.MimeType,
+		// TODO ADD Server
 	}, nil
 }
 
