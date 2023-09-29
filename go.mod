@@ -13,14 +13,16 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.9
+	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/nicksnyder/go-i18n v1.10.1
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20230928092855-6cbbb53daa57
-	github.com/webitel/protos/engine v0.0.0-20230919101002-a30f21070914
+	github.com/webitel/engine v0.0.0-20230929132314-e8f08f52c140
+	github.com/webitel/protos/engine v0.0.0-20230929083624-34e29d2feb6a
 	github.com/webitel/protos/storage v0.0.0-20230919101002-a30f21070914
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
+	golang.org/x/image v0.12.0
 	golang.org/x/sync v0.3.0
 	google.golang.org/api v0.126.0
 	google.golang.org/genproto v0.0.0-20230731193218-e0aa005b6bdf
@@ -45,7 +47,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.11.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.2 // indirect
-	github.com/hashicorp/consul/api v1.23.0 // indirect
+	github.com/hashicorp/consul/api v1.25.1 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -67,7 +69,7 @@ require (
 	golang.org/x/net v0.13.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230731193218-e0aa005b6bdf // indirect
