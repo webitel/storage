@@ -1,10 +1,13 @@
 package apis
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+
+	// so we use this beta one
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
@@ -267,6 +270,44 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	case "file":
 		fileId, _ := strconv.Atoi(uuid)
 		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
+	case "barcode":
+		var width, height int
+		text := q.Get("text")
+		altText := q.Get("alttext")
+		wT := q.Get("w")
+		hT := q.Get("h")
+		if text == "" {
+			return
+		}
+		var buf *bytes.Buffer
+
+		if wT != "" {
+			width, _ = strconv.Atoi(wT)
+		}
+		if hT != "" {
+			height, _ = strconv.Atoi(hT)
+		}
+
+		if width == 0 {
+			width = 350
+		}
+
+		if height == 0 {
+			height = 150
+		}
+
+		if c.Err, buf = c.App.Barcode(text, altText, width, height); c.Err != nil {
+			return
+		}
+
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", model.EncodeURIComponent("code.png")))
+		io.Copy(w, buf)
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(buf.Bytes())))
+		//w.WriteHeader(200)
+
+		return
+
 	default:
 		file, backend, c.Err = c.App.GetFileByUuidWithProfile(int64(domainId), uuid)
 	}
