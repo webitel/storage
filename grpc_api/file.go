@@ -96,7 +96,14 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 
 	var err engine.AppError
 	var publicUrl string
-	if err = api.ctrl.UploadFileStream(pipeReader, &fileRequest); err != nil {
+
+	if metadata.Metadata.ProfileId != 0 {
+		err = api.ctrl.UploadFileStreamToProfile(pipeReader, int(metadata.Metadata.ProfileId), &fileRequest)
+	} else {
+		err = api.ctrl.UploadFileStream(pipeReader, &fileRequest)
+	}
+
+	if err != nil {
 		return err
 	}
 

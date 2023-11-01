@@ -110,6 +110,11 @@ const (
 	DONyc3 DORegion = "nyc3"
 )
 
+type FileBackendProfileSync struct {
+	UpdatedAt int64 `json:"updated_at" db:"updated_at"`
+	Disabled  bool  `json:"disabled" db:"disabled"`
+}
+
 type FileBackendProfilePath struct {
 	Name        *string          `json:"name"`
 	ExpireDay   *int             `json:"expire_day"`

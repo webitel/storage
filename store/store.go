@@ -83,8 +83,7 @@ type FileBackendProfileStore interface {
 	GetById(id int) (*model.FileBackendProfile, engine.AppError)
 	Update(profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError)
 	Delete(domainId, id int64) engine.AppError
-
-	GetAllPageByDomain(domain string, limit, offset int) StoreChannel
+	GetSyncTime(domainId int64, id int) (*model.FileBackendProfileSync, engine.AppError)
 }
 
 type FileStore interface {

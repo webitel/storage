@@ -233,18 +233,19 @@ from storage.file_backend_profiles p
 	return profile, nil
 }
 
-func (s SqlFileBackendProfileStore) GetAllPageByDomain(domain string, offset, limit int) store.StoreChannel {
-	return store.Do(func(result *store.StoreResult) {
-		var profiles []*model.FileBackendProfile
+func (s SqlFileBackendProfileStore) GetSyncTime(domainId int64, id int) (*model.FileBackendProfileSync, engine.AppError) {
+	var sync *model.FileBackendProfileSync
 
-		query := `SELECT * FROM storage.file_backend_profiles 
-			WHERE domain = :Domain  
-			LIMIT :Limit OFFSET :Offset`
-
-		if _, err := s.GetReplica().Select(&profiles, query, map[string]interface{}{"Domain": domain, "Offset": offset, "Limit": limit}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_file_backend_profile.get_all.finding.app_error", err.Error())
-		} else {
-			result.Data = profiles
-		}
+	err := s.GetReplica().SelectOne(&sync, `select p.updated_at, p.disabled
+from storage.file_backend_profiles p
+where p.domain_id = :DomainId and p.id = :Id`, map[string]interface{}{
+		"DomainId": domainId,
+		"Id":       id,
 	})
+
+	if err != nil {
+		return nil, engine.NewCustomCodeError("store.sql_file_backend_profile.sync_tyme.app_error", fmt.Sprintf("id=%d, %s", id, err.Error()), extractCodeFromErr(err))
+	}
+
+	return sync, nil
 }

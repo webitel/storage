@@ -38,6 +38,19 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppE
 		// error
 	}
 
+	return app.syncUpload(app.DefaultFileStore, src, file)
+}
+
+func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) engine.AppError {
+	store, err := app.GetFileBackendStoreById(file.DomainId, profileId)
+	if err != nil {
+		return err
+	}
+
+	return app.syncUpload(store, src, file)
+}
+
+func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile) engine.AppError {
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
@@ -52,7 +65,7 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppE
 		},
 	}
 
-	size, err := app.DefaultFileStore.Write(src, f)
+	size, err := store.Write(src, f)
 	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
 		return err
 	}
@@ -67,10 +80,6 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppE
 		file.Id = res.Data.(int64)
 	}
 
-	wlog.Debug(fmt.Sprintf("store %s to %s %d bytes", file.GetStoreName(), app.DefaultFileStore.Name(), file.Size))
-	return nil
-}
-
-func (app *App) RemoveUploadJob(id int) engine.AppError {
+	wlog.Debug(fmt.Sprintf("store %s to %s %d bytes", file.GetStoreName(), store.Name(), file.Size))
 	return nil
 }

@@ -1,11 +1,18 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
+	"golang.org/x/sync/singleflight"
+)
+
+var (
+	backendStoreGroup singleflight.Group
 )
 
 func (app *App) FileBackendProfileCheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
@@ -91,14 +98,6 @@ func (app *App) GetFileBackendProfileById(id int) (*model.FileBackendProfile, en
 	return app.Store.FileBackendProfile().GetById(id)
 }
 
-func (app *App) ListFileBackendProfiles(domain string, page, perPage int) ([]*model.FileBackendProfile, engine.AppError) {
-	if result := <-app.Store.FileBackendProfile().GetAllPageByDomain(domain, page*perPage, perPage); result.Err != nil {
-		return nil, result.Err
-	} else {
-		return result.Data.([]*model.FileBackendProfile), nil
-	}
-}
-
 func (app *App) PathFileBackendProfile(profile *model.FileBackendProfile, path *model.FileBackendProfilePath) (*model.FileBackendProfile, engine.AppError) {
 	profile.Path(path)
 	profile, err := app.UpdateFileBackendProfile(profile)
@@ -108,16 +107,31 @@ func (app *App) PathFileBackendProfile(profile *model.FileBackendProfile, path *
 	return profile, nil
 }
 
+func (app *App) GetFileBackendStoreById(domainId int64, id int) (store utils.FileBackend, appError engine.AppError) {
+	sync, err := app.Store.FileBackendProfile().GetSyncTime(domainId, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if sync.Disabled {
+		return nil, engine.NewBadRequestError("app.backend_profile.valid.disabled", "profile is disabled")
+	}
+
+	return app.GetFileBackendStore(&id, &sync.UpdatedAt)
+}
+
 func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileBackend, appError engine.AppError) {
 	var ok bool
 	var cache interface{}
+	var shared bool
+	var err error
 
 	if id == nil && app.UseDefaultStore() {
 		return app.DefaultFileStore, nil
 	}
 
 	if id == nil || syncTime == nil {
-		return nil, engine.NewInternalError("", "")
+		return nil, engine.NewInternalError("app.backend_profile.get_backend", "id or syncTime isnull")
 	}
 
 	cache, ok = app.fileBackendCache.Get(*id)
@@ -128,21 +142,30 @@ func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileB
 		}
 	}
 
-	if store == nil {
-		var profile *model.FileBackendProfile
-		profile, appError = app.GetFileBackendProfileById(*id)
-		if appError != nil {
-			return
+	cache, err, shared = backendStoreGroup.Do(fmt.Sprintf("backendStore-%v-%v", id, syncTime), func() (interface{}, error) {
+		profile, err := app.GetFileBackendProfileById(*id)
+		if err != nil {
+			return nil, err
 		}
-		store, appError = utils.NewBackendStore(profile)
+		return utils.NewBackendStore(profile)
+	})
+
+	if err != nil {
+		switch err.(type) {
+		case engine.AppError:
+			return nil, err.(engine.AppError)
+		default:
+			return nil, engine.NewInternalError("app.backend_profile.get_backend", err.Error())
+		}
 	}
 
-	if appError != nil {
-		return
+	store = cache.(utils.FileBackend)
+
+	if !shared {
+		app.fileBackendCache.Add(*id, store)
+		wlog.Info("Added to cache", wlog.String("name", store.Name()))
 	}
 
-	app.fileBackendCache.Add(*id, store)
-	wlog.Info("Added to cache", wlog.String("name", store.Name()))
 	return store, nil
 }
 
