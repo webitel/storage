@@ -3,6 +3,7 @@ package grpc_api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -99,6 +100,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	var publicUrl string
 
 	if metadata.Metadata.ProfileId != 0 {
+		fileRequest.Name = fmt.Sprintf("%s_%s", model.NewId()[0:7], fileRequest.Name)
 		err = api.ctrl.UploadFileStreamToProfile(pipeReader, int(metadata.Metadata.ProfileId), &fileRequest)
 	} else {
 		err = api.ctrl.UploadFileStream(pipeReader, &fileRequest)
