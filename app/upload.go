@@ -38,7 +38,7 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppE
 		// error
 	}
 
-	return app.syncUpload(app.DefaultFileStore, src, file)
+	return app.syncUpload(app.DefaultFileStore, src, file, nil)
 }
 
 func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) engine.AppError {
@@ -47,10 +47,10 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 		return err
 	}
 
-	return app.syncUpload(store, src, file)
+	return app.syncUpload(store, src, file, &profileId)
 }
 
-func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile) engine.AppError {
+func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) engine.AppError {
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
@@ -63,6 +63,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			Properties: model.StringInterface{},
 			Instance:   app.GetInstanceId(),
 		},
+		ProfileId: profileId,
 	}
 
 	size, err := store.Write(src, f)
