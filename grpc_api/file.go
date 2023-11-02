@@ -68,6 +68,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 
 	fileRequest.MimeType = metadata.Metadata.MimeType
 	fileRequest.Uuid = metadata.Metadata.Uuid
+	fileRequest.ViewName = &metadata.Metadata.Name
 
 	pipeReader, pipeWriter := io.Pipe()
 
