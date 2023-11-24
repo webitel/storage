@@ -60,9 +60,12 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.App
 	defer fw.Close()
 	written, err := io.Copy(fw, src)
 	if err != nil {
-		if err == ErrorMaxLimit {
-			os.Remove(allPath)
+		os.Remove(allPath)
+		switch err {
+		case ErrorMaxLimit:
 			return 0, engine.NewBadRequestError(ErrMaxLimitId, err.Error())
+		case ErrorExtUnknown, ErrorExtSuspicious, ErrorExtNotAllowed:
+			return 0, engine.NewBadRequestError("utils.file.locally.writing.security_error", err.Error())
 		}
 		return written, engine.NewInternalError("utils.file.locally.writing.app_error", err.Error())
 	}
