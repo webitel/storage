@@ -43,7 +43,7 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.App
 	var err error
 
 	_, err = os.Stat(allPath)
-	if !os.IsNotExist(err) {
+	if err != nil && !os.IsNotExist(err) {
 		file.SetPropertyString("directory", directory)
 		return 0, engine.NewBadRequestError(ErrFileWriteExistsId, "root="+root+" name="+file.GetStoreName())
 	}
