@@ -2,6 +2,11 @@ module github.com/webitel/storage
 
 go 1.19
 
+
+replace (
+	github.com/webitel/protos/storage v0.0.0-20231101132502-15455cfe862e => /home/dtsnko/my_files/projects/protos/storage
+)
+
 require (
 	cloud.google.com/go/speech v1.19.0
 	cloud.google.com/go/storage v1.30.1

@@ -28,7 +28,10 @@ func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int,
 }
 
 func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, engine.AppError) {
-	return c.app.GeneratePreSignetResourceSignature(resource, action, id, domainId)
+	return c.app.GeneratePreSignedResourceSignature(resource, action, id, domainId)
+}
+func (c *Controller) GeneratePreSignedResourceSignatureBulk(id int64, domainId int64, resource string, action string, source string, queryParams map[string]string) (string, engine.AppError) {
+	return c.app.GeneratePreSignedResourceSignatureBulk(id, domainId, resource, action, source, queryParams)
 }
 
 func (c *Controller) InsecureGetFileWithProfile(domainId, id int64) (*model.File, utils.FileBackend, engine.AppError) {

@@ -270,6 +270,9 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	case "file":
 		fileId, _ := strconv.Atoi(uuid)
 		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
+	case "tts":
+		tts(c, w, r)
+		return
 	case "barcode":
 		var width, height int
 		text := q.Get("text")

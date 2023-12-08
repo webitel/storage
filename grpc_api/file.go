@@ -123,6 +123,14 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	})
 }
 
+func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileLinkRequest) (*storage.GenerateFileLinkResponse, error) {
+	uri, err := api.ctrl.GeneratePreSignedResourceSignatureBulk(in.GetFileId(), in.GetDomainId(), model.AnyFileRouteName, in.GetAction(), in.GetSource(), in.GetQuery())
+	if err != nil {
+		return nil, err
+	}
+	return &storage.GenerateFileLinkResponse{Url: uri}, nil
+}
+
 func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.FileService_DownloadFileServer) error {
 	var sFile io.ReadCloser
 	var err error
