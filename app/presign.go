@@ -65,6 +65,6 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 	existingParams.Add("signature", signature)
 	uri.RawQuery = existingParams.Encode()
 
-	return uri.RawQuery, nil
+	return uri.String(), nil
 
 }
