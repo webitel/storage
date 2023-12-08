@@ -36,7 +36,10 @@ func (a *App) GeneratePreSignedResourceSignature(resource, action string, id int
 }
 
 func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resource, action, source string, queryParams map[string]string) (string, engine.AppError) {
-	var expire int64
+	var (
+		expire int64
+		base   string
+	)
 	if v, ok := queryParams["expire"]; ok {
 		val, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
@@ -46,8 +49,15 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 	} else {
 		expire = model.GetMillis() + a.Config().PreSignedTimeout
 	}
-	base := fmt.Sprintf("%s/%d/%s?source=%s&domain_id=%d&expires=%d", resource, id, action, source, domainId,
-		expire)
+
+	if id == 0 {
+		base = fmt.Sprintf("%s/%s?source=%s&domain_id=%d&expires=%d", resource, action, source, domainId,
+			expire)
+
+	} else {
+		base = fmt.Sprintf("%s/%d/%s?source=%s&domain_id=%d&expires=%d", resource, id, action, source, domainId,
+			expire)
+	}
 	uri, err := url.Parse(base)
 	if err != nil {
 		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse.error", err.Error())
@@ -57,14 +67,13 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 		existingParams.Add(key, val)
 	}
 	uri.RawQuery = existingParams.Encode()
-
-	signature, appErr := a.GenerateSignature([]byte(uri.RawQuery))
+	signature, appErr := a.GenerateSignature([]byte(uri.String()))
 	if appErr != nil {
 		return "", appErr
 	}
-	existingParams.Add("signature", signature)
-	uri.RawQuery = existingParams.Encode()
-
-	return uri.String(), nil
+	//existingParams.Add("signature", signature)
+	//uri.RawQuery = existingParams.Encode()
+	//fmt.Println(uri.String())
+	return uri.String() + "&signature=" + signature, nil
 
 }

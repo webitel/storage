@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	// so we use this beta one
 
@@ -242,17 +243,8 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 
 	q := r.URL.Query()
 	uuid := q.Get("uuid")
-	if uuid == "" {
-		c.SetInvalidUrlParam("uuid")
-		return
-	}
 
-	key := fmt.Sprintf("%s/download?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
-
-	if !c.App.ValidateSignature(key, c.Params.Signature) {
-		c.SetSessionErrSignature()
-		return
-	}
+	//key := fmt.Sprintf("%s/download?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
 
 	var file utils.File
 	var backend utils.FileBackend
@@ -260,14 +252,34 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	var reader io.ReadCloser
 	source := q.Get("source")
 
+	// region VALIDATION
+	key := r.URL
+	existingParams := key.Query()
+	existingParams.Del("signature")
+	key.RawQuery = existingParams.Encode()
+	// dynamic parameters validation
+	_, after, _ := strings.Cut(key.String(), model.AnyFileRouteName)
+	if !c.App.ValidateSignature(model.AnyFileRouteName+after, c.Params.Signature) {
+		c.SetSessionErrSignature()
+		return
+	}
+	// endregion
 	domainId, _ = strconv.Atoi(c.Params.Domain)
 
 	switch source {
 	case "media":
+		if uuid == "" {
+			c.SetInvalidUrlParam("uuid")
+			return
+		}
 		backend = c.App.MediaFileStore
 		mediaId, _ := strconv.Atoi(uuid)
 		file, c.Err = c.App.GetMediaFile(int64(domainId), mediaId)
 	case "file":
+		if uuid == "" {
+			c.SetInvalidUrlParam("uuid")
+			return
+		}
 		fileId, _ := strconv.Atoi(uuid)
 		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
 	case "tts":
@@ -312,6 +324,10 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 		return
 
 	default:
+		if uuid == "" {
+			c.SetInvalidUrlParam("uuid")
+			return
+		}
 		file, backend, c.Err = c.App.GetFileByUuidWithProfile(int64(domainId), uuid)
 	}
 
