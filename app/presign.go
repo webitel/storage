@@ -40,12 +40,13 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 		expire int64
 		base   string
 	)
-	if v, ok := queryParams["expire"]; ok {
+	if v, ok := queryParams["expires"]; ok {
 		val, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
 			return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse_expire.error", err.Error())
 		}
 		expire = val
+		delete(queryParams, "expires")
 	} else {
 		expire = model.GetMillis() + a.Config().PreSignedTimeout
 	}
