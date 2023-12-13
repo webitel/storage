@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 
 	// so we use this beta one
 
@@ -35,12 +37,14 @@ func streamAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := fmt.Sprintf("%s/%s/stream?domain_id=%s&expires=%d", model.AnyFileRouteName, c.Params.Id, c.Params.Domain, c.Params.Expires)
-
-	if !c.App.ValidateSignature(key, c.Params.Signature) {
+	// region VALIDATION
+	validationString := createValidationKey(*r.URL)
+	// dynamic parameters validation
+	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
 		c.SetSessionErrSignature()
 		return
 	}
+	// endregion
 
 	var file *model.File
 	var backend utils.FileBackend
@@ -95,7 +99,7 @@ func streamAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	io.CopyN(w, reader, sendSize)
 }
 
-func downloadAnyFile(c *Context, w http.ResponseWriter, _ *http.Request) {
+func downloadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 	c.RequireDomain()
 	c.RequireExpire()
@@ -109,13 +113,14 @@ func downloadAnyFile(c *Context, w http.ResponseWriter, _ *http.Request) {
 		c.SetSessionExpire()
 		return
 	}
-
-	key := fmt.Sprintf("%s/%s/download?domain_id=%s&expires=%d", model.AnyFileRouteName, c.Params.Id, c.Params.Domain, c.Params.Expires)
-
-	if !c.App.ValidateSignature(key, c.Params.Signature) {
+	// region VALIDATION
+	validationString := createValidationKey(*r.URL)
+	// dynamic parameters validation
+	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
 		c.SetSessionErrSignature()
 		return
 	}
+	// endregion
 
 	var file *model.File
 	var backend utils.FileBackend
@@ -172,12 +177,16 @@ func streamAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	key := fmt.Sprintf("%s/stream?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
+	//key := fmt.Sprintf("%s/stream?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
 
-	if !c.App.ValidateSignature(key, c.Params.Signature) {
+	// region VALIDATION
+	validationString := createValidationKey(*r.URL)
+	// dynamic parameters validation
+	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
 		c.SetSessionErrSignature()
 		return
 	}
+	// endregion
 
 	var file *model.File
 	var backend utils.FileBackend
@@ -226,6 +235,18 @@ func streamAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 	io.CopyN(w, reader, sendSize)
 }
 
+func createValidationKey(key url.URL) string {
+	existingParams := key.Query()
+	existingParams.Del("signature")
+	key.RawQuery = existingParams.Encode()
+	// dynamic parameters validation
+	before, after, found := strings.Cut(key.String(), model.AnyFileRouteName)
+	if !found {
+		return before
+	}
+	return after
+}
+
 func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireDomain()
 	c.RequireExpire()
@@ -234,7 +255,6 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	if c.Err != nil {
 		return
 	}
-
 	if c.Params.Expires < model.GetMillis() {
 		c.SetSessionExpire()
 		return
@@ -242,17 +262,8 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 
 	q := r.URL.Query()
 	uuid := q.Get("uuid")
-	if uuid == "" {
-		c.SetInvalidUrlParam("uuid")
-		return
-	}
 
-	key := fmt.Sprintf("%s/download?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
-
-	if !c.App.ValidateSignature(key, c.Params.Signature) {
-		c.SetSessionErrSignature()
-		return
-	}
+	//key := fmt.Sprintf("%s/download?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
 
 	var file utils.File
 	var backend utils.FileBackend
@@ -260,16 +271,35 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	var reader io.ReadCloser
 	source := q.Get("source")
 
+	// region VALIDATION
+	validationString := createValidationKey(*r.URL)
+	// dynamic parameters validation
+	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
+		c.SetSessionErrSignature()
+		return
+	}
+	// endregion
 	domainId, _ = strconv.Atoi(c.Params.Domain)
 
 	switch source {
 	case "media":
+		if uuid == "" {
+			c.SetInvalidUrlParam("uuid")
+			return
+		}
 		backend = c.App.MediaFileStore
 		mediaId, _ := strconv.Atoi(uuid)
 		file, c.Err = c.App.GetMediaFile(int64(domainId), mediaId)
 	case "file":
+		if uuid == "" {
+			c.SetInvalidUrlParam("uuid")
+			return
+		}
 		fileId, _ := strconv.Atoi(uuid)
 		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
+	case "tts":
+		tts(c, w, r)
+		return
 	case "barcode":
 		var width, height int
 		text := q.Get("text")
@@ -309,6 +339,10 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 		return
 
 	default:
+		if uuid == "" {
+			c.SetInvalidUrlParam("uuid")
+			return
+		}
 		file, backend, c.Err = c.App.GetFileByUuidWithProfile(int64(domainId), uuid)
 	}
 

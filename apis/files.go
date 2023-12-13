@@ -100,7 +100,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			}
-			sig, _ := c.App.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
+			sig, _ := c.App.GeneratePreSignedResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
 
 			files = append(files, &fileResponse{
 				Id:        file.Id,
@@ -128,7 +128,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		sig, _ := c.App.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
+		sig, _ := c.App.GeneratePreSignedResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
 		files = append(files, &fileResponse{
 			Id:        file.Id,
 			Name:      file.GetViewName(),
