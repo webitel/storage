@@ -51,9 +51,6 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 		expire = model.GetMillis() + a.Config().PreSignedTimeout
 	}
 
-	if _, ok := queryParams["source"]; ok {
-		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_source.error", "arguments conflict")
-	}
 	if _, ok := queryParams["domain_id"]; ok {
 		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_domain.error", "arguments conflict")
 	}
@@ -64,12 +61,20 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_resource.error", "arguments conflict")
 	}
 
-	if id == 0 {
-		base = fmt.Sprintf("%s/%s?source=%s&domain_id=%d&expires=%d", resource, action, source, domainId,
-			expire)
+	if source != "" {
+		if _, ok := queryParams["source"]; ok {
+			return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_source.error", "arguments conflict")
+		}
+		if id == 0 {
+			base = fmt.Sprintf("%s/%s?source=%s&domain_id=%d&expires=%d", resource, action, source, domainId,
+				expire)
+		} else {
+			base = fmt.Sprintf("%s/%s?uuid=%d&source=%s&domain_id=%d&expires=%d", resource, action, id, source, domainId,
+				expire)
+		}
 
 	} else {
-		base = fmt.Sprintf("%s/%d/%s?source=%s&domain_id=%d&expires=%d", resource, id, action, source, domainId,
+		base = fmt.Sprintf("%s/%d/%s?&domain_id=%d&expires=%d", resource, id, action, domainId,
 			expire)
 	}
 	uri, err := url.Parse(base)
