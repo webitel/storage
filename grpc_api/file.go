@@ -51,12 +51,6 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		return gErr
 	}
 
-	defer func() {
-		if gErr != nil && gErr != io.EOF {
-			wlog.Error(gErr.Error())
-		}
-	}()
-
 	metadata, ok := res.Data.(*storage.UploadFileRequest_Metadata_)
 	if !ok {
 		gErr = errors.New("bad metadata")
@@ -92,7 +86,12 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 			writer.Write(chunk.Chunk)
 		}
 
-		writer.Close()
+		if gErr != nil && gErr != io.EOF {
+			wlog.Error(gErr.Error())
+			writer.CloseWithError(gErr)
+		} else {
+			writer.Close()
+		}
 
 	}(pipeWriter)
 
