@@ -20,6 +20,10 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 		return nil, nil, err
 	}
 
+	if req.Language == "" {
+		req.Language = req.Locale
+	}
+
 	data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
 	%s
 	<voice xml:lang='%s' xml:gender='%s' name='%s'>

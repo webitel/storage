@@ -17,6 +17,7 @@ type TTSParams struct {
 	Token       string          `json:"token"`
 	KeyLocation string          `json:"key_location"`
 	Region      string          `json:"region"`
+	Locale      string          `json:"locale"`
 
 	Format         string `json:"-"`
 	Voice          string `json:"-"`

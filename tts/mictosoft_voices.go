@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-//https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=speechtotext#voice-styles-and-roles
+// https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/language-support?tabs=speechtotext#voice-styles-and-roles
 const listVoices = `{
     "af-ZA": {
         "Female": [
@@ -1101,6 +1101,9 @@ func init() {
 }
 
 func microsoftLocalesNameMapping(locale, gender string) string {
+	if gender == "" {
+		gender = "Male"
+	}
 	if l, ok := parsedListVoice[locale]; ok {
 		if v, ok := l[gender]; ok && len(v) > 0 {
 			return v[0]
