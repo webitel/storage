@@ -115,7 +115,7 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 		return nil, engine.NewInternalError("app.stt.transcript.valid", "Bad client interface")
 	}
 
-	fileUri, err = app.GeneratePreSignedResourceSignature(model.AnyFileRouteName, "download", fileId, p.DomainId)
+	fileUri, err = app.GeneratePreSignedResourceSignatureBulk(fileId, p.DomainId, model.AnyFileRouteName, "download", "", nil)
 	if err != nil {
 		return nil, err
 	}

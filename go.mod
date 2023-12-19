@@ -2,6 +2,8 @@ module github.com/webitel/storage
 
 go 1.19
 
+replace github.com/webitel/protos/storage v0.0.0-20231218162753-829dc844e6db => /home/dtsnko/my_files/projects/protos/storage
+
 require (
 	cloud.google.com/go/speech v1.19.0
 	cloud.google.com/go/storage v1.30.1
@@ -21,7 +23,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine v0.0.0-20230929132314-e8f08f52c140
 	github.com/webitel/protos/engine v0.0.0-20230929083624-34e29d2feb6a
-	github.com/webitel/protos/storage v0.0.0-20231211104102-3f200d64d055
+	github.com/webitel/protos/storage v0.0.0-20231219144336-af0e727d5b1e
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	golang.org/x/image v0.12.0
 	golang.org/x/sync v0.3.0
@@ -61,6 +63,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/webitel/protos v1.0.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect

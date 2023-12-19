@@ -2,21 +2,26 @@ package grpc_api
 
 import (
 	"context"
-
+	"fmt"
+	engine "github.com/webitel/engine/model"
+	protoengine "github.com/webitel/protos/engine"
 	"github.com/webitel/storage/model"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/webitel/protos/storage"
 	"github.com/webitel/storage/controller"
 )
 
 type fileTranscript struct {
-	ctrl *controller.Controller
+	ctrl            *controller.Controller
+	getProfileGroup singleflight.Group
 	storage.UnsafeFileTranscriptServiceServer
 }
 
 func NewFileTranscriptApi(c *controller.Controller) *fileTranscript {
 	return &fileTranscript{
-		ctrl: c,
+		ctrl:            c,
+		getProfileGroup: singleflight.Group{},
 	}
 }
 
@@ -108,5 +113,47 @@ func (api *fileTranscript) DeleteFileTranscript(ctx context.Context, in *storage
 
 	return &storage.DeleteFileTranscriptResponse{
 		Items: ids,
+	}, nil
+}
+
+func (api *fileTranscript) FileTranscriptSafe(ctx context.Context, in *storage.FileTranscriptSafeRequest) (*storage.FileTranscriptSafeResponse, error) {
+	ops := &model.TranscriptOptions{
+		FileIds: []int64{in.GetFileId()},
+	}
+
+	if in.GetLocale() != "" {
+		ops.Locale = &in.Locale
+	}
+
+	if in.GetProfileId() > 0 {
+		ops.ProfileId = model.NewInt(int(in.GetProfileId()))
+	}
+	value, err, _ := api.getProfileGroup.Do(fmt.Sprintf("%d-%d", in.GetDomainId(), ops.ProfileId), func() (interface{}, error) {
+		return api.ctrl.GetProfileWithoutAuth(in.GetDomainId(), int64(*ops.ProfileId))
+	})
+
+	profile := value.(*model.CognitiveProfile)
+	if !profile.Enabled {
+		return nil, engine.NewBadRequestError("grpc_api.file_transcript.create_file_transcript_safe.profile_disabled.error", fmt.Sprintf("profile id=%d is disabled", ops.ProfileId))
+	}
+	syncTime := profile.UpdatedAt.Unix()
+	ops.ProfileSyncTime = &syncTime
+	t, err := api.ctrl.TranscriptFilesSafe(in.FileId, ops)
+	if err != nil {
+		return nil, err
+	}
+	return &storage.FileTranscriptSafeResponse{
+		Id: t.Id,
+		File: &protoengine.Lookup{
+			Id:   int64(t.File.Id),
+			Name: t.File.Name,
+		},
+		Profile: &protoengine.Lookup{
+			Id:   int64(t.Profile.Id),
+			Name: t.Profile.Name,
+		},
+		Transcript: t.Transcript,
+		CreatedAt:  t.CreatedAt.Unix(),
+		Locale:     t.Locale,
 	}, nil
 }

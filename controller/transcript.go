@@ -19,6 +19,14 @@ func (c *Controller) TranscriptFiles(session *auth_manager.Session, ops *model.T
 	return c.app.CreateTranscriptFilesJob(session.Domain(0), ops)
 }
 
+func (c *Controller) TranscriptFilesSafe(fileId int64, ops *model.TranscriptOptions) (*model.FileTranscript, engine.AppError) {
+	return c.app.TranscriptFile(fileId, *ops)
+}
+
+func (c *Controller) GetProfileWithoutAuth(domainId int64, profileId int64) (*model.CognitiveProfile, engine.AppError) {
+	return c.app.Store.CognitiveProfile().Get(profileId, domainId)
+}
+
 func (c *Controller) TranscriptFilePhrases(session *auth_manager.Session, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, bool, engine.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
 	if !permission.CanRead() {
