@@ -81,7 +81,7 @@ func (self *S3FileBackend) TestConnection() engine.AppError {
 	return nil
 }
 
-func (self *S3FileBackend) Write(src io.Reader, file File) (int64, engine.AppError) {
+func (self *S3FileBackend) Write(src io.Reader, file File, encryptedKey *string) (int64, engine.AppError) {
 	directory := self.GetStoreDirectory(file.Domain())
 	location := path.Join(directory, file.GetStoreName())
 

@@ -63,6 +63,10 @@ func (self MediaFile) GetStoreName() string {
 	return self.Name
 }
 
+func (self MediaFile) EncryptedKey() *string {
+	return nil
+}
+
 func (self *MediaFile) ToJson() string {
 	b, _ := json.Marshal(self)
 	return string(b)

@@ -12,7 +12,8 @@ func (api *API) InitFile() {
 	api.Routes.Files.Handle("", api.ApiHandler(putRecordCallFile)).Methods("POST")
 }
 
-//  /sys/records?
+//	/sys/records?
+//
 // domain=10.10.10.144
 // &id=65d252ab-3f9d-4293-b680-0728bb566acc
 // &type=mp3

@@ -36,11 +36,13 @@ func (self *LocalFileBackend) TestConnection() engine.AppError {
 	return nil
 }
 
-func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.AppError) {
+func (self *LocalFileBackend) Write(src io.Reader, file File, encryptedKey *string) (int64, engine.AppError) {
 	directory := self.GetStoreDirectory(file.Domain())
 	root := path.Join(self.directory, directory)
 	allPath := path.Join(root, file.GetStoreName())
 	var err error
+	var written int64
+	var fw *os.File
 
 	_, err = os.Stat(allPath)
 	if !os.IsNotExist(err) {
@@ -52,13 +54,22 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.App
 		return 0, engine.NewInternalError("utils.file.locally.create_dir.app_error", "root="+root+", err="+err.Error())
 	}
 
-	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fw, err = os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return 0, engine.NewInternalError("utils.file.locally.writing.app_error", err.Error())
 	}
 
 	defer fw.Close()
-	written, err := io.Copy(fw, src)
+
+	var w io.Writer = fw
+	if encryptedKey != nil {
+		w, err = EncryptedWriter(*encryptedKey, fw)
+		if err != nil {
+			return 0, engine.NewInternalError("utils.file.locally.encrypted.app_error", err.Error())
+		}
+	}
+
+	written, err = io.Copy(w, src)
 	if err != nil {
 		if err == ErrorMaxLimit {
 			os.Remove(allPath)

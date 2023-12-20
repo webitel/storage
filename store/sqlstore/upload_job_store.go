@@ -22,8 +22,8 @@ func (self *SqlUploadJobStore) CreateIndexesIfNotExists() {
 func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, engine.AppError) {
 	job.PreSave()
 	id, err := self.GetMaster().SelectInt(`insert into storage.upload_file_jobs (name, uuid, mime_type, size, instance,
-                                      created_at, updated_at, domain_id, view_name)
-values (:Name, :Uuid, :Mime, :Size, :Instance, :CreatedAt, :UpdatedAt, :DomainId, :VName)
+                                      created_at, updated_at, domain_id, view_name, props)
+values (:Name, :Uuid, :Mime, :Size, :Instance, :CreatedAt, :UpdatedAt, :DomainId, :VName, :Props)
 returning id
 `, map[string]interface{}{
 		"Name":      job.Name,
@@ -35,6 +35,7 @@ returning id
 		"UpdatedAt": job.UpdatedAt,
 		"DomainId":  job.DomainId,
 		"VName":     job.ViewName,
+		"Props":     job.Props(),
 	})
 
 	if err != nil {
@@ -90,7 +91,8 @@ from (
          t.email_msg,
          t.email_sub,
          profile.id as profile_id,
-         profile.updated_at profile_updated_at
+         profile.updated_at profile_updated_at,
+		 coalesce((t.props->>'encrypted')::bool, false) encrypted
        FROM storage.upload_file_jobs as t
          left join lateral (              select
                                              tmp.domain_id,

@@ -20,7 +20,7 @@ func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model
 		return nil, err
 	}
 
-	size, err = app.MediaFileStore.Write(src, mediaFile)
+	size, err = app.MediaFileStore.Write(src, mediaFile, nil)
 	if err != nil {
 		return nil, err
 	}

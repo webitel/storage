@@ -110,8 +110,14 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Ranges", "bytes")
 	w.Header().Set("Content-Type", file.MimeType)
 
+	var src io.Reader = reader
+	enc := c.App.Config().EncryptedRecordKey
+	if enc != nil && file.GetPropertyString("encrypted") == "true" {
+		src, err = utils.EncryptedReader(*enc, reader)
+	}
+
 	w.WriteHeader(code)
-	io.CopyN(w, reader, sendSize)
+	io.CopyN(w, src, sendSize)
 }
 
 func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -161,8 +167,14 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", file.MimeType)
 	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 
+	var src io.Reader = reader
+	enc := c.App.Config().EncryptedRecordKey
+	if enc != nil && file.GetPropertyString("encrypted") == "true" {
+		src, err = utils.EncryptedReader(*enc, reader)
+	}
+
 	w.WriteHeader(code)
-	io.Copy(w, reader)
+	io.Copy(w, src)
 }
 
 func checkCallRecordPermission(c *Context, r *http.Request) (bool, engine.AppError) {

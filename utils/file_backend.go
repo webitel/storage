@@ -17,12 +17,15 @@ const (
 
 var regCompileMask = regexp.MustCompile(`\$DOMAIN|\$Y|\$M|\$D|\$H|\$m`)
 
+type encryptedWriter func(key string, src io.Reader) io.Writer
+
 type BaseFileBackend struct {
 	sync.RWMutex
-	syncTime    int64
-	writeSize   float64
-	expireDay   int
-	maxFileSize float64
+	syncTime        int64
+	writeSize       float64
+	expireDay       int
+	maxFileSize     float64
+	encryptedWriter *encryptedWriter
 }
 
 func (b *BaseFileBackend) GetSyncTime() int64 {
@@ -62,7 +65,7 @@ type FileBackend interface {
 	TestConnection() engine.AppError
 	Reader(file File, offset int64) (io.ReadCloser, engine.AppError)
 	Remove(file File) engine.AppError
-	Write(src io.Reader, file File) (int64, engine.AppError)
+	Write(src io.Reader, file File, encryptedKey *string) (int64, engine.AppError)
 	GetSyncTime() int64
 	GetSize() float64
 	ExpireDay() int

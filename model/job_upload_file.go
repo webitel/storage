@@ -19,6 +19,7 @@ type JobUploadFile struct {
 	CreatedAt int64   `db:"created_at"`
 	UpdatedAt int64   `db:"updated_at"`
 	Attempts  int     `db:"attempts,default:0" json:"attempts"`
+	Encrypted bool    `db:"encrypted"`
 }
 
 type JobUploadFileWithProfile struct {
@@ -54,7 +55,15 @@ func (self *JobUploadFile) GetViewName() string {
 	return self.Name
 }
 
-//TODO
+func (self *JobUploadFile) Props() []byte {
+	if self.Encrypted {
+		return []byte(`{"encrypted":"true"}`)
+	}
+
+	return []byte(`{}`)
+}
+
+// TODO
 func (self *JobUploadFile) GetPropertyString(name string) string {
 	return ""
 }

@@ -12,13 +12,15 @@ import (
 )
 
 func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engine.AppError {
-	size, err := app.FileCache.Write(src, file)
+	enc := app.Config().EncryptedRecordKey
+	size, err := app.FileCache.Write(src, file, enc)
 	if err != nil {
 		return err
 	}
 
 	file.Size = size
 	file.Instance = app.GetInstanceId()
+	file.Encrypted = enc != nil
 
 	file, err = app.Store.UploadJob().Create(file)
 	if err != nil {
@@ -52,7 +54,7 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppE
 		},
 	}
 
-	size, err := app.DefaultFileStore.Write(src, f)
+	size, err := app.DefaultFileStore.Write(src, f, nil)
 	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
 		return err
 	}

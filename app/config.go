@@ -39,7 +39,8 @@ var (
 	proxyUpload = flag.String("proxy_upload", "", "Proxy upload url")
 	publicHost  = flag.String("public_host", "https://dev.webitel.com/", "Public host")
 
-	wbtTTSEndpoint = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
+	wbtTTSEndpoint     = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
+	encryptedRecordKey = flag.String("encrypted_record_key", "", "Encrypted record key")
 )
 
 func loadConfig(fileName string) (*model.Config, engine.AppError) {
@@ -119,6 +120,10 @@ func loadConfig(fileName string) (*model.Config, engine.AppError) {
 
 	if wbtTTSEndpoint != nil && len(*wbtTTSEndpoint) != 0 {
 		tts.SetWbtTTSEndpoint(*wbtTTSEndpoint) // TODO
+	}
+
+	if encryptedRecordKey != nil && len(*encryptedRecordKey) > 5 {
+		cfg.EncryptedRecordKey = model.NewString(*encryptedRecordKey)
 	}
 
 	return cfg, nil

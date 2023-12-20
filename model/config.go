@@ -68,6 +68,7 @@ type Config struct {
 	DefaultFileStore             *DefaultFileStore
 	ServerSettings               ServerSettings
 	ProxyUploadUrl               *string
+	EncryptedRecordKey           *string
 }
 
 type DiscoverySettings struct {
