@@ -2,8 +2,6 @@ module github.com/webitel/storage
 
 go 1.19
 
-replace github.com/webitel/protos/storage v0.0.0-20231218162753-829dc844e6db => /home/dtsnko/my_files/projects/protos/storage
-
 require (
 	cloud.google.com/go/speech v1.19.0
 	cloud.google.com/go/storage v1.30.1
@@ -21,9 +19,9 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20231219131344-033714018987
+	github.com/webitel/engine v0.0.0-20240108120113-5db7b02703f2
 	github.com/webitel/protos/engine v0.0.0-20231219144336-af0e727d5b1e
-	github.com/webitel/protos/storage v0.0.0-20231219144336-af0e727d5b1e
+	github.com/webitel/protos/storage v0.0.0-20240108110510-49609546e1c3
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	golang.org/x/image v0.12.0
 	golang.org/x/sync v0.4.0
