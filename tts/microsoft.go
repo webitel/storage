@@ -12,12 +12,12 @@ import (
 	"github.com/webitel/wlog"
 )
 
-func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
+func Microsoft(req TTSParams) (io.ReadCloser, *string, *int, error) {
 	var request *http.Request
 	var data string
 	token, err := microsoftToken(fixKey(req.Key), req.Region)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	if req.Language == "" {
@@ -34,7 +34,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 
 	request, err = http.NewRequest("POST", fmt.Sprintf("https://%s.tts.speech.microsoft.com/cognitiveservices/v1", req.Region), bytes.NewBuffer([]byte(data)))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	request.Header.Set("Content-Type", "application/ssml+xml")
@@ -48,7 +48,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 
 	result, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	if result.StatusCode != http.StatusOK {
@@ -59,7 +59,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 		if e != nil {
 			wlog.Error("[tts] microsoft error: " + string(e))
 
-			return nil, nil, engine.NewCustomCodeError("tts.microsoft", string(e), result.StatusCode)
+			return nil, nil, nil, engine.NewCustomCodeError("tts.microsoft", string(e), result.StatusCode)
 		}
 	}
 
@@ -69,7 +69,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, error) {
 		contentType = "audio/wav"
 	}
 
-	return result.Body, &contentType, nil
+	return result.Body, &contentType, nil, nil
 }
 
 func microsoftToken(key, region string) (string, error) {

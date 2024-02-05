@@ -3,6 +3,7 @@ package private
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	. "github.com/webitel/storage/apis/helper"
 	"github.com/webitel/storage/app"
@@ -16,7 +17,7 @@ func (api *API) InitTTS() {
 func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	params := TtsParamsFromRequest(r)
 
-	out, t, err := c.App.TTS(app.TtsProfile, params)
+	out, t, size, err := c.App.TTS(app.TtsProfile, params)
 	if err != nil {
 		c.Err = err
 		return
@@ -26,6 +27,9 @@ func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	if t != nil {
 		w.Header().Set("Content-Type", *t)
+	}
+	if size != nil {
+		w.Header().Set("Content-Length", strconv.Itoa(*size))
 	}
 	io.Copy(w, out)
 }
@@ -33,7 +37,7 @@ func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 func ttsByProvider(c *Context, w http.ResponseWriter, r *http.Request) {
 	params := TtsParamsFromRequest(r)
 
-	out, t, err := c.App.TTS(c.Params.Id, params)
+	out, t, size, err := c.App.TTS(c.Params.Id, params)
 	if err != nil {
 		c.Err = err
 		return
@@ -43,6 +47,9 @@ func ttsByProvider(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	if t != nil {
 		w.Header().Set("Content-Type", *t)
+	}
+	if size != nil {
+		w.Header().Set("Content-Length", strconv.Itoa(*size))
 	}
 	io.Copy(w, out)
 }

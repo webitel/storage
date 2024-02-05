@@ -19,7 +19,7 @@ func SetWbtTTSEndpoint(endpoint string) {
 	wbtTTSEndpoint = endpoint
 }
 
-func Webitel(req TTSParams) (io.ReadCloser, *string, error) {
+func Webitel(req TTSParams) (io.ReadCloser, *string, *int, error) {
 	req.Text = strings.TrimSpace(req.Text)
 	l := len(req.Text)
 
@@ -39,14 +39,14 @@ func Webitel(req TTSParams) (io.ReadCloser, *string, error) {
 
 	r, err := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(strings.Replace(data.Encode(), "+", "%20", -1))) // URL-encoded payload
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	r.Header.Add("Accept", "text/plain")
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	result, err := client.Do(r)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	contentType := result.Header.Get("Content-Type")
@@ -55,5 +55,5 @@ func Webitel(req TTSParams) (io.ReadCloser, *string, error) {
 		contentType = "audio/wav"
 	}
 
-	return result.Body, &contentType, nil
+	return result.Body, &contentType, nil, nil
 }
