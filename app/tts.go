@@ -22,7 +22,7 @@ const (
 	TtsWebitel   = "Webitel"
 )
 
-type ttsFunction func(tts2.TTSParams) (io.ReadCloser, *string, error)
+type ttsFunction func(tts2.TTSParams) (io.ReadCloser, *string, *int, error)
 
 var (
 	ttsEngine = map[string]ttsFunction{
@@ -34,7 +34,7 @@ var (
 	}
 )
 
-func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, err engine.AppError) {
+func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t *string, size *int, err engine.AppError) {
 	var ttsErr error
 
 	if params.ProfileId > 0 && len(params.Key) == 0 {
@@ -60,7 +60,7 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 	}
 	provider = strings.ToLower(provider)
 	if fn, ok := ttsEngine[provider]; ok {
-		out, t, ttsErr = fn(params)
+		out, t, size, ttsErr = fn(params)
 		if ttsErr != nil {
 			switch ttsErr.(type) {
 			case engine.AppError:
@@ -70,7 +70,7 @@ func (a *App) TTS(provider string, params tts2.TTSParams) (out io.ReadCloser, t 
 			}
 		}
 	} else {
-		return nil, nil, engine.NewNotFoundError("tts.valid.not_found", "Not found provider")
+		return nil, nil, nil, engine.NewNotFoundError("tts.valid.not_found", "Not found provider")
 	}
 
 	return

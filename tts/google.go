@@ -12,7 +12,7 @@ import (
 	texttospeechpb "google.golang.org/genproto/googleapis/cloud/texttospeech/v1"
 )
 
-func Google(params TTSParams) (io.ReadCloser, *string, error) {
+func Google(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	// Instantiates a client.
 	ctx := context.Background()
 	var err error
@@ -29,7 +29,7 @@ func Google(params TTSParams) (io.ReadCloser, *string, error) {
 	client, err = texttospeech.NewClient(ctx, options...)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Perform the text-to-speech request on the text input with the selected
@@ -98,11 +98,13 @@ func Google(params TTSParams) (io.ReadCloser, *string, error) {
 
 	resp, err := client.SynthesizeSpeech(ctx, &req)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	r := ioutil.NopCloser(bytes.NewReader(resp.GetAudioContent()))
 	client.Close() // FIXME
 
-	return r, &v, nil
+	size := len(resp.GetAudioContent())
+
+	return r, &v, &size, nil
 }

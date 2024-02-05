@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-func Yandex(params TTSParams) (io.ReadCloser, *string, error) {
+func Yandex(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	api := fmt.Sprintf("https://tts.api.cloud.yandex.net/speech/v1/tts:synthesize?lang=%s", url.QueryEscape(params.Language))
 
 	if params.Voice != "" {
@@ -25,8 +25,8 @@ func Yandex(params TTSParams) (io.ReadCloser, *string, error) {
 
 	result, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return result.Body, nil, nil
+	return result.Body, nil, nil, nil
 }

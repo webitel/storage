@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/polly"
 )
 
-func Poly(req TTSParams) (io.ReadCloser, *string, error) {
+func Poly(req TTSParams) (io.ReadCloser, *string, *int, error) {
 	config := &aws.Config{
 		Region:      aws.String("eu-west-1"),
 		Credentials: credentials.NewStaticCredentials(string(req.Key), req.Token, ""),
@@ -22,7 +22,7 @@ func Poly(req TTSParams) (io.ReadCloser, *string, error) {
 
 	sess, err := session.NewSession(config)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	p := polly.New(sess)
@@ -48,8 +48,8 @@ func Poly(req TTSParams) (io.ReadCloser, *string, error) {
 	}
 
 	if out, err := p.SynthesizeSpeech(params); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	} else {
-		return out.AudioStream, out.ContentType, nil
+		return out.AudioStream, out.ContentType, nil, nil
 	}
 }
