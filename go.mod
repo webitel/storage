@@ -21,7 +21,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine v0.0.0-20240110115656-c33ac558fdb5
 	github.com/webitel/protos/engine v0.0.0-20240108110510-49609546e1c3
-	github.com/webitel/protos/storage v0.0.0-20240108110510-49609546e1c3
+	github.com/webitel/protos/storage v0.0.0-20240301131502-4b713629fa17
 	github.com/webitel/wlog v0.0.0-20220608103744-93b33e61bd28
 	golang.org/x/image v0.12.0
 	golang.org/x/sync v0.4.0

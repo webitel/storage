@@ -210,6 +210,8 @@ func getProvider(p string) storage.ProviderType {
 		return storage.ProviderType_Microsoft
 	case storage.ProviderType_Google.String():
 		return storage.ProviderType_Google
+	case storage.ProviderType_Elevenlabs.String():
+		return storage.ProviderType_Elevenlabs
 	default:
 		return storage.ProviderType_DefaultProvider
 	}
