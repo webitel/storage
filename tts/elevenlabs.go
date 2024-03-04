@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Elevenlabs(params TTSParams) (io.ReadCloser, *string, error) {
+func Elevenlabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	token := string(fixKey(params.Key))
 	voiceId := ""
 
@@ -28,7 +28,7 @@ func Elevenlabs(params TTSParams) (io.ReadCloser, *string, error) {
 
 	request, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	request.Header.Add("Content-Type", "application/json")
@@ -36,7 +36,7 @@ func Elevenlabs(params TTSParams) (io.ReadCloser, *string, error) {
 
 	res, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	ct := "audio/mp3"
@@ -45,8 +45,8 @@ func Elevenlabs(params TTSParams) (io.ReadCloser, *string, error) {
 		defer res.Body.Close()
 		body, _ := ioutil.ReadAll(res.Body)
 
-		return nil, nil, errors.New("Bad response, error: " + string(body))
+		return nil, nil, nil, errors.New("Bad response, error: " + string(body))
 	}
 
-	return res.Body, &ct, nil
+	return res.Body, &ct, nil, nil
 }
