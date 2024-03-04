@@ -1,6 +1,7 @@
 package tts
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -23,8 +24,21 @@ func Elevenlabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 		voiceId = "J7snWfBtGKxBcPiNUoia"
 	}
 
+	req := struct {
+		ModelId string `json:"model_id"`
+		Text    string `json:"text"`
+	}{
+		"eleven_multilingual_v2",
+		params.Text,
+	}
+
+	jsonData, err := json.Marshal(&req)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
 	url := fmt.Sprintf("https://api.elevenlabs.io/v1/text-to-speech/%s/stream", voiceId)
-	payload := strings.NewReader(fmt.Sprintf("{\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"text\": \"%s\",\n  \"voice_settings\": {\n    \"similarity_boost\": 0.75,\n    \"stability\": 0.5,\n    \"style\": 0.5,\n    \"use_speaker_boost\": true\n  }\n}", params.Text))
+	payload := strings.NewReader(string(jsonData))
 
 	request, err := http.NewRequest("POST", url, payload)
 	if err != nil {
