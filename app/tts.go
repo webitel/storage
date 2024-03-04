@@ -14,23 +14,25 @@ import (
 )
 
 const (
-	TtsProfile   = ""
-	TtsPoly      = "Polly"
-	TtsMicrosoft = "Microsoft"
-	TtsGoogle    = "Google"
-	TtsYandex    = "Yandex"
-	TtsWebitel   = "Webitel"
+	TtsProfile    = ""
+	TtsPoly       = "Polly"
+	TtsMicrosoft  = "Microsoft"
+	TtsGoogle     = "Google"
+	TtsYandex     = "Yandex"
+	TtsWebitel    = "Webitel"
+	TtsElevenlabs = "Elevenlabs"
 )
 
 type ttsFunction func(tts2.TTSParams) (io.ReadCloser, *string, *int, error)
 
 var (
 	ttsEngine = map[string]ttsFunction{
-		strings.ToLower(TtsPoly):      tts2.Poly,
-		strings.ToLower(TtsMicrosoft): tts2.Microsoft,
-		strings.ToLower(TtsGoogle):    tts2.Google,
-		strings.ToLower(TtsYandex):    tts2.Yandex,
-		strings.ToLower(TtsWebitel):   tts2.Webitel,
+		strings.ToLower(TtsPoly):       tts2.Poly,
+		strings.ToLower(TtsMicrosoft):  tts2.Microsoft,
+		strings.ToLower(TtsGoogle):     tts2.Google,
+		strings.ToLower(TtsYandex):     tts2.Yandex,
+		strings.ToLower(TtsWebitel):    tts2.Webitel,
+		strings.ToLower(TtsElevenlabs): tts2.Elevenlabs,
 	}
 )
 
