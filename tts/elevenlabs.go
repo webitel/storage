@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func Elevenlabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
+func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	token := string(fixKey(params.Key))
 	voiceId := ""
 

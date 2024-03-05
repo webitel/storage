@@ -20,7 +20,7 @@ const (
 	TtsGoogle     = "Google"
 	TtsYandex     = "Yandex"
 	TtsWebitel    = "Webitel"
-	TtsElevenlabs = "Elevenlabs"
+	TtsElevenLabs = "ElevenLabs"
 )
 
 type ttsFunction func(tts2.TTSParams) (io.ReadCloser, *string, *int, error)
@@ -32,7 +32,7 @@ var (
 		strings.ToLower(TtsGoogle):     tts2.Google,
 		strings.ToLower(TtsYandex):     tts2.Yandex,
 		strings.ToLower(TtsWebitel):    tts2.Webitel,
-		strings.ToLower(TtsElevenlabs): tts2.Elevenlabs,
+		strings.ToLower(TtsElevenLabs): tts2.ElevenLabs,
 	}
 )
 
