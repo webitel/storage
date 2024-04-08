@@ -59,6 +59,10 @@ func (app *App) UpdateFileBackendProfile(profile *model.FileBackendProfile) (*mo
 	oldProfile.Priority = profile.Priority
 	oldProfile.Disabled = profile.Disabled
 	oldProfile.MaxSizeMb = profile.MaxSizeMb
+	// if access_key of profile is empty do not let reset access key (task: WTEL-4344)
+	if oldAccessKey, newAccessKey := oldProfile.Properties.GetString(model.BackendProfileAccessKeyField), profile.Properties.GetString(model.BackendProfileAccessKeyField); newAccessKey == "" {
+		profile.Properties[model.BackendProfileAccessKeyField] = oldAccessKey
+	}
 	oldProfile.Properties = profile.Properties
 	oldProfile.Description = profile.Description
 
@@ -72,7 +76,7 @@ func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBac
 		return nil, err
 	}
 
-	oldProfile.Path(patch)
+	oldProfile.Patch(patch)
 
 	if err = oldProfile.IsValid(); err != nil {
 		return nil, err
@@ -99,7 +103,7 @@ func (app *App) GetFileBackendProfileById(id int) (*model.FileBackendProfile, en
 }
 
 func (app *App) PathFileBackendProfile(profile *model.FileBackendProfile, path *model.FileBackendProfilePath) (*model.FileBackendProfile, engine.AppError) {
-	profile.Path(path)
+	profile.Patch(path)
 	profile, err := app.UpdateFileBackendProfile(profile)
 	if err != nil {
 		return nil, err

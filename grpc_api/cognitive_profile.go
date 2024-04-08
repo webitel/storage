@@ -188,6 +188,8 @@ func (api *cognitiveProfile) DeleteCognitiveProfile(ctx context.Context, in *sto
 }
 
 func toGrpcCognitiveProfile(src *model.CognitiveProfile) *storage.CognitiveProfile {
+	// nullify password
+	src.Properties.Remove(model.CognitiveProfileKeyField)
 	return &storage.CognitiveProfile{
 		Id:          src.Id,
 		CreatedAt:   getTimestamp(src.CreatedAt),

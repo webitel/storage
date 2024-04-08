@@ -52,6 +52,10 @@ func (s StringInterface) GetBool(name string) bool {
 	return false
 }
 
+func (s StringInterface) Remove(name string) {
+	delete(s, name)
+}
+
 var encoding = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769")
 
 // NewId is a globally unique identifier.  It is a [A-Z0-9] string 26

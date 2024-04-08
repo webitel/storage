@@ -46,6 +46,10 @@ func (app *App) UpdateCognitiveProfile(profile *model.CognitiveProfile) (*model.
 	oldProfile.UpdatedAt = profile.UpdatedAt
 
 	oldProfile.Provider = profile.Provider
+	// if access_key of profile is empty do not let reset access key (task: WTEL-4344)
+	if oldAccessKey, newAccessKey := oldProfile.Properties.GetString(model.CognitiveProfileKeyField), profile.Properties.GetString(model.CognitiveProfileKeyField); newAccessKey == "" {
+		profile.Properties[model.CognitiveProfileKeyField] = oldAccessKey
+	}
 	oldProfile.Properties = profile.Properties
 	oldProfile.Enabled = profile.Enabled
 	oldProfile.Name = profile.Name
@@ -63,7 +67,7 @@ func (app *App) PatchCognitiveProfile(domainId, id int64, patch *model.Cognitive
 		return nil, err
 	}
 
-	oldProfile.Path(patch)
+	oldProfile.Patch(patch)
 
 	if err = oldProfile.IsValid(); err != nil {
 		return nil, err

@@ -170,6 +170,8 @@ func (api *backendProfiles) DeleteBackendProfile(ctx context.Context, in *storag
 }
 
 func toGrpcProfile(src *model.FileBackendProfile) *storage.BackendProfile {
+	// nullify password (task: WTEL-4344)
+	src.Properties.Remove(model.BackendProfileAccessKeyField)
 	return &storage.BackendProfile{
 		Id:          src.Id,
 		CreatedAt:   src.CreatedAt,
@@ -183,13 +185,13 @@ func toGrpcProfile(src *model.FileBackendProfile) *storage.BackendProfile {
 		MaxSize:     int64(src.MaxSizeMb),
 		Priority:    int32(src.Priority),
 		Type:        src.Type.String(),
-		Properties:  toFrpcBackendProperties(src.Properties), //FIXME allow proto json
+		Properties:  toGrpcBackendProperties(src.Properties), //FIXME allow proto json
 		Description: src.Description,
 		Disabled:    src.Disabled,
 	}
 }
 
-//FIXME
+// FIXME
 func toStorageBackendProperties(src map[string]string) model.StringInterface {
 	out := make(map[string]interface{})
 	for k, v := range src {
@@ -198,7 +200,7 @@ func toStorageBackendProperties(src map[string]string) model.StringInterface {
 	return out
 }
 
-func toFrpcBackendProperties(src model.StringInterface) map[string]string {
+func toGrpcBackendProperties(src model.StringInterface) map[string]string {
 	out := make(map[string]string)
 	for k, v := range src {
 		out[k] = fmt.Sprintf("%v", v)
