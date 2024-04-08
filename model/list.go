@@ -9,7 +9,7 @@ import (
 const (
 	PAGE_DEFAULT     = 0
 	PER_PAGE_DEFAULT = 40
-	PER_PAGE_MAXIMUM = 1000
+	PER_PAGE_MAXIMUM = 10000
 )
 
 type ListRequest struct {

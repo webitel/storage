@@ -170,7 +170,10 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 	for {
 		n, err = sFile.Read(buf)
 		buf = buf[:n]
-		if err != nil {
+		if err != nil && err != io.EOF {
+			break
+		}
+		if n == 0 {
 			break
 		}
 		err = stream.Send(&storage.StreamFile{
