@@ -1,21 +1,23 @@
 package grpc_api
 
 import (
+	protoengine "buf.build/gen/go/webitel/engine/protocolbuffers/go"
 	"context"
 	"fmt"
 	engine "github.com/webitel/engine/model"
-	protoengine "github.com/webitel/protos/engine"
 	"github.com/webitel/storage/model"
 	"golang.org/x/sync/singleflight"
 
-	"github.com/webitel/protos/storage"
+	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
+	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
+
 	"github.com/webitel/storage/controller"
 )
 
 type fileTranscript struct {
 	ctrl            *controller.Controller
 	getProfileGroup singleflight.Group
-	storage.UnsafeFileTranscriptServiceServer
+	gogrpc.UnsafeFileTranscriptServiceServer
 }
 
 func NewFileTranscriptApi(c *controller.Controller) *fileTranscript {
