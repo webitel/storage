@@ -140,7 +140,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 		return appErr
 	}
 
-	sFile, appErr = backend.Reader(f, 0)
+	sFile, appErr = backend.Reader(f, in.Offset)
 	if appErr != nil {
 		return appErr
 	}
