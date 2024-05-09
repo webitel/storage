@@ -141,6 +141,9 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.FileService_DownloadFileServer) error {
 	var sFile io.ReadCloser
 	var err error
+	var buf []byte
+	var bufferSize int64 = 4 * 1024
+
 	f, backend, appErr := api.ctrl.InsecureGetFileWithProfile(in.DomainId, in.Id)
 	if appErr != nil {
 		return appErr
@@ -175,7 +178,12 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 		}
 	}
 
-	buf := make([]byte, 4*1024)
+	if in.BufferSize > 0 {
+		bufferSize = in.BufferSize
+	}
+
+	buf = make([]byte, bufferSize)
+
 	var n int
 	for {
 		n, err = sFile.Read(buf)
