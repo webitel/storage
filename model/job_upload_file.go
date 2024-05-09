@@ -19,6 +19,7 @@ type JobUploadFile struct {
 	CreatedAt int64   `db:"created_at"`
 	UpdatedAt int64   `db:"updated_at"`
 	Attempts  int     `db:"attempts,default:0" json:"attempts"`
+	SHA256Sum *string `db:"sha256sum" json:"sha256sum"`
 }
 
 type JobUploadFileWithProfile struct {
@@ -54,7 +55,7 @@ func (self *JobUploadFile) GetViewName() string {
 	return self.Name
 }
 
-//TODO
+// TODO
 func (self *JobUploadFile) GetPropertyString(name string) string {
 	return ""
 }

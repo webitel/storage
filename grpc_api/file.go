@@ -115,13 +115,19 @@ func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
 		return err
 	}
 
-	return in.SendAndClose(&storage.UploadFileResponse{
+	result := &storage.UploadFileResponse{
 		FileId:  fileRequest.Id,
 		Size:    fileRequest.Size,
 		Code:    storage.UploadStatusCode_Ok,
 		FileUrl: publicUrl,
 		Server:  api.publicHost,
-	})
+	}
+
+	if fileRequest.SHA256Sum != nil {
+		result.Sha256Sum = *fileRequest.SHA256Sum
+	}
+
+	return in.SendAndClose(result)
 }
 
 func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileLinkRequest) (*storage.GenerateFileLinkResponse, error) {
@@ -148,16 +154,20 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 	defer sFile.Close()
 
 	if in.Metadata {
-		err = stream.Send(&storage.StreamFile{
-			Data: &storage.StreamFile_Metadata_{
-				Metadata: &storage.StreamFile_Metadata{
-					Id:       f.Id,
-					Name:     f.Name,
-					MimeType: f.MimeType,
-					Uuid:     f.Uuid,
-					Size:     f.Size,
-				},
+		d := &storage.StreamFile_Metadata_{
+			Metadata: &storage.StreamFile_Metadata{
+				Id:       f.Id,
+				Name:     f.Name,
+				MimeType: f.MimeType,
+				Uuid:     f.Uuid,
+				Size:     f.Size,
 			},
+		}
+		if f.SHA256Sum != nil {
+			d.Metadata.Sha256Sum = *f.SHA256Sum
+		}
+		err = stream.Send(&storage.StreamFile{
+			Data: d,
 		})
 
 		if err != nil {
@@ -227,14 +237,20 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 		return nil, err
 	}
 
-	return &storage.UploadFileUrlResponse{
+	result := &storage.UploadFileUrlResponse{
 		Id:   fileRequest.Id,
 		Code: storage.UploadStatusCode_Ok,
 		Url:  publicUrl,
 		Size: fileRequest.Size,
 		Mime: fileRequest.MimeType,
 		// TODO ADD Server
-	}, nil
+	}
+
+	if fileRequest.SHA256Sum != nil {
+		result.Sha256Sum = *fileRequest.SHA256Sum
+	}
+
+	return result, nil
 }
 
 func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest) (*storage.DeleteFilesResponse, error) {
