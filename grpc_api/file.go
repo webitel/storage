@@ -179,7 +179,6 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 	var n int
 	for {
 		n, err = sFile.Read(buf)
-		buf = buf[:n]
 		if err != nil && err != io.EOF {
 			break
 		}
@@ -188,7 +187,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 		}
 		err = stream.Send(&storage.StreamFile{
 			Data: &storage.StreamFile_Chunk{
-				Chunk: buf,
+				Chunk: buf[:n],
 			},
 		})
 		if err != nil {
@@ -265,4 +264,34 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 	}
 
 	return &storage.DeleteFilesResponse{}, nil
+}
+
+func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) error {
+	//var chunk *storage.UploadFileRequest_Chunk
+	//var fileRequest model.JobUploadFile
+	//
+	//res, gErr := in.Recv()
+	//if gErr != nil {
+	//	wlog.Error(gErr.Error())
+	//	return gErr
+	//}
+	//
+	//switch r := res.Data.(type) {
+	//case *storage.SafeUploadFileRequest_FileId:
+	//	fmt.Println(r.FileId)
+	//	break
+	//case *storage.SafeUploadFileRequest_Metadata_:
+	//	fileRequest.DomainId = r.Metadata.DomainId
+	//	fileRequest.Name = r.Metadata.Name
+	//
+	//	fileRequest.MimeType = r.Metadata.MimeType
+	//	fileRequest.Uuid = r.Metadata.Uuid
+	//	fileRequest.ViewName = &r.Metadata.Name
+	//	break
+	//default:
+	//	gErr = errors.New("bad request")
+	//	return gErr
+	//}
+	panic("todo")
+
 }
