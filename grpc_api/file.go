@@ -132,13 +132,16 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 
 func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.FileService_DownloadFileServer) error {
 	var sFile io.ReadCloser
+	var buf []byte
+	var bufferSize int64 = 4 * 1024
+
 	var err error
 	f, backend, appErr := api.ctrl.InsecureGetFileWithProfile(in.DomainId, in.Id)
 	if appErr != nil {
 		return appErr
 	}
 
-	sFile, appErr = backend.Reader(f, 0)
+	sFile, appErr = backend.Reader(f, in.Offset)
 	if appErr != nil {
 		return appErr
 	}
@@ -163,11 +166,15 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 		}
 	}
 
-	buf := make([]byte, 4*1024)
+	if in.BufferSize > 0 {
+		bufferSize = in.BufferSize
+	}
+
+	buf = make([]byte, bufferSize)
+
 	var n int
 	for {
 		n, err = sFile.Read(buf)
-		buf = buf[:n]
 		if err != nil && err != io.EOF {
 			break
 		}
@@ -176,7 +183,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 		}
 		err = stream.Send(&storage.StreamFile{
 			Data: &storage.StreamFile_Chunk{
-				Chunk: buf,
+				Chunk: buf[:n],
 			},
 		})
 		if err != nil {
