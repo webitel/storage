@@ -23,6 +23,7 @@ type File struct {
 	CreatedAt int64  `db:"created_at" json:"created_at"`
 	Removed   *bool  `db:"removed" json:"-"`
 	NotExists *bool  `db:"not_exists" json:"-"`
+	Safe      bool   `db:"-" json:"-"`
 }
 
 func (f *File) Domain() int64 {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/webitel/storage/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -275,31 +276,113 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 }
 
 func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) error {
-	//var chunk *storage.UploadFileRequest_Chunk
-	//var fileRequest model.JobUploadFile
-	//
-	//res, gErr := in.Recv()
-	//if gErr != nil {
-	//	wlog.Error(gErr.Error())
-	//	return gErr
-	//}
-	//
-	//switch r := res.Data.(type) {
-	//case *storage.SafeUploadFileRequest_FileId:
-	//	fmt.Println(r.FileId)
-	//	break
-	//case *storage.SafeUploadFileRequest_Metadata_:
-	//	fileRequest.DomainId = r.Metadata.DomainId
-	//	fileRequest.Name = r.Metadata.Name
-	//
-	//	fileRequest.MimeType = r.Metadata.MimeType
-	//	fileRequest.Uuid = r.Metadata.Uuid
-	//	fileRequest.ViewName = &r.Metadata.Name
-	//	break
-	//default:
-	//	gErr = errors.New("bad request")
-	//	return gErr
-	//}
-	panic("todo")
+	var file *model.File
+	var backend utils.FileBackend
 
+	res, gErr := in.Recv()
+	if gErr != nil {
+		wlog.Error(gErr.Error())
+		return gErr
+	}
+
+	switch r := res.Data.(type) {
+	case *storage.SafeUploadFileRequest_FileId:
+		var err engine.AppError
+		file, backend, err = api.ctrl.App().GetFileWithProfile(1, r.FileId)
+		if err != nil {
+			return err
+		}
+
+		break
+	case *storage.SafeUploadFileRequest_Metadata_:
+		file = &model.File{}
+		file.DomainId = r.Metadata.DomainId
+		file.Name = r.Metadata.Name
+
+		file.MimeType = r.Metadata.MimeType
+		file.Uuid = r.Metadata.Uuid
+		file.ViewName = &r.Metadata.Name
+		if r.Metadata.ProfileId != 0 {
+			file.ProfileId = model.NewInt(int(r.Metadata.ProfileId))
+		}
+		var err engine.AppError
+		*file, err = api.ctrl.App().StoreFile(*file)
+		if err != nil {
+			return err
+		}
+
+		break
+	default:
+		gErr = errors.New("bad request")
+		return gErr
+	}
+
+	in.Send(&storage.SafeUploadFileResponse{
+		Data: &storage.SafeUploadFileResponse_Part_{
+			Part: &storage.SafeUploadFileResponse_Part{
+				FileId: file.Id,
+				Size:   file.Size,
+			},
+		},
+	})
+
+	pipeReader, pipeWriter := io.Pipe()
+
+	go func(writer *io.PipeWriter) {
+		var chunk *storage.SafeUploadFileRequest_Chunk
+		var ok bool
+		for {
+			res, gErr = in.Recv()
+			if gErr != nil {
+				break
+			}
+
+			if chunk, ok = res.Data.(*storage.SafeUploadFileRequest_Chunk); !ok {
+				gErr = errors.New("streaming data error: bad SafeUploadFileRequest_Chunk")
+				break
+			}
+
+			if len(chunk.Chunk) == 0 {
+				break
+			}
+
+			writer.Write(chunk.Chunk)
+		}
+
+		if gErr != nil && gErr != io.EOF {
+			wlog.Error(gErr.Error())
+			writer.CloseWithError(gErr)
+		} else {
+			writer.Close()
+		}
+
+	}(pipeWriter)
+
+	if err := api.ctrl.App().SafeUploadFileStream(backend, pipeReader, file); err != nil {
+		return err
+	}
+
+	if err := api.ctrl.App().Store.File().UpdateSize(file.Id, file.Size); err != nil {
+		return err
+	}
+
+	meta := &storage.SafeUploadFileResponse_Metadata_{
+		Metadata: &storage.SafeUploadFileResponse_Metadata{
+			DomainId:       file.DomainId,
+			Name:           file.GetViewName(),
+			MimeType:       file.MimeType,
+			Uuid:           file.Uuid,
+			StreamResponse: false,
+			Size:           file.Size,
+		},
+	}
+
+	if file.ProfileId != nil {
+		meta.Metadata.ProfileId = int64(*file.ProfileId)
+	}
+
+	in.Send(&storage.SafeUploadFileResponse{
+		Data: meta,
+	})
+	return nil
 }

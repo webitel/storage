@@ -95,6 +95,7 @@ type FileStore interface {
 	GetAllPageByDomain(domain string, offset, limit int) StoreChannel
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) StoreChannel
 	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError)
+	UpdateSize(id int64, size int64) engine.AppError
 }
 
 type MediaFileStore interface {

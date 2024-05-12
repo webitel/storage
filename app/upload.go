@@ -51,6 +51,30 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 	return app.syncUpload(store, src, file, &profileId)
 }
 
+func (app *App) SafeUploadFileStream(store utils.FileBackend, src io.Reader, file *model.File) engine.AppError {
+	h := sha256.New()
+	tr := io.TeeReader(src, h)
+
+	if store == nil {
+		var err engine.AppError
+		var todo int64 = 1
+		if store, err = app.GetFileBackendStore(file.ProfileId, &todo); err != nil {
+			return err
+		}
+	}
+
+	size, err := store.Write(tr, file)
+	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
+		return err
+	}
+
+	// fixme
+	file.Size += size
+	sha := fmt.Sprintf("%x", h.Sum(nil))
+	file.SHA256Sum = &sha
+	return nil
+}
+
 func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) engine.AppError {
 	f := &model.File{
 		DomainId:  file.DomainId,

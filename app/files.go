@@ -60,3 +60,14 @@ func (app *App) RemoveFiles(domainId int64, ids []int64) engine.AppError {
 func (app *App) MaxUploadFileSize() int64 {
 	return app.Config().MediaFileStoreSettings.MaxUploadFileSize
 }
+
+func (app *App) StoreFile(src model.File) (model.File, engine.AppError) {
+	res := <-app.Store.File().Create(&src)
+	if res.Err != nil {
+		return model.File{}, res.Err
+	}
+
+	src.Id = res.Data.(int64)
+
+	return src, nil
+}
