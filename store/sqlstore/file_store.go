@@ -171,18 +171,3 @@ func (s SqlFileStore) GetFileByUuidWithProfile(domainId int64, uuid string) (*mo
 	}
 	return file, nil
 }
-
-func (s SqlFileStore) UpdateSize(id int64, size int64) engine.AppError {
-	_, err := s.GetMaster().Exec(`update storage.files
-set size = :Size 
-where id = :Id`, map[string]interface{}{
-		"Id":   id,
-		"Size": size,
-	})
-
-	if err != nil {
-		return engine.NewCustomCodeError("store.sql_file.update_size.app_error", fmt.Sprintf("Id=%d %s", id, err.Error()), extractCodeFromErr(err))
-	}
-
-	return nil
-}

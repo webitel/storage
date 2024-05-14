@@ -4,12 +4,12 @@ go 1.19
 
 require (
 	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.34.1-20240509140222-104f37b912b6.1
-	buf.build/gen/go/webitel/storage/grpc/go v1.3.0-20240512123442-efb54cf0b673.3
-	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.34.1-20240512123442-efb54cf0b673.1
+	buf.build/gen/go/webitel/storage/grpc/go v1.3.0-20240514073022-55a5ec3c8d8b.3
+	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.34.1-20240514073022-55a5ec3c8d8b.1
 	cloud.google.com/go/speech v1.23.1
 	cloud.google.com/go/storage v1.39.1
 	cloud.google.com/go/texttospeech v1.7.7
-	github.com/aws/aws-sdk-go v1.51.15
+	github.com/aws/aws-sdk-go v1.53.0
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/handlers v1.5.1
