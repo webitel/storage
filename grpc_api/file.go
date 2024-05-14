@@ -309,7 +309,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		return gErr
 	}
 
-	in.Send(&storage.SafeUploadFileResponse{
+	gErr = in.Send(&storage.SafeUploadFileResponse{
 		Data: &storage.SafeUploadFileResponse_Part_{
 			Part: &storage.SafeUploadFileResponse_Part{
 				UploadId: su.Id(),
@@ -317,6 +317,11 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 			},
 		},
 	})
+
+	if gErr != nil {
+		su.SetError(gErr)
+		return gErr
+	}
 
 	var chunk *storage.SafeUploadFileRequest_Chunk
 	var ok bool

@@ -74,7 +74,7 @@ func (s *SafeUpload) destruct() {
 	safeUploadProcess.Remove(s.id)
 }
 
-func (s *SafeUpload) setError(err error) {
+func (s *SafeUpload) SetError(err error) {
 	s.writer.CloseWithError(err)
 	s.destruct()
 }
