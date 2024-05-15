@@ -184,8 +184,6 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) *SafeUplo
 func schedule(what func(), delay time.Duration) chan struct{} {
 	stop := make(chan struct{})
 
-	fmt.Printf("sleep %v", delay)
-
 	go func() {
 		for {
 			select {
