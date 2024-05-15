@@ -10,6 +10,7 @@ import (
 	"io"
 	"strconv"
 	"sync"
+	"time"
 )
 
 var safeUploadProcess *utils.Cache = utils.NewLru(4000)
@@ -23,18 +24,18 @@ const (
 )
 
 type SafeUpload struct {
-	id        string
-	state     SafeUploadState
-	app       *App
-	reader    *io.PipeReader
-	writer    *io.PipeWriter
-	backend   utils.FileBackend
-	request   *model.JobUploadFile
-	profileId *int
-	end       chan struct{}
-	err       chan error
-	size      int
-	mx        sync.RWMutex
+	id              string
+	state           SafeUploadState
+	app             *App
+	reader          *io.PipeReader
+	writer          *io.PipeWriter
+	backend         utils.FileBackend
+	request         *model.JobUploadFile
+	profileId       *int
+	cancelSleepChan chan struct{}
+	err             chan error
+	size            int
+	mx              sync.RWMutex
 }
 
 func (s *SafeUpload) Id() string {
@@ -96,21 +97,39 @@ func (s *SafeUpload) run() {
 		err = s.app.SyncUpload(s.reader, s.request)
 	}
 
-	if err != nil {
-		wlog.Error(err.String())
-	}
 	s.setState(SafeUploadStateFinished)
-	wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
+	if err != nil {
+		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, error=%s", s.id, s.request.Name, err.GetDetailedError()))
+	} else {
+		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
+	}
+}
+
+func addSafeUploadProcess(s *SafeUpload) {
+	safeUploadProcess.Add(s.id, s)
+}
+
+func (s *SafeUpload) timeout() {
+	s.SetError(errors.New("timeout"))
+	s.cancelSleepChan = nil
 }
 
 func (s *SafeUpload) Sleep() {
 	s.setState(SafeUploadStateSleep)
 	wlog.Debug(fmt.Sprintf("sleep safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
 	addSafeUploadProcess(s)
+	s.mx.Lock()
+	s.cancelSleepChan = schedule(s.timeout, s.app.Config().MaxSafeUploadSleep)
+	s.mx.Unlock()
 }
 
-func addSafeUploadProcess(s *SafeUpload) {
-	safeUploadProcess.Add(s.id, s)
+func (s *SafeUpload) cancelSleep() {
+	s.mx.Lock()
+	if s.cancelSleepChan != nil {
+		close(s.cancelSleepChan)
+		s.cancelSleepChan = nil
+	}
+	s.mx.Unlock()
 }
 
 func RecoverySafeUploadProcess(id string) (*SafeUpload, error) {
@@ -122,6 +141,7 @@ func RecoverySafeUploadProcess(id string) (*SafeUpload, error) {
 	if su.State() != SafeUploadStateSleep {
 		return nil, errors.New("upload state " + strconv.Itoa(int(su.State())))
 	}
+	su.cancelSleep()
 	wlog.Debug(fmt.Sprintf("recovery upload id=%s, name=%s, size=%d", su.id, su.request.Name, su.Size()))
 
 	return su, nil
@@ -150,7 +170,6 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) *SafeUplo
 		state:     SafeUploadStateActive,
 		profileId: profileId,
 		id:        model.NewId(),
-		end:       make(chan struct{}),
 		err:       make(chan error),
 		request:   req,
 		reader:    r,
@@ -160,4 +179,23 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) *SafeUplo
 	go s.run()
 
 	return s
+}
+
+func schedule(what func(), delay time.Duration) chan struct{} {
+	stop := make(chan struct{})
+
+	fmt.Printf("sleep %v", delay)
+
+	go func() {
+		for {
+			select {
+			case <-time.After(delay):
+				what()
+			case <-stop:
+				return
+			}
+		}
+	}()
+
+	return stop
 }

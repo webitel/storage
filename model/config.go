@@ -2,6 +2,7 @@ package model
 
 import (
 	engine "github.com/webitel/engine/model"
+	"time"
 )
 
 const (
@@ -68,6 +69,7 @@ type Config struct {
 	DefaultFileStore             *DefaultFileStore
 	ServerSettings               ServerSettings
 	ProxyUploadUrl               *string
+	MaxSafeUploadSleep           time.Duration
 }
 
 type DiscoverySettings struct {

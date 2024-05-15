@@ -19,10 +19,9 @@ func TestFile(t *testing.T) {
 	uploadId := sendFile(nil)
 	time.Sleep(time.Second)
 	sendFile(uploadId)
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * 3)
 	sendFile(uploadId)
 	time.Sleep(time.Second)
-	sendFile(uploadId)
 	sendFile(uploadId)
 	sendFile(uploadId)
 
@@ -56,7 +55,7 @@ func sendFile(uploadId *string) (newUploadId *string) {
 			Data: &storage.SafeUploadFileRequest_Metadata_{
 				Metadata: &storage.SafeUploadFileRequest_Metadata{
 					DomainId:       1,
-					Name:           "3131231.png",
+					Name:           "ffff.png",
 					MimeType:       "image/png",
 					Uuid:           "blabla",
 					StreamResponse: false,

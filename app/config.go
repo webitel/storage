@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/webitel/storage/tts"
 
@@ -39,7 +40,8 @@ var (
 	proxyUpload = flag.String("proxy_upload", "", "Proxy upload url")
 	publicHost  = flag.String("public_host", "https://dev.webitel.com/", "Public host")
 
-	wbtTTSEndpoint = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
+	wbtTTSEndpoint     = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
+	maxSafeUploadSleep = flag.Duration("safe_upload_max_sleep", time.Second*60, "Maximum upload second sleep process")
 )
 
 func loadConfig(fileName string) (*model.Config, engine.AppError) {
@@ -93,6 +95,7 @@ func loadConfig(fileName string) (*model.Config, engine.AppError) {
 			Port:    *grpcServerPort,
 			Network: "tcp",
 		},
+		MaxSafeUploadSleep: *maxSafeUploadSleep,
 	}
 
 	if proxyUpload != nil && *proxyUpload != "" {
