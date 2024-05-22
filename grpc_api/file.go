@@ -351,6 +351,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		su.CloseWrite()
 	}
 
+	<-su.WaitUploaded()
 	fileRequest := su.File()
 	var err engine.AppError
 	var publicUrl string
@@ -359,11 +360,14 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 	}
 
 	metadata := &storage.SafeUploadFileResponse_Metadata{
-		FileId:  fileRequest.Id,
-		Size:    fileRequest.Size,
-		Code:    storage.UploadStatusCode_Ok,
-		FileUrl: publicUrl,
-		Server:  api.publicHost,
+		FileId:   fileRequest.Id,
+		FileUrl:  publicUrl,
+		Size:     fileRequest.Size,
+		Code:     storage.UploadStatusCode_Ok,
+		Server:   api.publicHost,
+		Name:     fileRequest.GetViewName(),
+		Uuid:     fileRequest.Uuid,
+		MimeType: fileRequest.GetMimeType(),
 	}
 
 	if fileRequest.SHA256Sum != nil {
