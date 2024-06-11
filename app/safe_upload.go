@@ -37,6 +37,7 @@ type SafeUpload struct {
 	uploaded        chan struct{}
 	size            int
 	mx              sync.RWMutex
+	Progress        bool
 }
 
 func (s *SafeUpload) Id() string {
@@ -123,6 +124,10 @@ func (s *SafeUpload) Sleep() {
 	s.mx.Lock()
 	s.cancelSleepChan = schedule(s.timeout, s.app.Config().MaxSafeUploadSleep)
 	s.mx.Unlock()
+}
+
+func (s *SafeUpload) SetProgress(v bool) {
+	s.Progress = v
 }
 
 func (s *SafeUpload) cancelSleep() {
