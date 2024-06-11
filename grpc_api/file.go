@@ -277,7 +277,6 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 
 func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) error {
 	var su *app.SafeUpload
-	var progress = false
 	res, gErr := in.Recv()
 	if gErr != nil {
 		wlog.Error(gErr.Error())
@@ -293,7 +292,6 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		break
 	case *storage.SafeUploadFileRequest_Metadata_:
 		var fileRequest model.JobUploadFile
-		progress = r.Metadata.Progress
 		fileRequest.DomainId = r.Metadata.DomainId
 		fileRequest.Name = r.Metadata.Name
 
@@ -305,6 +303,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 			pid = model.NewInt(int(r.Metadata.ProfileId))
 		}
 		su = api.ctrl.App().NewSafeUpload(pid, &fileRequest)
+		su.SetProgress(r.Metadata.Progress)
 		break
 	default:
 		gErr = errors.New("bad request")
@@ -344,7 +343,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 
 		su.Write(chunk.Chunk)
 
-		if progress {
+		if su.Progress {
 			in.Send(&storage.SafeUploadFileResponse{
 				Data: &storage.SafeUploadFileResponse_Progress_{
 					Progress: &storage.SafeUploadFileResponse_Progress{
