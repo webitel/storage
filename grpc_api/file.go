@@ -19,6 +19,10 @@ import (
 	"github.com/webitel/storage/model"
 )
 
+var (
+	ErrCancel = errors.New("cancel")
+)
+
 type file struct {
 	ctrl       *controller.Controller
 	curl       *http.Client
@@ -325,14 +329,19 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 	}
 
 	var chunk *storage.SafeUploadFileRequest_Chunk
-	var ok bool
 	for {
 		res, gErr = in.Recv()
 		if gErr != nil {
 			break
 		}
 
-		if chunk, ok = res.Data.(*storage.SafeUploadFileRequest_Chunk); !ok {
+		switch res.Data.(type) {
+		case *storage.SafeUploadFileRequest_Chunk:
+			chunk = res.Data.(*storage.SafeUploadFileRequest_Chunk)
+		case *storage.SafeUploadFileRequest_Cancel:
+			su.SetError(ErrCancel)
+			return in.Send(&storage.SafeUploadFileResponse{})
+		default:
 			gErr = errors.New("streaming data error: bad SafeUploadFileRequest_Chunk")
 			break
 		}
