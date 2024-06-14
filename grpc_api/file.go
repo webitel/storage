@@ -208,6 +208,10 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 		}
 	}
 
+	if err != nil && err != io.EOF {
+		wlog.Error(fmt.Sprintf("DownloadFile \"%s\" error: %s", f.Name, err.Error()))
+	}
+
 	return nil
 }
 
