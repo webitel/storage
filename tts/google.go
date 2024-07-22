@@ -3,6 +3,7 @@ package tts
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -107,4 +108,19 @@ func Google(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	size := len(resp.GetAudioContent())
 
 	return r, &v, &size, nil
+}
+
+func GoogleVoice(params TTSVoiceParams) (*string, error) {
+	voices := []Voice{
+		{VoiceID: "FEMALE", Name: "FEMALE"},
+		{VoiceID: "MALE", Name: "MALE"},
+		{VoiceID: "NEUTRAL", Name: "NEUTRAL"},
+	}
+	voicesJSON, err := json.Marshal(voices)
+	if err != nil {
+		return nil, err
+	}
+	var result = (string(voicesJSON))
+
+	return &result, nil
 }

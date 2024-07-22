@@ -38,6 +38,16 @@ type TTSParams struct {
 	EffectsProfileId []string `json:"-"`
 }
 
+type TTSVoiceParams struct {
+	DomainId    int             `json:"-"`
+	ProfileId   int             `json:"-"`
+	Key         json.RawMessage `json:"key"`
+	Token       string          `json:"token"`
+	KeyLocation string          `json:"key_location"`
+	Language    string          `json:"region"`
+	Q           string          `json:"q"`
+}
+
 func (p TTSParams) BackgroundNode() string {
 	if p.Background != nil {
 		return fmt.Sprintf(`<mstts:backgroundaudio src="%s" volume="%f" fadein="%d" fadeout="%d"/>`,
