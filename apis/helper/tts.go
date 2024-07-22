@@ -79,32 +79,3 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 
 	return params
 }
-
-func TtsVoiceParamsFromRequest(r *http.Request) tts2.TTSVoiceParams  {
-	var profileId int
-	var domainId int
-
-	query := r.URL.Query()
-
-	if query.Has("profile_id") {
-		profileId, _ = strconv.Atoi(query.Get("profile_id"))
-	}
-
-	if query.Has("domain_id") {
-		domainId, _ = strconv.Atoi(query.Get("domain_id"))
-	}
-
-	params := tts2.TTSVoiceParams{
-		DomainId:  domainId,
-		ProfileId: profileId,
-
-		Key:      []byte(query.Get("key")),
-		Token:    query.Get("token"),
-		Language: query.Get("language"),
-		Q: 		  query.Get("q"),
-	}
-
-	params.KeyLocation = query.Get("keyLocation")
-
-	return params
-}

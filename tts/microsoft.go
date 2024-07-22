@@ -2,7 +2,6 @@ package tts
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,16 +12,16 @@ import (
 	"github.com/webitel/wlog"
 )
 
-func Microsoft(params TTSParams) (io.ReadCloser, *string, *int, error) {
+func Microsoft(req TTSParams) (io.ReadCloser, *string, *int, error) {
 	var request *http.Request
 	var data string
-	token, err := microsoftToken(fixKey(params.Key), params.Region)
+	token, err := microsoftToken(fixKey(req.Key), req.Region)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	if params.Language == "" {
-		params.Language = params.Locale
+	if req.Language == "" {
+		req.Language = req.Locale
 	}
 
 	data = fmt.Sprintf(`<speak version='1.0' xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts" xml:lang='%s'>
@@ -31,9 +30,9 @@ func Microsoft(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	%s
 	 </voice>
 </speak>
-`, params.Language, params.BackgroundNode(), params.Language, params.Voice, microsoftLocalesNameMapping(params.Language, params.Voice), params.Text)
+`, req.Language, req.BackgroundNode(), req.Language, req.Voice, microsoftLocalesNameMapping(req.Language, req.Voice), req.Text)
 
-	request, err = http.NewRequest("POST", fmt.Sprintf("https://%s.tts.speech.microsoft.com/cognitiveservices/v1", params.Region), bytes.NewBuffer([]byte(data)))
+	request, err = http.NewRequest("POST", fmt.Sprintf("https://%s.tts.speech.microsoft.com/cognitiveservices/v1", req.Region), bytes.NewBuffer([]byte(data)))
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -41,7 +40,7 @@ func Microsoft(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	request.Header.Set("Content-Type", "application/ssml+xml")
 	request.Header.Set("User-Agent", "WebitelACR")
 	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	if strings.Index(params.Format, "wav") > -1 {
+	if strings.Index(req.Format, "wav") > -1 {
 		request.Header.Set("X-Microsoft-OutputFormat", "riff-8khz-8bit-mono-mulaw")
 	} else {
 		request.Header.Set("X-Microsoft-OutputFormat", "audio-16khz-32kbitrate-mono-mp3")
@@ -114,18 +113,4 @@ func fixKey(key []byte) string {
 	}
 
 	return string(key)
-}
-
-func MicrosoftVoice(params TTSVoiceParams) (*string, error) {
-	voices := []Voice{
-		{VoiceID: "FEMALE", Name: "FEMALE"},
-		{VoiceID: "MALE", Name: "MALE"},
-	}
-	voicesJSON, err := json.Marshal(voices)
-	if err != nil {
-		return nil, err
-	}
-	var result = (string(voicesJSON))
-
-	return &result, nil
 }
