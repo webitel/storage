@@ -14,8 +14,7 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	token := string(fixKey(params.Key))
 	voiceId := ""
 
-	params.Voice = strings.ToUpper(params.Voice)
-	switch params.Voice {
+	switch strings.ToUpper(params.Voice) {
 	case "MALE":
 		voiceId = "J7snWfBtGKxBcPiNUoia"
 	case "FEMALE":
