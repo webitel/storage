@@ -173,6 +173,14 @@ func (api *fileTranscript) PutFileTranscript(ctx context.Context, in *storage.Pu
 		return nil, err
 	}
 
+	if in.GetUuid() == "" {
+		return nil, engine.NewBadRequestError("storage.stt.transcript.valid.uuid", "UUID is required")
+	}
+
+	if in.GetFileId() == 0 {
+		return nil, engine.NewBadRequestError("storage.stt.transcript.valid.file_id", "file_id is required")
+	}
+
 	req := model.FileTranscript{
 		Id: 0,
 		File: model.Lookup{
