@@ -76,6 +76,7 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 	}
 
 	params.KeyLocation = query.Get("keyLocation")
+	params.VoiceSettings = query
 
 	return params
 }
