@@ -33,7 +33,7 @@ type TranscriptChannel struct {
 type FileTranscript struct {
 	Id         int64               `json:"id" db:"id"`
 	File       Lookup              `json:"file" db:"file"`
-	Profile    Lookup              `json:"profile" db:"profile"`
+	Profile    *Lookup             `json:"profile" db:"profile"`
 	Transcript string              `json:"transcript" db:"transcript"`
 	Log        json.RawMessage     `json:"log" db:"log"`
 	CreatedAt  time.Time           `json:"created_at" db:"created_at"`

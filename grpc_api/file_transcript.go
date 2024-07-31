@@ -7,6 +7,7 @@ import (
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"golang.org/x/sync/singleflight"
+	"time"
 
 	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
 	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
@@ -144,18 +145,69 @@ func (api *fileTranscript) FileTranscriptSafe(ctx context.Context, in *storage.F
 	if err != nil {
 		return nil, err
 	}
-	return &storage.FileTranscriptSafeResponse{
+
+	res := &storage.FileTranscriptSafeResponse{
 		Id: t.Id,
 		File: &protoengine.Lookup{
 			Id:   int64(t.File.Id),
 			Name: t.File.Name,
 		},
-		Profile: &protoengine.Lookup{
-			Id:   int64(t.Profile.Id),
-			Name: t.Profile.Name,
-		},
 		Transcript: t.Transcript,
 		CreatedAt:  t.CreatedAt.Unix(),
 		Locale:     t.Locale,
+	}
+
+	if t.Profile != nil {
+		res.Profile = &protoengine.Lookup{
+			Id:   int64(t.Profile.Id),
+			Name: t.Profile.Name,
+		}
+	}
+
+	return res, nil
+}
+
+func (api *fileTranscript) PutFileTranscript(ctx context.Context, in *storage.PutFileTranscriptRequest) (*storage.PutFileTranscriptResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req := model.FileTranscript{
+		Id: 0,
+		File: model.Lookup{
+			Id: int(in.GetFileId()),
+		},
+		Profile:    nil,
+		Transcript: in.GetText(),
+		Log:        nil,
+		CreatedAt:  time.Now(),
+		Locale:     in.GetLocale(),
+		Phrases:    nil,
+		Channels:   nil,
+	}
+
+	req.Phrases = make([]model.TranscriptPhrase, 0, len(in.GetPhrases()))
+	for _, v := range in.GetPhrases() {
+		req.Phrases = append(req.Phrases, model.TranscriptPhrase{
+			TranscriptRange: model.TranscriptRange{
+				StartSec: float64(v.StartSec),
+				EndSec:   float64(v.EndSec),
+			},
+			Channel: v.Channel,
+			Itn:     "",
+			Display: v.Phrase,
+			Lexical: v.Phrase,
+			Words:   nil,
+		})
+	}
+	var id int64
+	id, err = api.ctrl.PutTranscript(ctx, session, in.GetUuid(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.PutFileTranscriptResponse{
+		Id: id,
 	}, nil
 }

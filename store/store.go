@@ -147,12 +147,12 @@ type CognitiveProfileStore interface {
 }
 
 type TranscriptFileStore interface {
-	GetByFileId(fileId int64, profileId int64) (*model.FileTranscript, engine.AppError)
 	Store(t *model.FileTranscript) (*model.FileTranscript, engine.AppError)
 
 	CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError)
 	GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, engine.AppError)
 	Delete(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError)
+	Put(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, engine.AppError)
 }
 
 type ImportTemplateStore interface {

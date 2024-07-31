@@ -1,6 +1,7 @@
 package sqlstore
 
 import (
+	"context"
 	"github.com/lib/pq"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
@@ -16,31 +17,7 @@ func NewSqlTranscriptFileStore(sqlStore SqlStore) store.TranscriptFileStore {
 	return us
 }
 
-func (s SqlTranscriptFileStore) GetByFileId(fileId int64, profileId int64) (*model.FileTranscript, engine.AppError) {
-	var t model.FileTranscript
-	err := s.GetReplica().SelectOne(&t, `select t.id,
-       storage.get_lookup(f.id, f.name) as file,
-       storage.get_lookup(p.id, p.name) as profile,
-       t.transcript,
-       t.log,
-       t.locale,
-       t.created_at
-from storage.file_transcript t
-    left join storage.files f on f.id = t.file_id
-    left join storage.cognitive_profile_services p on p.id = t.profile_id
-where t.id = :Id and t.profile_id = :ProfileId`, map[string]interface{}{
-		"Id":        fileId,
-		"ProfileId": profileId,
-	})
-
-	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_stt_file.get.app_error", err.Error(), extractCodeFromErr(err))
-	}
-
-	return &t, nil
-}
-
-func (s SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, engine.AppError) {
+func (s *SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, engine.AppError) {
 	err := s.GetMaster().SelectOne(&t, `with t as (
     insert into storage.file_transcript (file_id, transcript, log, profile_id, locale, phrases, channels, uuid, domain_id)
     select :FileId, :Transcript, :Log, :ProfileId, :Locale, :Phrases, :Channels, f.uuid, f.domain_id
@@ -75,7 +52,7 @@ from t
 	return t, nil
 }
 
-func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError) {
+func (s *SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError) {
 	var jobs []*model.FileTranscriptJob
 	_, err := s.GetMaster().Select(&jobs, `with trfiles as (
 		select 0 as state,
@@ -137,7 +114,7 @@ func (s SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcri
 	return jobs, nil
 }
 
-func (s SqlTranscriptFileStore) GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, engine.AppError) {
+func (s *SqlTranscriptFileStore) GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, engine.AppError) {
 	var phrases []*model.TranscriptPhrase
 	_, err := s.GetReplica().Select(&phrases, `select p->'start_sec' as start_sec,
        p->'end_sec' as end_sec,
@@ -167,7 +144,7 @@ where id = :Id
 	return phrases, nil
 }
 
-func (s SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
+func (s *SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
 	var res []int64
 	_, err := s.GetMaster().Select(&res, `delete
 from storage.file_transcript t
@@ -181,6 +158,31 @@ returning t.id`, map[string]interface{}{
 
 	if err != nil {
 		return nil, engine.NewCustomCodeError("store.sql_stt_file.transcript.delete.error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return res, nil
+}
+
+func (s *SqlTranscriptFileStore) Put(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, engine.AppError) {
+	res, err := s.GetMaster().WithContext(ctx).SelectInt(`insert into storage.file_transcript(file_id, transcript, created_at, locale, phrases, uuid, domain_id)
+values (:FileId, :Transcript, :CreatedAt, :Locale, :Phrases, :Uuid, :DomainId)
+on conflict (file_id, coalesce(profile_id, 0), locale)
+DO UPDATE SET
+        transcript = EXCLUDED.transcript,
+        phrases = EXCLUDED.phrases,
+        uuid = EXCLUDED.uuid
+returning id`, map[string]interface{}{
+		"FileId":     tr.File.Id,
+		"Transcript": tr.Transcript,
+		"CreatedAt":  tr.CreatedAt,
+		"Locale":     tr.Locale,
+		"Phrases":    tr.JsonPhrases(),
+		"Uuid":       uuid,
+		"DomainId":   domainId,
+	})
+
+	if err != nil {
+		return 0, engine.NewCustomCodeError("store.sql_stt_file.put.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return res, nil
