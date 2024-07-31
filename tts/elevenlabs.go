@@ -21,7 +21,11 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	case "FEMALE":
 		voiceId = "yoKoOZMjmn2OuceuTuQO"
 	default:
-		voiceId = "J7snWfBtGKxBcPiNUoia"
+		if params.Voice == "" {
+			voiceId = "J7snWfBtGKxBcPiNUoia"
+		} else {
+			voiceId = params.Voice
+		}
 	}
 
 	req := struct {
