@@ -43,6 +43,7 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 			"VName":     file.ViewName,
 			"ProfileId": file.ProfileId,
 			"SHA256Sum": file.SHA256Sum,
+			"Channel":   file.Channel,
 		})
 
 		if err != nil {

@@ -71,6 +71,7 @@ func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
 	fileRequest.MimeType = metadata.Metadata.MimeType
 	fileRequest.Uuid = metadata.Metadata.Uuid
 	fileRequest.ViewName = &metadata.Metadata.Name
+	fileRequest.Channel = model.NewString(channelType(metadata.Metadata.Channel))
 
 	pipeReader, pipeWriter := io.Pipe()
 
@@ -237,6 +238,7 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	fileRequest.MimeType = res.Header.Get("Content-Type")
 	fileRequest.Uuid = in.GetUuid()
 	fileRequest.Size = res.ContentLength
+	fileRequest.Channel = model.NewString(channelType(in.Channel))
 	if fileRequest.Uuid == "" {
 		fileRequest.Uuid = model.NewId() // bad request ?
 	}
@@ -306,6 +308,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		fileRequest.MimeType = r.Metadata.MimeType
 		fileRequest.Uuid = r.Metadata.Uuid
 		fileRequest.ViewName = &r.Metadata.Name
+		fileRequest.Channel = model.NewString(channelType(r.Metadata.Channel))
 		var pid *int
 		if r.Metadata.ProfileId > 0 {
 			pid = model.NewInt(int(r.Metadata.ProfileId))
@@ -402,4 +405,16 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		Data: &storage.SafeUploadFileResponse_Metadata_{
 			Metadata: metadata,
 		}})
+}
+
+func channelType(channel storage.UploadFileChannel) string {
+	switch channel {
+	case storage.UploadFileChannel_CallChannel:
+		return model.UploadFileChannelCall
+	case storage.UploadFileChannel_MailChannel:
+		return model.UploadFileChannelMail
+	default:
+		return model.UploadFileChannelChat
+
+	}
 }

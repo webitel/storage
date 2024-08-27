@@ -4,6 +4,12 @@ import (
 	"fmt"
 )
 
+const (
+	UploadFileChannelCall = "call"
+	UploadFileChannelChat = "chat"
+	UploadFileChannelMail = "mail"
+)
+
 type JobUploadFile struct {
 	Id        int64   `db:"id"`
 	State     int     `db:"state"`
@@ -20,6 +26,7 @@ type JobUploadFile struct {
 	UpdatedAt int64   `db:"updated_at"`
 	Attempts  int     `db:"attempts,default:0" json:"attempts"`
 	SHA256Sum *string `db:"sha256sum" json:"sha256sum"`
+	Channel   *string `db:"channel" json:"channel"`
 }
 
 type JobUploadFileWithProfile struct {
