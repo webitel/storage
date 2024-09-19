@@ -198,13 +198,11 @@ func schedule(what func(), delay time.Duration) chan struct{} {
 	stop := make(chan struct{})
 
 	go func() {
-		for {
-			select {
-			case <-time.After(delay):
-				what()
-			case <-stop:
-				return
-			}
+		select {
+		case <-time.After(delay):
+			what()
+		case <-stop:
+			return
 		}
 	}()
 
