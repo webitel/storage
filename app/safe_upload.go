@@ -152,6 +152,7 @@ func RecoverySafeUploadProcess(id string) (*SafeUpload, error) {
 	if su.State() != SafeUploadStateSleep {
 		return nil, errors.New("upload state " + strconv.Itoa(int(su.State())))
 	}
+	su.setState(SafeUploadStateActive)
 	su.cancelSleep()
 	wlog.Debug(fmt.Sprintf("recovery upload id=%s, name=%s, size=%d", su.id, su.request.Name, su.Size()))
 
