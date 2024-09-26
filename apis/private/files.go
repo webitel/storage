@@ -123,6 +123,8 @@ func putAiSpeech(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := c.Params.Id
+	wlog.Debug(fmt.Sprintf("start record %s", id))
+	defer wlog.Debug(fmt.Sprintf("stop record %s", id))
 
 	q := r.URL.Query()
 	addresses, _ := base64.URLEncoding.DecodeString(q.Get("addresses"))
