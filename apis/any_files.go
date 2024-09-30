@@ -102,23 +102,17 @@ func streamAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 func downloadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 	c.RequireDomain()
+	c.RequireExpire()
 	c.RequireSignature()
+
 	if c.Err != nil {
 		return
 	}
-	source := r.URL.Query().Get("source")
-	if source != "tts" {
-		c.RequireExpire()
 
-		if c.Err != nil {
-			return
-		}
-		if c.Params.Expires < model.GetMillis() {
-			c.SetSessionExpire()
-			return
-		}
+	if c.Params.Expires < model.GetMillis() {
+		c.SetSessionExpire()
+		return
 	}
-
 	// region VALIDATION
 	validationString := createValidationKey(*r.URL)
 	// dynamic parameters validation
@@ -255,15 +249,22 @@ func createValidationKey(key url.URL) string {
 
 func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireDomain()
-	c.RequireExpire()
 	c.RequireSignature()
 
 	if c.Err != nil {
 		return
 	}
-	if c.Params.Expires < model.GetMillis() {
-		c.SetSessionExpire()
-		return
+	source := r.URL.Query().Get("source")
+	if source != "tts" {
+		c.RequireExpire()
+
+		if c.Err != nil {
+			return
+		}
+		if c.Params.Expires < model.GetMillis() {
+			c.SetSessionExpire()
+			return
+		}
 	}
 
 	q := r.URL.Query()
@@ -275,7 +276,6 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	var backend utils.FileBackend
 	var domainId int
 	var reader io.ReadCloser
-	source := q.Get("source")
 
 	// region VALIDATION
 	validationString := createValidationKey(*r.URL)
