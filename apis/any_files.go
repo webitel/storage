@@ -102,17 +102,23 @@ func streamAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 func downloadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 	c.RequireDomain()
-	c.RequireExpire()
 	c.RequireSignature()
-
 	if c.Err != nil {
 		return
 	}
+	source := r.URL.Query().Get("source")
+	if source != "tts" {
+		c.RequireExpire()
 
-	if c.Params.Expires < model.GetMillis() {
-		c.SetSessionExpire()
-		return
+		if c.Err != nil {
+			return
+		}
+		if c.Params.Expires < model.GetMillis() {
+			c.SetSessionExpire()
+			return
+		}
 	}
+
 	// region VALIDATION
 	validationString := createValidationKey(*r.URL)
 	// dynamic parameters validation
