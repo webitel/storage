@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
@@ -46,4 +47,16 @@ func (c *Controller) DeleteTranscript(session *auth_manager.Session, ids []int64
 	}
 
 	return c.app.RemoveTranscript(session.Domain(0), ids, uuid)
+}
+
+func (c *Controller) PutTranscript(ctx context.Context, session *auth_manager.Session, uuid string, tr model.FileTranscript) (int64, engine.AppError) {
+	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
+	if !permission.CanRead() {
+		return 0, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+	}
+	if !permission.CanUpdate() {
+		return 0, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
+	}
+
+	return c.app.PutTranscript(ctx, session.Domain(0), uuid, tr)
 }

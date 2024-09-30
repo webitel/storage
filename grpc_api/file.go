@@ -4,23 +4,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/webitel/storage/app"
 	"io"
 	"net/http"
 	"net/url"
 
 	"github.com/webitel/wlog"
 
+	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
+	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	engine "github.com/webitel/engine/model"
-	"github.com/webitel/protos/storage"
+
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
+)
+
+var (
+	ErrCancel = errors.New("cancel")
 )
 
 type file struct {
 	ctrl       *controller.Controller
 	curl       *http.Client
 	publicHost string
-	storage.UnsafeFileServiceServer
+	gogrpc.UnsafeFileServiceServer
 }
 
 func NewFileApi(proxy *string, ph string, api *controller.Controller) *file {
@@ -42,7 +49,7 @@ func NewFileApi(proxy *string, ph string, api *controller.Controller) *file {
 	return c
 }
 
-func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
+func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
 	var chunk *storage.UploadFileRequest_Chunk
 
 	res, gErr := in.Recv()
@@ -113,13 +120,19 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		return err
 	}
 
-	return in.SendAndClose(&storage.UploadFileResponse{
+	result := &storage.UploadFileResponse{
 		FileId:  fileRequest.Id,
 		Size:    fileRequest.Size,
 		Code:    storage.UploadStatusCode_Ok,
 		FileUrl: publicUrl,
 		Server:  api.publicHost,
-	})
+	}
+
+	if fileRequest.SHA256Sum != nil {
+		result.Sha256Sum = *fileRequest.SHA256Sum
+	}
+
+	return in.SendAndClose(result)
 }
 
 func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileLinkRequest) (*storage.GenerateFileLinkResponse, error) {
@@ -130,15 +143,18 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 	return &storage.GenerateFileLinkResponse{Url: uri}, nil
 }
 
-func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.FileService_DownloadFileServer) error {
+func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.FileService_DownloadFileServer) error {
 	var sFile io.ReadCloser
 	var err error
+	var buf []byte
+	var bufferSize int64 = 4 * 1024
+
 	f, backend, appErr := api.ctrl.InsecureGetFileWithProfile(in.DomainId, in.Id)
 	if appErr != nil {
 		return appErr
 	}
 
-	sFile, appErr = backend.Reader(f, 0)
+	sFile, appErr = backend.Reader(f, in.Offset)
 	if appErr != nil {
 		return appErr
 	}
@@ -146,16 +162,20 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 	defer sFile.Close()
 
 	if in.Metadata {
-		err = stream.Send(&storage.StreamFile{
-			Data: &storage.StreamFile_Metadata_{
-				Metadata: &storage.StreamFile_Metadata{
-					Id:       f.Id,
-					Name:     f.Name,
-					MimeType: f.MimeType,
-					Uuid:     f.Uuid,
-					Size:     f.Size,
-				},
+		d := &storage.StreamFile_Metadata_{
+			Metadata: &storage.StreamFile_Metadata{
+				Id:       f.Id,
+				Name:     f.Name,
+				MimeType: f.MimeType,
+				Uuid:     f.Uuid,
+				Size:     f.Size,
 			},
+		}
+		if f.SHA256Sum != nil {
+			d.Metadata.Sha256Sum = *f.SHA256Sum
+		}
+		err = stream.Send(&storage.StreamFile{
+			Data: d,
 		})
 
 		if err != nil {
@@ -163,22 +183,33 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 		}
 	}
 
-	buf := make([]byte, 4*1024)
+	if in.BufferSize > 0 {
+		bufferSize = in.BufferSize
+	}
+
+	buf = make([]byte, bufferSize)
+
 	var n int
 	for {
 		n, err = sFile.Read(buf)
-		buf = buf[:n]
-		if err != nil {
+		if err != nil && err != io.EOF {
+			break
+		}
+		if n == 0 {
 			break
 		}
 		err = stream.Send(&storage.StreamFile{
 			Data: &storage.StreamFile_Chunk{
-				Chunk: buf,
+				Chunk: buf[:n],
 			},
 		})
 		if err != nil {
 			break
 		}
+	}
+
+	if err != nil && err != io.EOF {
+		wlog.Error(fmt.Sprintf("DownloadFile \"%s\" error: %s", f.Name, err.Error()))
 	}
 
 	return nil
@@ -222,14 +253,20 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 		return nil, err
 	}
 
-	return &storage.UploadFileUrlResponse{
+	result := &storage.UploadFileUrlResponse{
 		Id:   fileRequest.Id,
 		Code: storage.UploadStatusCode_Ok,
 		Url:  publicUrl,
 		Size: fileRequest.Size,
 		Mime: fileRequest.MimeType,
 		// TODO ADD Server
-	}, nil
+	}
+
+	if fileRequest.SHA256Sum != nil {
+		result.Sha256Sum = *fileRequest.SHA256Sum
+	}
+
+	return result, nil
 }
 
 func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest) (*storage.DeleteFilesResponse, error) {
@@ -244,4 +281,125 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 	}
 
 	return &storage.DeleteFilesResponse{}, nil
+}
+
+func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) error {
+	var su *app.SafeUpload
+	res, gErr := in.Recv()
+	if gErr != nil {
+		wlog.Error(gErr.Error())
+		return gErr
+	}
+
+	switch r := res.Data.(type) {
+	case *storage.SafeUploadFileRequest_UploadId:
+		su, gErr = app.RecoverySafeUploadProcess(r.UploadId)
+		if gErr != nil {
+			return gErr
+		}
+		break
+	case *storage.SafeUploadFileRequest_Metadata_:
+		var fileRequest model.JobUploadFile
+		fileRequest.DomainId = r.Metadata.DomainId
+		fileRequest.Name = r.Metadata.Name
+
+		fileRequest.MimeType = r.Metadata.MimeType
+		fileRequest.Uuid = r.Metadata.Uuid
+		fileRequest.ViewName = &r.Metadata.Name
+		var pid *int
+		if r.Metadata.ProfileId > 0 {
+			pid = model.NewInt(int(r.Metadata.ProfileId))
+		}
+		su = api.ctrl.App().NewSafeUpload(pid, &fileRequest)
+		su.SetProgress(r.Metadata.Progress)
+		break
+	default:
+		gErr = errors.New("bad request")
+		return gErr
+	}
+
+	gErr = in.Send(&storage.SafeUploadFileResponse{
+		Data: &storage.SafeUploadFileResponse_Part_{
+			Part: &storage.SafeUploadFileResponse_Part{
+				UploadId: su.Id(),
+				Size:     int64(su.Size()),
+			},
+		},
+	})
+
+	if gErr != nil {
+		su.SetError(gErr)
+		return gErr
+	}
+
+	var chunk *storage.SafeUploadFileRequest_Chunk
+	for {
+		res, gErr = in.Recv()
+		if gErr != nil {
+			break
+		}
+
+		switch res.Data.(type) {
+		case *storage.SafeUploadFileRequest_Chunk:
+			chunk = res.Data.(*storage.SafeUploadFileRequest_Chunk)
+		case *storage.SafeUploadFileRequest_Cancel:
+			su.SetError(ErrCancel)
+			return in.Send(&storage.SafeUploadFileResponse{})
+		default:
+			gErr = errors.New("streaming data error: bad SafeUploadFileRequest_Chunk")
+			break
+		}
+
+		if len(chunk.Chunk) == 0 {
+			break
+		}
+
+		su.Write(chunk.Chunk)
+
+		if su.Progress {
+			in.Send(&storage.SafeUploadFileResponse{
+				Data: &storage.SafeUploadFileResponse_Progress_{
+					Progress: &storage.SafeUploadFileResponse_Progress{
+						Uploaded: int64(su.Size()),
+					},
+				},
+			})
+		}
+	}
+
+	if gErr != nil && gErr != io.EOF {
+		su.Sleep()
+		wlog.Error(gErr.Error())
+		return gErr
+	} else {
+		su.CloseWrite()
+	}
+
+	<-su.WaitUploaded()
+	fileRequest := su.File()
+	var err engine.AppError
+	var publicUrl string
+	if publicUrl, err = api.ctrl.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", fileRequest.Id, fileRequest.DomainId); err != nil {
+		return err
+	}
+
+	metadata := &storage.SafeUploadFileResponse_Metadata{
+		FileId:   fileRequest.Id,
+		FileUrl:  publicUrl,
+		Size:     fileRequest.Size,
+		Code:     storage.UploadStatusCode_Ok,
+		Server:   api.publicHost,
+		Name:     fileRequest.GetViewName(),
+		Uuid:     fileRequest.Uuid,
+		MimeType: fileRequest.GetMimeType(),
+	}
+
+	if fileRequest.SHA256Sum != nil {
+		metadata.Sha256Sum = *fileRequest.SHA256Sum
+	}
+
+	return in.Send(&storage.SafeUploadFileResponse{
+		Data: &storage.SafeUploadFileResponse_Metadata_{
+			Metadata: metadata,
+		}})
 }

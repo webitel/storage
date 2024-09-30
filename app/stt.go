@@ -131,7 +131,7 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 		transcript.File = model.Lookup{
 			Id: int(fileId),
 		}
-		transcript.Profile = model.Lookup{
+		transcript.Profile = &model.Lookup{
 			Id: int(p.Id),
 		}
 
@@ -155,6 +155,10 @@ func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequ
 
 func (app *App) RemoveTranscript(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
 	return app.Store.TranscriptFile().Delete(domainId, ids, uuid)
+}
+
+func (app *App) PutTranscript(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, engine.AppError) {
+	return app.Store.TranscriptFile().Put(ctx, domainId, uuid, tr)
 }
 
 func (app *App) publicUri(uri string) string {

@@ -9,3 +9,7 @@ type Controller struct {
 func NewController(a *app.App) *Controller {
 	return &Controller{a}
 }
+
+func (c *Controller) App() *app.App {
+	return c.app
+}

@@ -1,7 +1,7 @@
 package grpc_api
 
 import (
-	"github.com/webitel/protos/engine"
+	engine "buf.build/gen/go/webitel/engine/protocolbuffers/go"
 	"github.com/webitel/storage/model"
 )
 

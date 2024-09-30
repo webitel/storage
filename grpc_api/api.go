@@ -1,7 +1,7 @@
 package grpc_api
 
 import (
-	"github.com/webitel/protos/storage"
+	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
 	"google.golang.org/grpc"
@@ -31,10 +31,10 @@ func Init(a *app.App, server *grpc.Server) {
 	api.fileTranscript = NewFileTranscriptApi(ctrl)
 	api.importTemplate = NewImportTemplateApi(ctrl)
 
-	storage.RegisterBackendProfileServiceServer(server, api.backendProfiles)
-	storage.RegisterMediaFileServiceServer(server, api.media)
-	storage.RegisterFileServiceServer(server, api.file)
-	storage.RegisterCognitiveProfileServiceServer(server, api.cognitiveProfile)
-	storage.RegisterFileTranscriptServiceServer(server, api.fileTranscript)
-	storage.RegisterImportTemplateServiceServer(server, api.importTemplate)
+	gogrpc.RegisterBackendProfileServiceServer(server, api.backendProfiles)
+	gogrpc.RegisterMediaFileServiceServer(server, api.media)
+	gogrpc.RegisterFileServiceServer(server, api.file)
+	gogrpc.RegisterCognitiveProfileServiceServer(server, api.cognitiveProfile)
+	gogrpc.RegisterFileTranscriptServiceServer(server, api.fileTranscript)
+	gogrpc.RegisterImportTemplateServiceServer(server, api.importTemplate)
 }

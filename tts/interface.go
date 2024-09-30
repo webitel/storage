@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 )
 
 type TTSEngine interface {
@@ -36,6 +37,8 @@ type TTSParams struct {
 	Pitch            float64  `json:"-"`
 	VolumeGainDb     float64  `json:"-"`
 	EffectsProfileId []string `json:"-"`
+
+	VoiceSettings url.Values
 }
 
 func (p TTSParams) BackgroundNode() string {

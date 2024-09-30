@@ -8,6 +8,8 @@ import (
 	engine "github.com/webitel/engine/model"
 )
 
+const CognitiveProfileKeyField = "key"
+
 type CognitiveProfile struct {
 	Id        int64      `json:"id" db:"id"`
 	DomainId  int64      `json:"-" db:"domain_id"`
@@ -64,6 +66,8 @@ func (CognitiveProfile) EntityName() string {
 }
 
 func (c *CognitiveProfile) IsValid() engine.AppError {
+	// on create action key from properties can't be empty
+	// on update action key can be empty (task: WTEL-4344)
 	return nil
 }
 
@@ -80,7 +84,7 @@ type CognitiveProfilePath struct {
 	UpdatedAt time.Time
 }
 
-func (f *CognitiveProfile) Path(path *CognitiveProfilePath) {
+func (f *CognitiveProfile) Patch(path *CognitiveProfilePath) {
 	f.UpdatedBy = &path.UpdatedBy
 	f.UpdatedAt = &path.UpdatedAt
 
@@ -89,6 +93,9 @@ func (f *CognitiveProfile) Path(path *CognitiveProfilePath) {
 	}
 
 	if path.Properties != nil {
+		if oldAccessKey, newAccessKey := f.Properties.GetString(CognitiveProfileKeyField), path.Properties.GetString(CognitiveProfileKeyField); newAccessKey == "" {
+			f.Properties[CognitiveProfileKeyField] = oldAccessKey
+		}
 		f.Properties = *path.Properties
 	}
 

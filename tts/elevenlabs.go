@@ -7,29 +7,58 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
+
+type ElevenLabsVoiceSettings struct {
+	Stability       float64 `json:"stability"`
+	SimilarityBoost float64 `json:"similarity_boost"`
+	Style           float64 `json:"style"`
+	UseSpeakerBoost bool    `json:"use_speaker_boost,omitempty"`
+}
+
+type ElevenLabsRequest struct {
+	ModelId       string                  `json:"model_id"`
+	Text          string                  `json:"text"`
+	VoiceSettings ElevenLabsVoiceSettings `json:"voice_settings"`
+}
 
 func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	token := string(fixKey(params.Key))
 	voiceId := ""
 
-	params.Voice = strings.ToUpper(params.Voice)
-	switch params.Voice {
+	switch strings.ToUpper(params.Voice) {
 	case "MALE":
 		voiceId = "J7snWfBtGKxBcPiNUoia"
 	case "FEMALE":
 		voiceId = "yoKoOZMjmn2OuceuTuQO"
 	default:
-		voiceId = "J7snWfBtGKxBcPiNUoia"
+		if params.Voice == "" {
+			voiceId = "J7snWfBtGKxBcPiNUoia"
+		} else {
+			voiceId = params.Voice
+		}
 	}
 
-	req := struct {
-		ModelId string `json:"model_id"`
-		Text    string `json:"text"`
-	}{
-		"eleven_multilingual_v2",
-		params.Text,
+	req := ElevenLabsRequest{
+		ModelId: "eleven_multilingual_v2",
+		Text:    params.Text,
+	}
+
+	if params.VoiceSettings != nil {
+		if params.VoiceSettings.Has("similarity_boost") {
+			req.VoiceSettings.SimilarityBoost, _ = strconv.ParseFloat(params.VoiceSettings.Get("similarity_boost"), 32)
+		}
+		if params.VoiceSettings.Has("stability") {
+			req.VoiceSettings.Stability, _ = strconv.ParseFloat(params.VoiceSettings.Get("stability"), 32)
+		}
+		if params.VoiceSettings.Has("style") {
+			req.VoiceSettings.Style, _ = strconv.ParseFloat(params.VoiceSettings.Get("style"), 32)
+		}
+		if params.VoiceSettings.Has("use_speaker_boost") {
+			req.VoiceSettings.UseSpeakerBoost = params.VoiceSettings.Get("use_speaker_boost") == "true"
+		}
 	}
 
 	jsonData, err := json.Marshal(&req)

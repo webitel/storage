@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	BackendCacheSize = 1000
-	CacheDir         = "./cache"
+	BackendCacheSize             = 1000
+	CacheDir                     = "./cache"
+	BackendProfileAccessKeyField = "access_key"
 )
 
 type BackendProfileType string
@@ -142,6 +143,8 @@ func (f *FileBackendProfile) PreSave() {
 }
 
 func (f *FileBackendProfile) IsValid() engine.AppError {
+	// on create action access_key from properties can't be empty
+	// on update action access_key can be empty (task: WTEL-4344)
 	if len(f.Name) == 0 {
 		return engine.NewBadRequestError("model.file_backend_profile.name.app_error", "")
 	}
@@ -158,7 +161,7 @@ func (f *FileBackendProfile) ToJson() string {
 	return string(b)
 }
 
-func (f *FileBackendProfile) Path(path *FileBackendProfilePath) {
+func (f *FileBackendProfile) Patch(path *FileBackendProfilePath) {
 	f.UpdatedBy = path.UpdatedBy
 	f.UpdatedAt = path.UpdatedAt
 
@@ -171,6 +174,9 @@ func (f *FileBackendProfile) Path(path *FileBackendProfilePath) {
 	}
 
 	if path.Priority != nil {
+		if oldAccessKey, newAccessKey := f.Properties.GetString(BackendProfileAccessKeyField), path.Properties.GetString(BackendProfileAccessKeyField); newAccessKey == "" {
+			f.Properties[BackendProfileAccessKeyField] = oldAccessKey
+		}
 		f.Priority = *path.Priority
 	}
 

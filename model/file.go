@@ -10,6 +10,7 @@ type BaseFile struct {
 	Size       int64           `db:"size" json:"size"`
 	MimeType   string          `db:"mime_type" json:"mime_type"`
 	Properties StringInterface `db:"properties" json:"properties"`
+	SHA256Sum  *string         `db:"sha256sum" json:"sha256sum"`
 	Instance   string          `db:"instance" json:"-"`
 }
 
@@ -22,6 +23,7 @@ type File struct {
 	CreatedAt int64  `db:"created_at" json:"created_at"`
 	Removed   *bool  `db:"removed" json:"-"`
 	NotExists *bool  `db:"not_exists" json:"-"`
+	Safe      bool   `db:"-" json:"-"`
 }
 
 func (f *File) Domain() int64 {
