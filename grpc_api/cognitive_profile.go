@@ -200,7 +200,7 @@ func (api *cognitiveProfile) SearchCognitiveProfileVoices(ctx context.Context, i
 		ListRequest: model.ListRequest{
 			Q: in.GetQ(),
 		},
-		Id:  in.Id,
+		Id:  in.GetId(),
 		Key: in.Key,
 	}
 
