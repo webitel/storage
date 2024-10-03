@@ -188,6 +188,37 @@ func (api *cognitiveProfile) DeleteCognitiveProfile(ctx context.Context, in *sto
 	return toGrpcCognitiveProfile(profile), nil
 }
 
+func (api *cognitiveProfile) SearchCognitiveProfileVoices(ctx context.Context, in *storage.SearchCognitiveProfileVoicesRequest) (*storage.ListCognitiveProfileVoices, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*model.CognitiveProfileVoice
+
+	rec := &model.SearchCognitiveProfileVoice{
+		ListRequest: model.ListRequest{
+			Q: in.GetQ(),
+		},
+		Id:  in.Id,
+		Key: in.Key,
+	}
+
+	list, err = api.ctrl.SearchCognitiveProfileVoice(session, session.Domain(0), rec)
+
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*storage.CognitiveProfileVoice, 0, len(list))
+	for _, v := range list {
+		items = append(items, toGrpcCognitiveProfileVoice(v))
+	}
+	return &storage.ListCognitiveProfileVoices{
+		Items: items,
+	}, nil
+}
+
 func toGrpcCognitiveProfile(src *model.CognitiveProfile) *storage.CognitiveProfile {
 	// nullify password
 	src.Properties.Remove(model.CognitiveProfileKeyField)
@@ -204,6 +235,13 @@ func toGrpcCognitiveProfile(src *model.CognitiveProfile) *storage.CognitiveProfi
 		Description: src.Description,
 		Service:     getService(src.Service),
 		Default:     src.Default,
+	}
+}
+
+func toGrpcCognitiveProfileVoice(src *model.CognitiveProfileVoice) *storage.CognitiveProfileVoice {
+	return &storage.CognitiveProfileVoice{
+		Id:   src.Id,
+		Name: src.Name,
 	}
 }
 

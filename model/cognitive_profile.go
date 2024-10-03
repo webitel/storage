@@ -29,6 +29,17 @@ type CognitiveProfile struct {
 	SyncTag     int64           `json:"-" db:"-"`
 }
 
+type CognitiveProfileVoice struct {
+	Id   string `json:"id" db:"id"`
+	Name string `json:"name" db:"name"`
+}
+
+type SearchCognitiveProfileVoice struct {
+	ListRequest
+	Id  int64
+	Key string
+}
+
 type SearchCognitiveProfile struct {
 	ListRequest
 	Ids     []int64

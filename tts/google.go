@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
+	engine "github.com/webitel/engine/model"
+	"github.com/webitel/storage/model"
 	"google.golang.org/api/option"
 	texttospeechpb "google.golang.org/genproto/googleapis/cloud/texttospeech/v1"
 )
@@ -107,4 +109,22 @@ func Google(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	size := len(resp.GetAudioContent())
 
 	return r, &v, &size, nil
+}
+
+func GoogleVoice(domainId int64, req *model.SearchCognitiveProfileVoice) ([]*model.CognitiveProfileVoice, engine.AppError) {
+	var voices []*model.CognitiveProfileVoice
+	voices = append(voices, &model.CognitiveProfileVoice{
+		Id:   "FEMALE",
+		Name: "FEMALE",
+	})
+	voices = append(voices, &model.CognitiveProfileVoice{
+		Id:   "MALE",
+		Name: "MALE",
+	})
+	voices = append(voices, &model.CognitiveProfileVoice{
+		Id:   "NEUTRAL",
+		Name: "NEUTRAL",
+	})
+
+	return voices, nil
 }
