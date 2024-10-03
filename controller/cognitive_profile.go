@@ -50,6 +50,20 @@ func (c *Controller) SearchCognitiveProfile(session *auth_manager.Session, domai
 	return list, endOfList, err
 }
 
+func (c *Controller) SearchCognitiveProfileVoice(session *auth_manager.Session, domainId int64, search *model.SearchCognitiveProfileVoice) ([]*model.CognitiveProfileVoice, engine.AppError) {
+	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)
+	if !permission.CanRead() {
+		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+	}
+
+	var list []*model.CognitiveProfileVoice
+	var err engine.AppError
+
+	list, err = c.app.SearchCognitiveProfileVoices(session.Domain(domainId), search)
+
+	return list, err
+}
+
 func (c *Controller) GetCognitiveProfile(session *auth_manager.Session, id int64, domainId int64) (*model.CognitiveProfile, engine.AppError) {
 	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeCognitiveProfile)

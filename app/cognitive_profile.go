@@ -1,9 +1,22 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
+	tts2 "github.com/webitel/storage/tts"
+)
+
+type ttsVoiceFunction func(domainId int64, params *model.SearchCognitiveProfileVoice) ([]*model.CognitiveProfileVoice, engine.AppError)
+
+var (
+	ttsVoiceEngine = map[string]ttsVoiceFunction{
+		strings.ToLower(TtsMicrosoft):  tts2.MicrosoftVoice,
+		strings.ToLower(TtsGoogle):     tts2.GoogleVoice,
+		strings.ToLower(TtsElevenLabs): tts2.ElevenLabsVoice,
+	}
 )
 
 func (app *App) CognitiveProfileCheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
@@ -30,6 +43,37 @@ func (app *App) SearchCognitiveProfilesByGroups(domainId int64, groups []int, se
 	}
 	search.RemoveLastElemIfNeed(&res)
 	return res, search.EndOfList(), nil
+}
+
+func (app *App) SearchCognitiveProfileVoices(domainId int64, search *model.SearchCognitiveProfileVoice) ([]*model.CognitiveProfileVoice, engine.AppError) {
+	var ttsProfile *model.TtsProfile
+	ttsProfile, err := app.Store.CognitiveProfile().SearchTtsProfile(domainId, int(search.Id))
+	if err != nil {
+		return nil, err
+	}
+	if !ttsProfile.Enabled {
+		err = engine.NewBadRequestError("tts.profile.disabled", "Profile is disabled")
+
+		return nil, err
+	}
+
+	provider := ttsProfile.Provider
+	provider = strings.ToLower(provider)
+
+	if fn, ok := ttsVoiceEngine[provider]; ok {
+		res, ttsErr := fn(domainId, search)
+		if ttsErr != nil {
+			switch ttsErr.(type) {
+			case engine.AppError:
+				return nil, engine.NewNotFoundError("tts.valid.not_found", "Not found provider")
+			default:
+				return nil, engine.NewInternalError("tts.app_error", ttsErr.Error())
+			}
+		}
+		return res, nil
+	}
+
+	return nil, engine.NewNotFoundError("tts.valid.not_found", "Not found provider")
 }
 
 func (app *App) GetCognitiveProfile(id, domain int64) (*model.CognitiveProfile, engine.AppError) {

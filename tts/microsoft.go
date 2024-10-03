@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	engine "github.com/webitel/engine/model"
+	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 )
 
@@ -70,6 +71,20 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, *int, error) {
 	}
 
 	return result.Body, &contentType, nil, nil
+}
+
+func MicrosoftVoice(domainId int64, req *model.SearchCognitiveProfileVoice) ([]*model.CognitiveProfileVoice, engine.AppError) {
+	var voices []*model.CognitiveProfileVoice
+	voices = append(voices, &model.CognitiveProfileVoice{
+		Id:   "FEMALE",
+		Name: "FEMALE",
+	})
+	voices = append(voices, &model.CognitiveProfileVoice{
+		Id:   "MALE",
+		Name: "MALE",
+	})
+
+	return voices, nil
 }
 
 func microsoftToken(key, region string) (string, error) {
