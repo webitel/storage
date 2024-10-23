@@ -28,8 +28,10 @@ func (self SqlFileStore) CreateIndexesIfNotExists() {
 func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		id, err := self.GetMaster().SelectInt(`
-			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name, profile_id, sha256sum)
-            values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName, :ProfileId, :SHA256Sum)
+			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name, 
+			                          profile_id, sha256sum, channel)
+            values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName, 
+                   :ProfileId, :SHA256Sum, :Channel)
 			returning id
 		`, map[string]interface{}{
 			"Name":      file.Name,

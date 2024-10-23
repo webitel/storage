@@ -89,6 +89,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			Instance:   app.GetInstanceId(),
 		},
 		ProfileId: profileId,
+		Channel:   file.Channel,
 	}
 
 	h := sha256.New()
