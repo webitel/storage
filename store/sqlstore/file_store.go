@@ -43,6 +43,7 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 			"VName":     file.ViewName,
 			"ProfileId": file.ProfileId,
 			"SHA256Sum": file.SHA256Sum,
+			"Channel":   file.Channel,
 		})
 
 		if err != nil {
@@ -74,10 +75,10 @@ func (self SqlFileStore) MoveFromJob(jobId int64, profileId *int, properties mod
 		_, err := self.GetMaster().Exec(`with del as (
   delete from storage.upload_file_jobs
   where id = $1
-  returning id, name, uuid, size, domain_id, mime_type, created_at, instance, view_name
+  returning id, name, uuid, size, domain_id, mime_type, created_at, instance, view_name, channel
 )
-insert into storage.files(id, name, uuid, profile_id, size, domain_id, mime_type, properties, created_at, instance, view_name)
-select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $3, del.created_at, del.instance, del.view_name
+insert into storage.files(id, name, uuid, profile_id, size, domain_id, mime_type, properties, created_at, instance, view_name, channel)
+select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $3, del.created_at, del.instance, del.view_name, del.channel
 from del`, jobId, profileId, properties.ToJson())
 
 		if err != nil {

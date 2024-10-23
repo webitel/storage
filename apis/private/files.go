@@ -45,6 +45,7 @@ func putRecordCallFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	fileRequest.Name = r.URL.Query().Get("name")
 	fileRequest.ViewName = &fileRequest.Name
 	fileRequest.MimeType = r.Header.Get("Content-Type")
+	fileRequest.Channel = model.NewString(model.UploadFileChannelCall)
 
 	if r.URL.Query().Get("email_msg") != "" && r.URL.Query().Get("email_msg") != "none" {
 		fileRequest.EmailMsg = r.URL.Query().Get("email_msg")

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var service = "10.10.10.201:8767"
+var service = "10.10.10.25:8767"
 var fileLoc = "/Users/ihor/work/storage/1/img.png"
 
 func TestFile(t *testing.T) {

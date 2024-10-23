@@ -16,14 +16,15 @@ type BaseFile struct {
 
 type File struct {
 	BaseFile
-	Id        int64  `db:"id" json:"id"`
-	DomainId  int64  `db:"domain_id" json:"domain_id"`
-	Uuid      string `db:"uuid" json:"uuid"`
-	ProfileId *int   `db:"profile_id" json:"profile_id"`
-	CreatedAt int64  `db:"created_at" json:"created_at"`
-	Removed   *bool  `db:"removed" json:"-"`
-	NotExists *bool  `db:"not_exists" json:"-"`
-	Safe      bool   `db:"-" json:"-"`
+	Id        int64   `db:"id" json:"id"`
+	DomainId  int64   `db:"domain_id" json:"domain_id"`
+	Uuid      string  `db:"uuid" json:"uuid"`
+	ProfileId *int    `db:"profile_id" json:"profile_id"`
+	CreatedAt int64   `db:"created_at" json:"created_at"`
+	Removed   *bool   `db:"removed" json:"-"`
+	NotExists *bool   `db:"not_exists" json:"-"`
+	Safe      bool    `db:"-" json:"-"`
+	Channel   *string `db:"channel" json:"channel"`
 }
 
 func (f *File) Domain() int64 {

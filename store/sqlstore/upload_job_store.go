@@ -22,8 +22,8 @@ func (self *SqlUploadJobStore) CreateIndexesIfNotExists() {
 func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, engine.AppError) {
 	job.PreSave()
 	id, err := self.GetMaster().SelectInt(`insert into storage.upload_file_jobs (name, uuid, mime_type, size, instance,
-                                      created_at, updated_at, domain_id, view_name)
-values (:Name, :Uuid, :Mime, :Size, :Instance, :CreatedAt, :UpdatedAt, :DomainId, :VName)
+                                      created_at, updated_at, domain_id, view_name, channel)
+values (:Name, :Uuid, :Mime, :Size, :Instance, :CreatedAt, :UpdatedAt, :DomainId, :VName, :Channel)
 returning id
 `, map[string]interface{}{
 		"Name":      job.Name,
@@ -35,6 +35,7 @@ returning id
 		"UpdatedAt": job.UpdatedAt,
 		"DomainId":  job.DomainId,
 		"VName":     job.ViewName,
+		"Channel":   job.Channel,
 	})
 
 	if err != nil {
