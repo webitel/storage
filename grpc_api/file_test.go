@@ -13,22 +13,31 @@ import (
 )
 
 var service = "10.10.10.25:8767"
+
 var fileLoc = "/Users/ihor/work/storage/1/img.png"
 
+//var fileLoc = "/tmp/1/ddd.mp4"
+
+//var fileLoc = "/Users/ihor/work/storage/1/1.jpg"
+
+//var fileLoc = "/Users/ihor/work/storage/1/1.avi"
+
 func TestFile(t *testing.T) {
-	uploadId := sendFile(nil)
-	time.Sleep(time.Second)
+	var uploadId *string
 	sendFile(uploadId)
-	time.Sleep(time.Second * 3)
-	sendFile(uploadId)
-	time.Sleep(time.Second)
-	sendFile(uploadId)
-	sendFile(uploadId)
+	return
+	for uploadId = sendFile(uploadId); uploadId != nil; {
+		fmt.Println("send")
+		time.Sleep(time.Millisecond * 100)
+	}
 
 }
 
 func sendFile(uploadId *string) (newUploadId *string) {
 	c, err := grpc.Dial(service, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(2*time.Second))
+	check(err)
+
+	stats, err := os.Stat(fileLoc)
 	check(err)
 
 	f, err := os.Open(fileLoc)
@@ -54,9 +63,10 @@ func sendFile(uploadId *string) (newUploadId *string) {
 		err = s.Send(&storage.SafeUploadFileRequest{
 			Data: &storage.SafeUploadFileRequest_Metadata_{
 				Metadata: &storage.SafeUploadFileRequest_Metadata{
-					DomainId:       1,
-					Name:           "ffff.png",
-					MimeType:       "image/png",
+					DomainId: 1,
+					Name:     stats.Name(),
+					MimeType: "image/jpeg",
+					//MimeType:       "video/mp4",
 					Uuid:           "blabla",
 					StreamResponse: false,
 					ProfileId:      221,
@@ -80,11 +90,14 @@ func sendFile(uploadId *string) (newUploadId *string) {
 	var n int
 	for {
 		n, err = f.Read(buf)
+		if err != nil {
+			break
+		}
 		i++
 
 		if i == 50 {
-			cancel()
-			return
+			//cancel()
+			//return
 		}
 
 		if n == 0 {

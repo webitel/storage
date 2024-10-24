@@ -3,13 +3,11 @@ package app
 import (
 	"crypto/sha256"
 	"fmt"
-	"io"
-
 	engine "github.com/webitel/engine/model"
-	"github.com/webitel/storage/utils"
-
 	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
+	"io"
 )
 
 func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engine.AppError {
@@ -48,7 +46,33 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 		return err
 	}
 
-	return app.syncUpload(store, src, file, &profileId)
+	th, e := utils.NewThumbnail(file.MimeType)
+	if e != nil {
+		panic(e.Error())
+	}
+	originn := io.TeeReader(src, th)
+
+	var o = *file
+	file.Name = "thumbnail_" + file.Name
+	file.MimeType = "image/png"
+	ch := make(chan struct{})
+
+	go func() {
+		e := app.syncUpload(store, th.Reader(), file, &profileId)
+		if e != nil {
+			fmt.Println(e)
+		}
+		close(ch)
+	}()
+
+	err = app.syncUpload(store, originn, &o, &profileId)
+	if err != nil {
+		fmt.Println(err)
+	}
+	th.Close()
+	<-ch
+
+	return err
 }
 
 func (app *App) SafeUploadFileStream(store utils.FileBackend, src io.Reader, file *model.File) engine.AppError {

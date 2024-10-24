@@ -13,7 +13,7 @@ func (api *API) InitMedia() {
 	api.Routes.Media.Handle("/{id}/stream", api.ApiHandler(streamMedia)).Methods("GET")
 }
 
-//  /sys/media/:id/stream?domain_id=
+// /sys/media/:id/stream?domain_id=
 func streamMedia(c *Context, w http.ResponseWriter, r *http.Request) {
 	c.RequireId()
 

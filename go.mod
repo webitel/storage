@@ -16,6 +16,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/h2non/filetype v1.1.3
 	github.com/jmoiron/sqlx v1.3.5
+	github.com/juju/ratelimit v1.0.2
 	github.com/lib/pq v1.10.9
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/nicksnyder/go-i18n v1.10.1
@@ -66,6 +67,8 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
+	github.com/u2takey/ffmpeg-go v0.5.0 // indirect
+	github.com/u2takey/go-utils v0.3.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect

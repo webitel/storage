@@ -2,15 +2,13 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/webitel/storage/apis"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/grpc_api"
-	"github.com/webitel/wlog"
-
 	_ "github.com/webitel/storage/stt"
 	_ "github.com/webitel/storage/synchronizer"
 	_ "github.com/webitel/storage/uploader"
+	"github.com/webitel/wlog"
 
 	"net/http"
 	_ "net/http/pprof"
