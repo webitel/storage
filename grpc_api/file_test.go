@@ -14,13 +14,14 @@ import (
 
 var service = "10.10.10.25:8767"
 
-var fileLoc = "/Users/ihor/work/storage/1/img.png"
+//var fileLoc = "/Users/ihor/work/storage/1/img.png"
 
 //var fileLoc = "/tmp/1/ddd.mp4"
 
 //var fileLoc = "/Users/ihor/work/storage/1/1.jpg"
 
-//var fileLoc = "/Users/ihor/work/storage/1/1.avi"
+// var fileLoc = "/Users/ihor/work/storage/1/1.avi"
+var fileLoc = "/Users/ihor/work/storage/1/2.mp4"
 
 func TestFile(t *testing.T) {
 	var uploadId *string
@@ -65,8 +66,8 @@ func sendFile(uploadId *string) (newUploadId *string) {
 				Metadata: &storage.SafeUploadFileRequest_Metadata{
 					DomainId: 1,
 					Name:     stats.Name(),
-					MimeType: "image/jpeg",
-					//MimeType:       "video/mp4",
+					//MimeType: "image/png",
+					MimeType:       "video/mp4",
 					Uuid:           "blabla",
 					StreamResponse: false,
 					ProfileId:      221,

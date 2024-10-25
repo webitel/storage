@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -16,12 +15,20 @@ type Thumbnail struct {
 	stdin  io.WriteCloser
 	stdout io.ReadCloser
 	cmd    *exec.Cmd
+	end    bool
 }
 
 func (r *Thumbnail) Write(p []byte) (nn int, err error) {
+	if r.end {
+		return len(p), nil // TODO wait if io.EOF
+	}
 	nn, err = r.stdin.Write(p)
-
 	r.l += nn
+	if err != nil {
+		r.end = true
+		return nn, nil
+	}
+
 	return
 }
 
@@ -72,10 +79,6 @@ func mimeCmdArgs(mime string) []string {
 	return nil
 }
 
-func (r *Thumbnail) Start() {
-	r.cmd.Start()
-}
-
 func NewThumbnail(mime string) (*Thumbnail, error) {
 
 	cmdArgs := mimeCmdArgs(mime)
@@ -84,7 +87,7 @@ func NewThumbnail(mime string) (*Thumbnail, error) {
 	}
 
 	cmd := exec.Command("ffmpeg", cmdArgs...)
-	cmd.Stderr = os.Stderr // bind log stream to stderr
+	//cmd.Stderr = os.Stderr // bind log stream to stderr
 
 	stdin, _ := cmd.StdinPipe() // Open stdin pipe
 	//fh, _ := os.OpenFile("/Users/ihor/work/storage/bin/"+model.NewId()[:6]+".png",

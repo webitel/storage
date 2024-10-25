@@ -50,27 +50,24 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 	if e != nil {
 		panic(e.Error())
 	}
-	originn := io.TeeReader(src, th)
+	origin := io.TeeReader(src, th)
 
 	var o = *file
 	file.Name = "thumbnail_" + file.Name
 	file.MimeType = "image/png"
-	ch := make(chan struct{})
+	ch := make(chan engine.AppError)
 
 	go func() {
-		e := app.syncUpload(store, th.Reader(), file, &profileId)
-		if e != nil {
-			fmt.Println(e)
-		}
+		ch <- app.syncUpload(store, th.Reader(), file, &profileId)
 		close(ch)
 	}()
 
-	err = app.syncUpload(store, originn, &o, &profileId)
-	if err != nil {
-		fmt.Println(err)
-	}
+	err = app.syncUpload(store, origin, &o, &profileId)
 	th.Close()
-	<-ch
+	err2 := <-ch
+	if err2 != nil {
+
+	}
 
 	return err
 }
