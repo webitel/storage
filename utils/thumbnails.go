@@ -1,11 +1,14 @@
 package utils
 
 import (
-	"fmt"
 	"github.com/pkg/errors"
 	"io"
 	"os/exec"
 	"strings"
+)
+
+const (
+	ThumbnailScale = "scale=128:-1"
 )
 
 type Thumbnail struct {
@@ -37,8 +40,6 @@ func (r *Thumbnail) Reader() io.Reader {
 }
 
 func (r *Thumbnail) Close() (err error) {
-	fmt.Println("send ", r.l)
-
 	err = r.stdin.Close() // close the stdin, or ffmpeg will wait forever
 	if err != nil {
 		return err
@@ -58,8 +59,7 @@ func mimeCmdArgs(mime string) []string {
 			"-i", "pipe:0",
 			"-f", "image2pipe",
 			"-vcodec", "png",
-			"-vf",
-			"scale=128:-1",
+			"-vf", ThumbnailScale,
 			"pipe:1",
 		}
 	} else if strings.HasPrefix(mime, "video/") {
@@ -72,6 +72,7 @@ func mimeCmdArgs(mime string) []string {
 			"-f", "image2pipe", // Вивід у форматі image2pipe
 			"-vcodec", "png", // Виведення у форматі PNG
 			"-pix_fmt", "rgba", // Формат пікселів
+			"-vf", ThumbnailScale,
 			"pipe:1", // pipe:1 для виводу у io.Writer
 		}
 	}
@@ -89,11 +90,8 @@ func NewThumbnail(mime string) (*Thumbnail, error) {
 	cmd := exec.Command("ffmpeg", cmdArgs...)
 	//cmd.Stderr = os.Stderr // bind log stream to stderr
 
-	stdin, _ := cmd.StdinPipe() // Open stdin pipe
-	//fh, _ := os.OpenFile("/Users/ihor/work/storage/bin/"+model.NewId()[:6]+".png",
-	//	os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	stdin, _ := cmd.StdinPipe()   // Open stdin pipe
 	stdout, _ := cmd.StdoutPipe() // Open stout pipe
-	//cmd.Stdout = fh
 	cmd.Start()
 
 	return &Thumbnail{
