@@ -6,25 +6,40 @@ import (
 
 type BaseFile struct {
 	Name       string          `db:"name" json:"name"`
-	ViewName   *string         `db:"view_name" json:"view_name"`
+	ViewName   *string         `db:"view_name" json:"view_name,omitempty"`
 	Size       int64           `db:"size" json:"size"`
 	MimeType   string          `db:"mime_type" json:"mime_type"`
 	Properties StringInterface `db:"properties" json:"properties"`
-	SHA256Sum  *string         `db:"sha256sum" json:"sha256sum"`
+	SHA256Sum  *string         `db:"sha256sum" json:"sha256sum,omitempty"`
 	Instance   string          `db:"instance" json:"-"`
 }
 
 type File struct {
 	BaseFile
-	Id        int64   `db:"id" json:"id"`
-	DomainId  int64   `db:"domain_id" json:"domain_id"`
-	Uuid      string  `db:"uuid" json:"uuid"`
-	ProfileId *int    `db:"profile_id" json:"profile_id"`
-	CreatedAt int64   `db:"created_at" json:"created_at"`
-	Removed   *bool   `db:"removed" json:"-"`
-	NotExists *bool   `db:"not_exists" json:"-"`
-	Safe      bool    `db:"-" json:"-"`
-	Channel   *string `db:"channel" json:"channel"`
+	Id        int64      `db:"id" json:"id"`
+	DomainId  int64      `db:"domain_id" json:"domain_id"`
+	Uuid      string     `db:"uuid" json:"uuid"`
+	ProfileId *int       `db:"profile_id" json:"profile_id"`
+	CreatedAt int64      `db:"created_at" json:"created_at"`
+	Removed   *bool      `db:"removed" json:"-"`
+	NotExists *bool      `db:"not_exists" json:"-"`
+	Safe      bool       `db:"-" json:"-"`
+	Channel   *string    `db:"channel" json:"channel"`
+	Thumbnail *Thumbnail `db:"thumbnail" json:"thumbnail"`
+}
+
+type Thumbnail struct {
+	BaseFile
+	Scale string `json:"scale"`
+}
+
+func (t *Thumbnail) ToJson() *[]byte {
+	if t == nil {
+		return nil
+	}
+
+	d, _ := json.Marshal(t)
+	return &d
 }
 
 func (f *File) Domain() int64 {

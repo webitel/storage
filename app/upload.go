@@ -37,7 +37,12 @@ func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppE
 		// error
 	}
 
-	return app.syncUpload(app.DefaultFileStore, src, file, nil)
+	sf, err := app.syncUpload(app.DefaultFileStore, src, file, nil)
+	if err != nil {
+		return err
+	}
+
+	return app.storeFile(app.DefaultFileStore, sf)
 }
 
 func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) engine.AppError {
@@ -46,30 +51,54 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 		return err
 	}
 
-	th, e := utils.NewThumbnail(file.MimeType)
-	if e != nil {
-		panic(e.Error())
+	var reader io.Reader = src
+	var ch chan engine.AppError
+	var th *utils.Thumbnail
+
+	if true {
+		var e error
+		th, e = utils.NewThumbnail(file.MimeType, "")
+		if e != nil {
+			panic(e.Error())
+		}
+
+		reader = io.TeeReader(src, th)
+
+		var o = *file
+		o.Name = "thumbnail_" + file.Name
+		o.MimeType = "image/png"
+		ch = make(chan engine.AppError)
+
+		go func() {
+			f, e := app.syncUpload(store, th.Reader(), &o, &profileId)
+			if e != nil {
+				fmt.Println(e)
+			}
+			th.UserData = &model.Thumbnail{
+				BaseFile: f.BaseFile,
+			}
+			close(ch)
+		}()
 	}
-	origin := io.TeeReader(src, th)
 
-	var o = *file
-	file.Name = "thumbnail_" + file.Name
-	file.MimeType = "image/png"
-	ch := make(chan engine.AppError)
-
-	go func() {
-		ch <- app.syncUpload(store, th.Reader(), file, &profileId)
-		close(ch)
-	}()
-
-	err = app.syncUpload(store, origin, &o, &profileId)
-	th.Close()
-	err2 := <-ch
-	if err2 != nil {
-
+	var sf *model.File
+	sf, err = app.syncUpload(store, reader, file, &profileId)
+	if err != nil {
+		return err
 	}
 
-	return err
+	if ch != nil {
+		th.Close()
+		err2 := <-ch
+
+		if err2 != nil {
+
+		}
+
+		sf.Thumbnail = th.UserData.(*model.Thumbnail)
+	}
+
+	return app.storeFile(store, sf)
 }
 
 func (app *App) SafeUploadFileStream(store utils.FileBackend, src io.Reader, file *model.File) engine.AppError {
@@ -96,7 +125,7 @@ func (app *App) SafeUploadFileStream(store utils.FileBackend, src io.Reader, fil
 	return nil
 }
 
-func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) engine.AppError {
+func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) (*model.File, engine.AppError) {
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
@@ -118,7 +147,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 
 	size, err := store.Write(tr, f)
 	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
-		return err
+		return nil, err
 	}
 	// fixme
 	file.Size = size
@@ -127,13 +156,16 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 	f.Size = file.Size
 	f.SHA256Sum = file.SHA256Sum
 
-	res := <-app.Store.File().Create(f)
+	return f, nil
+}
+
+func (app *App) storeFile(store utils.FileBackend, file *model.File) engine.AppError {
+	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
 		return res.Err
 	} else {
 		file.Id = res.Data.(int64)
 	}
-
-	wlog.Debug(fmt.Sprintf("store %s to %s %d bytes [sha256=%v]", file.GetStoreName(), store.Name(), file.Size, sha))
+	wlog.Debug(fmt.Sprintf("store %s to %s %d bytes [sha256=%v]", file.GetStoreName(), store.Name(), file.Size, file.SHA256Sum))
 	return nil
 }

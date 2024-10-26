@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -12,13 +13,39 @@ const (
 )
 
 type Thumbnail struct {
+	scale string
 	io.Writer
 	io.Closer
-	l      int
-	stdin  io.WriteCloser
-	stdout io.ReadCloser
-	cmd    *exec.Cmd
-	end    bool
+	l        int64
+	stdin    io.WriteCloser
+	stdout   io.ReadCloser
+	cmd      *exec.Cmd
+	end      bool
+	UserData interface{}
+}
+
+func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
+	if scale == "" {
+		scale = ThumbnailScale
+	}
+	cmdArgs := mimeCmdArgs(mime, scale)
+	if cmdArgs == nil {
+		return nil, errors.New("not supported")
+	}
+
+	cmd := exec.Command("ffmpeg", cmdArgs...)
+	cmd.Stderr = os.Stderr // bind log stream to stderr
+
+	stdin, _ := cmd.StdinPipe()   // Open stdin pipe
+	stdout, _ := cmd.StdoutPipe() // Open stout pipe
+	cmd.Start()
+
+	return &Thumbnail{
+		scale:  scale,
+		stdin:  stdin,
+		stdout: stdout,
+		cmd:    cmd,
+	}, nil
 }
 
 func (r *Thumbnail) Write(p []byte) (nn int, err error) {
@@ -26,7 +53,7 @@ func (r *Thumbnail) Write(p []byte) (nn int, err error) {
 		return len(p), nil // TODO wait if io.EOF
 	}
 	nn, err = r.stdin.Write(p)
-	r.l += nn
+	r.l += int64(nn)
 	if err != nil {
 		r.end = true
 		return nn, nil
@@ -53,13 +80,19 @@ func (r *Thumbnail) Close() (err error) {
 	return nil
 }
 
-func mimeCmdArgs(mime string) []string {
+func (t *Thumbnail) Size() int64 {
+	return t.l
+}
+
+func mimeCmdArgs(mime string, scale string) []string {
 	if strings.HasPrefix(mime, "image/") {
 		return []string{
 			"-i", "pipe:0",
 			"-f", "image2pipe",
 			"-vcodec", "png",
-			"-vf", ThumbnailScale,
+			"-pix_fmt", "rgba", // Формат пікселів
+			"-threads", "1",
+			"-vf", scale,
 			"pipe:1",
 		}
 	} else if strings.HasPrefix(mime, "video/") {
@@ -72,31 +105,11 @@ func mimeCmdArgs(mime string) []string {
 			"-f", "image2pipe", // Вивід у форматі image2pipe
 			"-vcodec", "png", // Виведення у форматі PNG
 			"-pix_fmt", "rgba", // Формат пікселів
-			"-vf", ThumbnailScale,
+			//"-threads", "1",
+			"-vf", scale,
 			"pipe:1", // pipe:1 для виводу у io.Writer
 		}
 	}
 
 	return nil
-}
-
-func NewThumbnail(mime string) (*Thumbnail, error) {
-
-	cmdArgs := mimeCmdArgs(mime)
-	if cmdArgs == nil {
-		return nil, errors.New("not supported")
-	}
-
-	cmd := exec.Command("ffmpeg", cmdArgs...)
-	//cmd.Stderr = os.Stderr // bind log stream to stderr
-
-	stdin, _ := cmd.StdinPipe()   // Open stdin pipe
-	stdout, _ := cmd.StdoutPipe() // Open stout pipe
-	cmd.Start()
-
-	return &Thumbnail{
-		stdin:  stdin,
-		stdout: stdout,
-		cmd:    cmd,
-	}, nil
 }
