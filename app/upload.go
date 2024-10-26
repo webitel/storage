@@ -52,6 +52,7 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, tryThumbnail b
 	return app.upload(src, &profileId, store, tryThumbnail, file)
 }
 
+// upload - основний метод завантаження файлу з підтримкою мініатюр
 func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, tryThumbnail bool, file *model.JobUploadFile) engine.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail

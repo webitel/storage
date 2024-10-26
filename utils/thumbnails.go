@@ -3,7 +3,6 @@ package utils
 import (
 	"errors"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -34,7 +33,7 @@ func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
 	}
 
 	cmd := exec.Command("ffmpeg", cmdArgs...)
-	cmd.Stderr = os.Stderr // bind log stream to stderr
+	//cmd.Stderr = os.Stderr // bind log stream to stderr
 
 	stdin, _ := cmd.StdinPipe()   // Open stdin pipe
 	stdout, _ := cmd.StdoutPipe() // Open stout pipe
