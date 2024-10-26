@@ -34,36 +34,39 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engin
 }
 
 // SyncUpload синхронно завантажує файл за замовчуванням
-func (app *App) SyncUpload(src io.Reader, tryThumbnail bool, file *model.JobUploadFile) engine.AppError {
+func (app *App) SyncUpload(src io.Reader, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
 	if !app.UseDefaultStore() {
 		return engine.NewInternalError("SyncUpload", "default store error")
 	}
 
-	return app.upload(src, nil, app.DefaultFileStore, tryThumbnail, file)
+	return app.upload(src, nil, app.DefaultFileStore, generateThumbnail, file)
 }
 
 // SyncUploadToProfile синхронно завантажує файл у профіль користувача
-func (app *App) SyncUploadToProfile(src io.Reader, profileId int, tryThumbnail bool, file *model.JobUploadFile) engine.AppError {
+func (app *App) SyncUploadToProfile(src io.Reader, profileId int, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
 	store, err := app.GetFileBackendStoreById(file.DomainId, profileId)
 	if err != nil {
 		return err
 	}
 
-	return app.upload(src, &profileId, store, tryThumbnail, file)
+	return app.upload(src, &profileId, store, generateThumbnail, file)
 }
 
 // upload - основний метод завантаження файлу з підтримкою мініатюр
-func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, tryThumbnail bool, file *model.JobUploadFile) engine.AppError {
+func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail
 	var ch chan engine.AppError
 	var err engine.AppError
 
-	if tryThumbnail {
+	if generateThumbnail {
 		reader, thumbnail, ch, err = app.setupThumbnail(src, file)
 		if err != nil {
 			return err
 		}
+		defer func() {
+			thumbnail.Close()
+		}()
 	} else {
 		reader = src
 	}
