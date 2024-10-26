@@ -94,7 +94,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.Uuid = c.Params.Id
 
 			// TODO PERMISSION
-			if c.Err = c.App.SyncUpload(utils.NewSecureReader(part, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), file); c.Err != nil {
+			if c.Err = c.App.SyncUpload(utils.NewSecureReader(part, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), false, file); c.Err != nil {
 				if c.Err.GetId() == utils.ErrMaxLimitId {
 					c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 				}
@@ -121,7 +121,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.Uuid = c.Params.Id
 
 		// TODO PERMISSION
-		if c.Err = c.App.SyncUpload(utils.NewSecureReader(r.Body, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), file); c.Err != nil {
+		if c.Err = c.App.SyncUpload(utils.NewSecureReader(r.Body, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), false, file); c.Err != nil {
 			if c.Err.GetId() == utils.ErrMaxLimitId {
 				c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 			}

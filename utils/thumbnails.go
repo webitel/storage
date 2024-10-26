@@ -113,3 +113,7 @@ func mimeCmdArgs(mime string, scale string) []string {
 
 	return nil
 }
+
+func IsSupportThumbnail(mimeType string) bool {
+	return strings.HasPrefix(mimeType, "video/") || strings.HasPrefix(mimeType, "image/")
+}
