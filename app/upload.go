@@ -3,15 +3,14 @@ package app
 import (
 	"crypto/sha256"
 	"fmt"
-	"io"
-
 	engine "github.com/webitel/engine/model"
-	"github.com/webitel/storage/utils"
-
 	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
+	"io"
 )
 
+// AddUploadJobFile додає файл до черги завантаження
 func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engine.AppError {
 	size, err := app.FileCache.Write(src, file)
 	if err != nil {
@@ -28,54 +27,99 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engin
 			wlog.Error(fmt.Sprintf("Failed to remove cache file %v", err))
 		}
 	} else {
-		wlog.Debug(fmt.Sprintf("create new file job %d upload file: %s [%d %s]", file.Id, file.Name, file.Size, file.MimeType))
+		wlog.Debug(fmt.Sprintf("Created new file job %d, upload file: %s [%d %s]", file.Id, file.Name, file.Size, file.MimeType))
 	}
 
 	return err
 }
 
-func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppError {
-	if app.UseDefaultStore() {
-		// error
+// SyncUpload синхронно завантажує файл за замовчуванням
+func (app *App) SyncUpload(src io.Reader, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
+	if !app.UseDefaultStore() {
+		return engine.NewInternalError("SyncUpload", "default store error")
 	}
 
-	return app.syncUpload(app.DefaultFileStore, src, file, nil)
+	return app.upload(src, nil, app.DefaultFileStore, generateThumbnail, file)
 }
 
-func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) engine.AppError {
+// SyncUploadToProfile синхронно завантажує файл у профіль користувача
+func (app *App) SyncUploadToProfile(src io.Reader, profileId int, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
 	store, err := app.GetFileBackendStoreById(file.DomainId, profileId)
 	if err != nil {
 		return err
 	}
 
-	return app.syncUpload(store, src, file, &profileId)
+	return app.upload(src, &profileId, store, generateThumbnail, file)
 }
 
-func (app *App) SafeUploadFileStream(store utils.FileBackend, src io.Reader, file *model.File) engine.AppError {
-	h := sha256.New()
-	tr := io.TeeReader(src, h)
+// upload - основний метод завантаження файлу з підтримкою мініатюр
+func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
+	var reader io.Reader
+	var thumbnail *utils.Thumbnail
+	var ch chan engine.AppError
+	var err engine.AppError
 
-	if store == nil {
-		var err engine.AppError
-		var todo int64 = 1
-		if store, err = app.GetFileBackendStore(file.ProfileId, &todo); err != nil {
+	if generateThumbnail {
+		reader, thumbnail, ch, err = app.setupThumbnail(src, file)
+		if err != nil {
 			return err
 		}
+		defer func() {
+			thumbnail.Close()
+		}()
+	} else {
+		reader = src
 	}
 
-	size, err := store.Write(tr, file)
-	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
+	// Завантаження основного файлу
+	sf, err := app.syncUpload(store, reader, file, profileId)
+	if err != nil {
 		return err
 	}
 
-	// fixme
-	file.Size += size
-	sha := fmt.Sprintf("%x", h.Sum(nil))
-	file.SHA256Sum = &sha
-	return nil
+	// Завершення обробки мініатюри, якщо вона існує
+	if ch != nil {
+		if err := <-ch; err != nil {
+			return err
+		}
+		sf.Thumbnail = thumbnail.UserData.(*model.Thumbnail)
+	}
+
+	return app.storeFile(store, sf)
 }
 
-func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) engine.AppError {
+// setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
+func (app *App) setupThumbnail(src io.Reader, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan engine.AppError, engine.AppError) {
+	if !utils.IsSupportThumbnail(file.MimeType) {
+		return src, nil, nil, nil
+	}
+
+	thumbnail, err := utils.NewThumbnail(file.MimeType, "")
+	if err != nil {
+		return nil, nil, nil, engine.NewInternalError("ThumbnailError", err.Error())
+	}
+
+	reader := io.TeeReader(src, thumbnail)
+
+	thumbnailFile := *file
+	thumbnailFile.Name = "thumbnail_" + file.Name
+	thumbnailFile.MimeType = "image/png"
+	ch := make(chan engine.AppError)
+
+	go func() {
+		if f, e := app.syncUpload(app.DefaultFileStore, thumbnail.Reader(), &thumbnailFile, nil); e != nil {
+			ch <- e
+		} else {
+			thumbnail.UserData = &model.Thumbnail{BaseFile: f.BaseFile}
+		}
+		close(ch)
+	}()
+
+	return reader, thumbnail, ch, nil
+}
+
+// syncUpload здійснює запис файлу до файлового сховища
+func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) (*model.File, engine.AppError) {
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
@@ -97,22 +141,25 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 
 	size, err := store.Write(tr, f)
 	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
-		return err
+		return nil, err
 	}
-	// fixme
-	file.Size = size
+
 	sha := fmt.Sprintf("%x", h.Sum(nil))
 	file.SHA256Sum = &sha
-	f.Size = file.Size
-	f.SHA256Sum = file.SHA256Sum
+	f.Size = size
+	f.SHA256Sum = &sha
 
-	res := <-app.Store.File().Create(f)
+	return f, nil
+}
+
+// storeFile зберігає інформацію про файл у базі даних
+func (app *App) storeFile(store utils.FileBackend, file *model.File) engine.AppError {
+	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
 		return res.Err
-	} else {
-		file.Id = res.Data.(int64)
 	}
 
-	wlog.Debug(fmt.Sprintf("store %s to %s %d bytes [sha256=%v]", file.GetStoreName(), store.Name(), file.Size, sha))
+	file.Id = res.Data.(int64)
+	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.SHA256Sum))
 	return nil
 }

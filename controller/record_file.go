@@ -20,11 +20,11 @@ func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId,
 }
 
 func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFile) engine.AppError {
-	return c.app.SyncUpload(src, file)
+	return c.app.SyncUpload(src, false, file)
 }
 
 func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int, file *model.JobUploadFile) engine.AppError {
-	return c.app.SyncUploadToProfile(src, profileId, file)
+	return c.app.SyncUploadToProfile(src, profileId, false, file)
 }
 
 func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, engine.AppError) {
