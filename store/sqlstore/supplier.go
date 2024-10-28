@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/lib/pq"
-	"github.com/webitel/engine/localization"
 	sqltrace "log"
 	"os"
 	"time"
@@ -303,7 +302,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*[]byte)
 			if !ok {
-				return errors.New(localization.T("store.sql.convert_string_array"))
+				return errors.New(utils.T("store.sql.convert_string_array"))
 			}
 
 			if *s == nil {
