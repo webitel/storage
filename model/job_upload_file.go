@@ -28,6 +28,8 @@ type JobUploadFile struct {
 	SHA256Sum *string    `db:"sha256sum" json:"sha256sum"`
 	Channel   *string    `db:"channel" json:"channel"`
 	Thumbnail *Thumbnail `db:"thumbnail" json:"thumbnail"`
+
+	GenerateThumbnail bool `db:"-"`
 }
 
 type JobUploadFileWithProfile struct {

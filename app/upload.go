@@ -34,33 +34,33 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engin
 }
 
 // SyncUpload синхронно завантажує файл за замовчуванням
-func (app *App) SyncUpload(src io.Reader, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
+func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppError {
 	if !app.UseDefaultStore() {
 		return engine.NewInternalError("SyncUpload", "default store error")
 	}
 
-	return app.upload(src, nil, app.DefaultFileStore, generateThumbnail, file)
+	return app.upload(src, nil, app.DefaultFileStore, file)
 }
 
 // SyncUploadToProfile синхронно завантажує файл у профіль користувача
-func (app *App) SyncUploadToProfile(src io.Reader, profileId int, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
+func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) engine.AppError {
 	store, err := app.GetFileBackendStoreById(file.DomainId, profileId)
 	if err != nil {
 		return err
 	}
 
-	return app.upload(src, &profileId, store, generateThumbnail, file)
+	return app.upload(src, &profileId, store, file)
 }
 
 // upload - основний метод завантаження файлу з підтримкою мініатюр
-func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, generateThumbnail bool, file *model.JobUploadFile) engine.AppError {
+func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) engine.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail
 	var ch chan engine.AppError
 	var err engine.AppError
 
-	if generateThumbnail {
-		reader, thumbnail, ch, err = app.setupThumbnail(src, file)
+	if file.GenerateThumbnail {
+		reader, thumbnail, ch, err = app.setupThumbnail(src, store, file)
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, g
 }
 
 // setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
-func (app *App) setupThumbnail(src io.Reader, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan engine.AppError, engine.AppError) {
+func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan engine.AppError, engine.AppError) {
 	if !utils.IsSupportThumbnail(file.MimeType) {
 		return src, nil, nil, nil
 	}
@@ -102,15 +102,16 @@ func (app *App) setupThumbnail(src io.Reader, file *model.JobUploadFile) (io.Rea
 	reader := io.TeeReader(src, thumbnail)
 
 	thumbnailFile := *file
-	thumbnailFile.Name = "thumbnail_" + file.Name
+	thumbnailFile.Name = "thumbnail_" + file.Name + ".png"
+	thumbnailFile.ViewName = &thumbnailFile.Name
 	thumbnailFile.MimeType = "image/png"
 	ch := make(chan engine.AppError)
 
 	go func() {
-		if f, e := app.syncUpload(app.DefaultFileStore, thumbnail.Reader(), &thumbnailFile, nil); e != nil {
+		if f, e := app.syncUpload(store, thumbnail.Reader(), &thumbnailFile, nil); e != nil {
 			ch <- e
 		} else {
-			thumbnail.UserData = &model.Thumbnail{BaseFile: f.BaseFile}
+			thumbnail.UserData = &model.Thumbnail{BaseFile: f.BaseFile, Scale: thumbnail.Scale()}
 		}
 		close(ch)
 	}()

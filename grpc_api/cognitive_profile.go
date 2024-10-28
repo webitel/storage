@@ -22,6 +22,11 @@ type cognitiveProfile struct {
 	gogrpc.UnsafeCognitiveProfileServiceServer
 }
 
+func (api *cognitiveProfile) SearchCognitiveProfileVoices(ctx context.Context, request *storage.SearchCognitiveProfileVoicesRequest) (*storage.ListCognitiveProfileVoices, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewCognitiveProfileApi(c *controller.Controller) *cognitiveProfile {
 	return &cognitiveProfile{ctrl: c}
 }

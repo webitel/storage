@@ -3,9 +3,9 @@ module github.com/webitel/storage
 go 1.19
 
 require (
-	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.34.2-20240402125447-cb375844242f.2
-	buf.build/gen/go/webitel/storage/grpc/go v1.4.0-20240731055617-28b8bce074fa.2
-	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.34.2-20240731055617-28b8bce074fa.2
+	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.35.1-20240402125447-cb375844242f.1
+	buf.build/gen/go/webitel/storage/grpc/go v1.5.1-20241026124749-76b39a56f571.1
+	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.35.1-20241026124749-76b39a56f571.1
 	cloud.google.com/go/speech v1.23.1
 	cloud.google.com/go/storage v1.39.1
 	cloud.google.com/go/texttospeech v1.7.7
@@ -29,12 +29,12 @@ require (
 	golang.org/x/sync v0.7.0
 	google.golang.org/api v0.177.0
 	google.golang.org/genproto v0.0.0-20240506185236-b8a5c65736ae
-	google.golang.org/grpc v1.63.2
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/grpc v1.64.1
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
-	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.34.2-20231027202514-3f42134f4c56.2 // indirect
+	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.35.1-20231027202514-3f42134f4c56.1 // indirect
 	cloud.google.com/go v0.112.2 // indirect
 	cloud.google.com/go/auth v0.3.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
@@ -76,12 +76,12 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
+	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240506185236-b8a5c65736ae // indirect

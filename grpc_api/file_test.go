@@ -25,7 +25,15 @@ var fileLoc = "/Users/ihor/work/storage/1/2.mp4"
 
 func TestFile(t *testing.T) {
 	var uploadId *string
-	sendFile(uploadId)
+	uploadId = sendFile(uploadId)
+	for {
+		uploadId = sendFile(uploadId)
+		if uploadId == nil {
+			fmt.Println("OK")
+			return
+		}
+		fmt.Println("send")
+	}
 	return
 	for uploadId = sendFile(uploadId); uploadId != nil; {
 		fmt.Println("send")
@@ -67,10 +75,11 @@ func sendFile(uploadId *string) (newUploadId *string) {
 					DomainId: 1,
 					Name:     stats.Name(),
 					//MimeType: "image/png",
-					MimeType:       "video/mp4",
-					Uuid:           "blabla",
-					StreamResponse: false,
-					ProfileId:      221,
+					MimeType:          "video/mp4",
+					Uuid:              "blabla",
+					StreamResponse:    false,
+					ProfileId:         221,
+					GenerateThumbnail: true,
 				},
 			},
 		})
@@ -97,8 +106,8 @@ func sendFile(uploadId *string) (newUploadId *string) {
 		i++
 
 		if i == 50 {
-			//cancel()
-			//return
+			cancel()
+			return
 		}
 
 		if n == 0 {
@@ -118,6 +127,7 @@ func sendFile(uploadId *string) (newUploadId *string) {
 	check(err)
 
 	fmt.Println(rcv)
+	newUploadId = nil
 	return
 }
 

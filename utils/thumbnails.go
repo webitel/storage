@@ -47,31 +47,31 @@ func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
 	}, nil
 }
 
-func (r *Thumbnail) Write(p []byte) (nn int, err error) {
-	if r.end {
+func (t *Thumbnail) Write(p []byte) (nn int, err error) {
+	if t.end {
 		return len(p), nil // TODO wait if io.EOF
 	}
-	nn, err = r.stdin.Write(p)
-	r.l += int64(nn)
+	nn, err = t.stdin.Write(p)
+	t.l += int64(nn)
 	if err != nil {
-		r.end = true
+		t.end = true
 		return nn, nil
 	}
 
 	return
 }
 
-func (r *Thumbnail) Reader() io.Reader {
-	return r.stdout
+func (t *Thumbnail) Reader() io.Reader {
+	return t.stdout
 }
 
-func (r *Thumbnail) Close() (err error) {
-	err = r.stdin.Close() // close the stdin, or ffmpeg will wait forever
+func (t *Thumbnail) Close() (err error) {
+	err = t.stdin.Close() // close the stdin, or ffmpeg will wait forever
 	if err != nil {
 		return err
 	}
 
-	err = r.cmd.Wait() // wait until ffmpeg finish
+	err = t.cmd.Wait() // wait until ffmpeg finish
 	if err != nil {
 		return err
 	}
@@ -81,6 +81,10 @@ func (r *Thumbnail) Close() (err error) {
 
 func (t *Thumbnail) Size() int64 {
 	return t.l
+}
+
+func (t *Thumbnail) Scale() string {
+	return t.scale
 }
 
 func mimeCmdArgs(mime string, scale string) []string {

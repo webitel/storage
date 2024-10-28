@@ -71,6 +71,8 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	generateThumbnail := r.URL.Query().Get("thumbnail") == "true"
+
 	if strings.HasPrefix(mediaType, "multipart/form-data") {
 		writer := multipart.NewReader(r.Body, params["boundary"])
 		var part *multipart.Part
@@ -92,9 +94,10 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.MimeType = part.Header.Get("Content-Type")
 			file.DomainId = c.Session.DomainId
 			file.Uuid = c.Params.Id
+			file.GenerateThumbnail = generateThumbnail
 
 			// TODO PERMISSION
-			if c.Err = c.App.SyncUpload(utils.NewSecureReader(part, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), false, file); c.Err != nil {
+			if c.Err = c.App.SyncUpload(utils.NewSecureReader(part, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), file); c.Err != nil {
 				if c.Err.GetId() == utils.ErrMaxLimitId {
 					c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 				}
@@ -119,9 +122,10 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.MimeType = r.Header.Get("Content-Type")
 		file.DomainId = c.Session.DomainId
 		file.Uuid = c.Params.Id
+		file.GenerateThumbnail = generateThumbnail
 
 		// TODO PERMISSION
-		if c.Err = c.App.SyncUpload(utils.NewSecureReader(r.Body, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), false, file); c.Err != nil {
+		if c.Err = c.App.SyncUpload(utils.NewSecureReader(r.Body, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), file); c.Err != nil {
 			if c.Err.GetId() == utils.ErrMaxLimitId {
 				c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 			}
