@@ -16,6 +16,7 @@ type API struct {
 	file             *file
 	fileTranscript   *fileTranscript
 	importTemplate   *importTemplate
+	filePolicies     *filePolicies
 }
 
 func Init(a *app.App, server *grpc.Server) {
@@ -30,6 +31,7 @@ func Init(a *app.App, server *grpc.Server) {
 	api.file = NewFileApi(a.Config().ProxyUploadUrl, a.Config().ServiceSettings.PublicHost, ctrl)
 	api.fileTranscript = NewFileTranscriptApi(ctrl)
 	api.importTemplate = NewImportTemplateApi(ctrl)
+	api.filePolicies = NewFilePoliciesApi(ctrl)
 
 	gogrpc.RegisterBackendProfileServiceServer(server, api.backendProfiles)
 	gogrpc.RegisterMediaFileServiceServer(server, api.media)
@@ -37,4 +39,5 @@ func Init(a *app.App, server *grpc.Server) {
 	gogrpc.RegisterCognitiveProfileServiceServer(server, api.cognitiveProfile)
 	gogrpc.RegisterFileTranscriptServiceServer(server, api.fileTranscript)
 	gogrpc.RegisterImportTemplateServiceServer(server, api.importTemplate)
+	gogrpc.RegisterFilePoliciesServiceServer(server, api.filePolicies)
 }

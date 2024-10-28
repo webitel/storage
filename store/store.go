@@ -54,6 +54,7 @@ type StoreData interface {
 	CognitiveProfile() CognitiveProfileStore
 	TranscriptFile() TranscriptFileStore
 	ImportTemplate() ImportTemplateStore
+	FilePolicies() FilePoliciesStore
 }
 
 type UploadJobStore interface {
@@ -162,5 +163,15 @@ type ImportTemplateStore interface {
 	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, engine.AppError)
 	Get(domainId int64, id int32) (*model.ImportTemplate, engine.AppError)
 	Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError)
+	Delete(domainId int64, id int32) engine.AppError
+}
+
+type FilePoliciesStore interface {
+	CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError)
+	Create(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError)
+	GetAllPage(domainId int64, req *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError)
+	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError)
+	Get(domainId int64, id int32) (*model.FilePolicy, engine.AppError)
+	Update(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError)
 	Delete(domainId int64, id int32) engine.AppError
 }

@@ -5,6 +5,8 @@ import (
 	dbsql "database/sql"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
+	"github.com/webitel/engine/localization"
 	sqltrace "log"
 	"os"
 	"time"
@@ -42,6 +44,7 @@ type SqlSupplierOldStores struct {
 	cognitiveProfile   store.CognitiveProfileStore
 	transcriptFile     store.TranscriptFileStore
 	importTemplate     store.ImportTemplateStore
+	filePolicies       store.FilePoliciesStore
 }
 
 type SqlSupplier struct {
@@ -75,6 +78,7 @@ func NewSqlSupplier(settings model.SqlSettings) *SqlSupplier {
 	supplier.oldStores.cognitiveProfile = NewSqlCognitiveProfileStore(supplier)
 	supplier.oldStores.transcriptFile = NewSqlTranscriptFileStore(supplier)
 	supplier.oldStores.importTemplate = NewSqlImportTemplateStore(supplier)
+	supplier.oldStores.filePolicies = NewSqlFilePoliciesStore(supplier)
 
 	err := supplier.GetMaster().CreateTablesIfNotExists()
 	if err != nil {
@@ -294,16 +298,28 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		}
 		return gorp.CustomScanner{Holder: new(string), Target: target, Binder: binder}, true
 
-	case *model.StringArray:
+	case *model.StringArray,
+		**model.StringArray:
 		binder := func(holder, target interface{}) error {
-			s, ok := holder.(*string)
+			s, ok := holder.(*[]byte)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_array"))
+				return errors.New(localization.T("store.sql.convert_string_array"))
 			}
-			b := []byte(*s)
-			return json.Unmarshal(b, target)
+
+			if *s == nil {
+				return nil
+			}
+
+			var a pq.StringArray
+
+			if err := a.Scan(*s); err != nil {
+				return err
+			} else {
+				*(target).(*model.StringArray) = model.StringArray(a)
+				return nil
+			}
 		}
-		return gorp.CustomScanner{Holder: new(string), Target: target, Binder: binder}, true
+		return gorp.CustomScanner{Holder: &[]byte{}, Target: target, Binder: binder}, true
 
 	case *map[string]interface{}:
 		binder := func(holder, target interface{}) error {
@@ -375,4 +391,8 @@ func (ss *SqlSupplier) TranscriptFile() store.TranscriptFileStore {
 
 func (ss *SqlSupplier) ImportTemplate() store.ImportTemplateStore {
 	return ss.oldStores.importTemplate
+}
+
+func (ss *SqlSupplier) FilePolicies() store.FilePoliciesStore {
+	return ss.oldStores.filePolicies
 }

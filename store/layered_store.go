@@ -76,3 +76,7 @@ func (s *LayeredStore) TranscriptFile() TranscriptFileStore {
 func (s *LayeredStore) ImportTemplate() ImportTemplateStore {
 	return s.DatabaseLayer.ImportTemplate()
 }
+
+func (s *LayeredStore) FilePolicies() FilePoliciesStore {
+	return s.DatabaseLayer.FilePolicies()
+}
