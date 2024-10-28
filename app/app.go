@@ -49,6 +49,8 @@ type App struct {
 	preSigned presign.PreSign
 
 	upTime time.Time
+
+	thumbnailSettings model.ThumbnailSettings
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -79,6 +81,8 @@ func New(options ...string) (outApp *App, outErr error) {
 	if err := app.LoadConfig(app.configFile); err != nil {
 		return nil, err
 	}
+
+	app.thumbnailSettings = app.Config().Thumbnail
 
 	if utils.T == nil {
 		if err := utils.TranslationsPreInit(app.Config().TranslationsDirectory); err != nil {

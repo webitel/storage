@@ -94,7 +94,7 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 		return src, nil, nil, nil
 	}
 
-	thumbnail, err := utils.NewThumbnail(file.MimeType, "")
+	thumbnail, err := utils.NewThumbnail(file.MimeType, app.thumbnailSettings.DefaultScale)
 	if err != nil {
 		return nil, nil, nil, engine.NewInternalError("ThumbnailError", err.Error())
 	}

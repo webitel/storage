@@ -70,6 +70,13 @@ type Config struct {
 	ServerSettings               ServerSettings
 	ProxyUploadUrl               *string
 	MaxSafeUploadSleep           time.Duration
+	Thumbnail                    ThumbnailSettings
+}
+
+type ThumbnailSettings struct {
+	ForceEnabled      bool
+	DefaultScale      string
+	MinBytesForCreate int64
 }
 
 type DiscoverySettings struct {
