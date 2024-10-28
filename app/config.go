@@ -42,6 +42,9 @@ var (
 
 	wbtTTSEndpoint     = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
 	maxSafeUploadSleep = flag.Duration("safe_upload_max_sleep", time.Second*60, "Maximum upload second sleep process")
+
+	thumbnailDefaultScale = flag.String("thumbnail_default_scale", "", "Default scale for thumbnail")
+	//thumbnailMinSize      = flag.String("thumbnail_min_size", "500kB", "Minimum size for create thumbnail")
 )
 
 func loadConfig(fileName string) (*model.Config, engine.AppError) {
@@ -96,6 +99,10 @@ func loadConfig(fileName string) (*model.Config, engine.AppError) {
 			Network: "tcp",
 		},
 		MaxSafeUploadSleep: *maxSafeUploadSleep,
+		Thumbnail: model.ThumbnailSettings{
+			ForceEnabled: false,
+			DefaultScale: *thumbnailDefaultScale,
+		},
 	}
 
 	if proxyUpload != nil && *proxyUpload != "" {

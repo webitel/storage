@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	ThumbnailScale = "scale=128:-1"
+	ThumbnailScale = "128:-1"
 )
 
 type Thumbnail struct {
@@ -27,6 +27,7 @@ func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
 	if scale == "" {
 		scale = ThumbnailScale
 	}
+	scale = "scale=" + scale
 	cmdArgs := mimeCmdArgs(mime, scale)
 	if cmdArgs == nil {
 		return nil, errors.New("not supported")
