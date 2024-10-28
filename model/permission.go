@@ -7,6 +7,7 @@ const (
 
 	PermissionScopeCognitiveProfile = "cognitive_profile"
 	PermissionScopeImportTemplate   = "import_template"
+	PermissionScopeFilePolicy       = "import_template" //"file_policies"
 )
 
 const (
