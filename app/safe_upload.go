@@ -94,9 +94,9 @@ func (s *SafeUpload) run() {
 	wlog.Debug(fmt.Sprintf("start safe upload id=%s, name=%s", s.id, s.request.Name))
 	var err engine.AppError
 	if s.profileId != nil {
-		err = s.app.SyncUploadToProfile(s.reader, *s.profileId, true, s.request)
+		err = s.app.SyncUploadToProfile(s.reader, *s.profileId, s.request)
 	} else {
-		err = s.app.SyncUpload(s.reader, true, s.request)
+		err = s.app.SyncUpload(s.reader, s.request)
 	}
 
 	s.setState(SafeUploadStateFinished)

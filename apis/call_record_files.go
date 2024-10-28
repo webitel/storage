@@ -55,7 +55,7 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	if c.Err != nil {
 		return
 	}
-
+	query := r.URL.Query()
 	var file *model.File
 	var backend utils.FileBackend
 	var id, domainId int
@@ -78,6 +78,10 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	if file, backend, c.Err = c.Ctrl.GetFileWithProfile(&c.Session, int64(domainId), int64(id)); c.Err != nil {
 		return
+	}
+
+	if file.Thumbnail != nil && query.Get("thumbnail") == "true" {
+		file.BaseFile = file.Thumbnail.BaseFile
 	}
 
 	if ranges, c.Err = parseRange(r.Header.Get("Range"), file.Size); c.Err != nil {
@@ -121,6 +125,7 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := r.URL.Query()
 	var file *model.File
 	var backend utils.FileBackend
 	var id, domainId int
@@ -141,6 +146,10 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	if file, backend, c.Err = c.Ctrl.GetFileWithProfile(&c.Session, int64(domainId), int64(id)); c.Err != nil {
 		return
+	}
+
+	if file.Thumbnail != nil && query.Get("thumbnail") == "true" {
+		file.BaseFile = file.Thumbnail.BaseFile
 	}
 
 	sendSize := file.Size

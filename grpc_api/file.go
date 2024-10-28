@@ -72,6 +72,7 @@ func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
 	fileRequest.Uuid = metadata.Metadata.Uuid
 	fileRequest.ViewName = &metadata.Metadata.Name
 	fileRequest.Channel = model.NewString(channelType(metadata.Metadata.Channel))
+	fileRequest.GenerateThumbnail = metadata.Metadata.GetGenerateThumbnail()
 
 	pipeReader, pipeWriter := io.Pipe()
 
@@ -239,6 +240,7 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	fileRequest.Uuid = in.GetUuid()
 	fileRequest.Size = res.ContentLength
 	fileRequest.Channel = model.NewString(channelType(in.Channel))
+	fileRequest.GenerateThumbnail = in.GetGenerateThumbnail()
 	if fileRequest.Uuid == "" {
 		fileRequest.Uuid = model.NewId() // bad request ?
 	}
@@ -309,6 +311,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		fileRequest.Uuid = r.Metadata.Uuid
 		fileRequest.ViewName = &r.Metadata.Name
 		fileRequest.Channel = model.NewString(channelType(r.Metadata.Channel))
+		fileRequest.GenerateThumbnail = r.Metadata.GetGenerateThumbnail()
 		var pid *int
 		if r.Metadata.ProfileId > 0 {
 			pid = model.NewInt(int(r.Metadata.ProfileId))
