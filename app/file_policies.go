@@ -52,6 +52,7 @@ func (app *App) UpdateFilePolicy(domainId int64, id int32, policy *model.FilePol
 	oldPolicy.Channels = policy.Channels
 	oldPolicy.SpeedUpload = policy.SpeedUpload
 	oldPolicy.SpeedDownload = policy.SpeedDownload
+	oldPolicy.RetentionDays = policy.RetentionDays
 
 	return app.Store.FilePolicies().Update(domainId, oldPolicy)
 

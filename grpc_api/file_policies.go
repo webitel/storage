@@ -31,6 +31,7 @@ func (api *filePolicies) CreateFilePolicy(ctx context.Context, in *storage.Creat
 		SpeedDownload: in.SpeedDownload,
 		MimeTypes:     in.MimeTypes,
 		Channels:      in.Channels,
+		RetentionDays: in.RetentionDays,
 	}
 
 	policy, err = api.ctrl.CreateFilePolicy(session, policy)
@@ -108,6 +109,7 @@ func (api *filePolicies) UpdateFilePolicy(ctx context.Context, in *storage.Updat
 		SpeedDownload: in.SpeedDownload,
 		MimeTypes:     in.MimeTypes,
 		Channels:      in.Channels,
+		RetentionDays: in.RetentionDays,
 	}
 
 	policy, err = api.ctrl.UpdateFilePolicy(session, in.Id, policy)
@@ -144,6 +146,8 @@ func (api *filePolicies) PatchFilePolicy(ctx context.Context, in *storage.PatchF
 			patch.SpeedDownload = &in.SpeedDownload
 		case "speed_upload":
 			patch.SpeedUpload = &in.SpeedUpload
+		case "retention_days":
+			patch.RetentionDays = &in.RetentionDays
 		}
 	}
 
@@ -184,5 +188,6 @@ func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {
 		SpeedUpload:   src.SpeedUpload,
 		MimeTypes:     src.MimeTypes,
 		Channels:      src.Channels,
+		RetentionDays: src.RetentionDays,
 	}
 }

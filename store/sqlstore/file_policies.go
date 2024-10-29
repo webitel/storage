@@ -40,9 +40,9 @@ func (s *SqlFilePoliciesStore) CheckAccess(domainId int64, id int32, groups []in
 func (s *SqlFilePoliciesStore) Create(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
 	err := s.GetMaster().SelectOne(&policy, `with p as (
     insert into storage.file_policies (domain_id, created_at, created_by, updated_at, updated_by, name, enabled, mime_types,
-                                       speed_download, speed_upload, description, channels)
+                                       speed_download, speed_upload, description, channels, retention_days)
     values (:DomainId, :CreatedAt, :CreatedBy, :UpdatedAt, :UpdatedBy, :Name, :Enabled, :MimeTypes,
-            :SpeedDownload, :SpeedUpload, :Description, :Channels)
+            :SpeedDownload, :SpeedUpload, :Description, :Channels, :RetentionDays)
    returning *
 )
 SELECT p.id,
@@ -56,7 +56,8 @@ SELECT p.id,
        p.channels,
        p.mime_types,
        p.speed_download,
-       p.speed_upload
+       p.speed_upload,
+       p.retention_days		
 FROM p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by;`, map[string]interface{}{
@@ -72,6 +73,7 @@ FROM p
 		"SpeedUpload":   policy.SpeedUpload,
 		"Description":   policy.Description,
 		"Channels":      pq.Array(policy.Channels),
+		"RetentionDays": policy.RetentionDays,
 	})
 
 	if err != nil {
@@ -143,7 +145,8 @@ func (s *SqlFilePoliciesStore) Get(domainId int64, id int32) (*model.FilePolicy,
        p.channels,
        p.mime_types,
        p.speed_download,
-       p.speed_upload
+       p.speed_upload,
+       p.retention_days
 FROM storage.file_policies p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by
@@ -171,7 +174,8 @@ func (s *SqlFilePoliciesStore) Update(domainId int64, policy *model.FilePolicy) 
             speed_upload = :SpeedUpload,
             speed_download = :SpeedDownload,
             mime_types = :MimeTypes,
-            channels= :Channels
+            channels = :Channels,
+			retention_days = :RetentionDays
         where domain_id = :DomainId and id = :Id
 		returning *
 )
@@ -186,7 +190,8 @@ SELECT p.id,
        p.channels,
        p.mime_types,
        p.speed_download,
-       p.speed_upload
+       p.speed_upload,
+	   p.retention_days
 FROM p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by`, map[string]interface{}{
@@ -200,6 +205,7 @@ FROM p
 		"SpeedDownload": policy.SpeedDownload,
 		"MimeTypes":     pq.Array(policy.MimeTypes),
 		"Channels":      pq.Array(policy.Channels),
+		"RetentionDays": policy.RetentionDays,
 
 		"DomainId": domainId,
 		"Id":       policy.Id,
