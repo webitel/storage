@@ -80,7 +80,7 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if file.Thumbnail != nil && query.Get("thumbnail") == "true" {
+	if file.Thumbnail != nil && query.Get("fetch_thumbnail") == "true" {
 		file.BaseFile = file.Thumbnail.BaseFile
 	}
 
@@ -148,7 +148,7 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if file.Thumbnail != nil && query.Get("thumbnail") == "true" {
+	if file.Thumbnail != nil && query.Get("fetch_thumbnail") == "true" {
 		file.BaseFile = file.Thumbnail.BaseFile
 	}
 

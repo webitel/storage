@@ -156,13 +156,6 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 		return appErr
 	}
 
-	sFile, appErr = backend.Reader(f, in.Offset)
-	if appErr != nil {
-		return appErr
-	}
-
-	defer sFile.Close()
-
 	if in.Metadata {
 		d := &storage.StreamFile_Metadata_{
 			Metadata: &storage.StreamFile_Metadata{
@@ -176,6 +169,13 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 		if f.SHA256Sum != nil {
 			d.Metadata.Sha256Sum = *f.SHA256Sum
 		}
+		if f.Thumbnail != nil {
+			d.Metadata.Thumbnail = &storage.Thumbnail{
+				MimeType: f.Thumbnail.MimeType,
+				Size:     f.Thumbnail.Size,
+				Scale:    f.Thumbnail.Scale,
+			}
+		}
 		err = stream.Send(&storage.StreamFile{
 			Data: d,
 		})
@@ -184,6 +184,17 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 			return err
 		}
 	}
+
+	if in.FetchThumbnail && f.Thumbnail != nil {
+		f.BaseFile = f.Thumbnail.BaseFile
+	}
+
+	sFile, appErr = backend.Reader(f, in.Offset)
+	if appErr != nil {
+		return appErr
+	}
+
+	defer sFile.Close()
 
 	if in.BufferSize > 0 {
 		bufferSize = in.BufferSize
