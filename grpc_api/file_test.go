@@ -17,6 +17,7 @@ var service = "10.10.10.25:8767"
 var testFolder = "../test_data"
 
 func TestFile(t *testing.T) {
+	downloadFile()
 	var uploadId *string
 	fileLoc := testFolder + "/2.mp4"
 	uploadId = sendFile(uploadId, fileLoc)
@@ -46,13 +47,15 @@ func downloadFile() {
 
 	api := gogrpc.NewFileServiceClient(c)
 
+	fetchThumbnail := true
+
 	s, err := api.DownloadFile(ctx, &storage.DownloadFileRequest{
 		Id:             107167,
 		DomainId:       1,
 		Metadata:       true,
 		Offset:         0,
 		BufferSize:     0,
-		FetchThumbnail: false,
+		FetchThumbnail: fetchThumbnail,
 	})
 	check(err)
 
@@ -61,8 +64,16 @@ func downloadFile() {
 	if meta == nil {
 		log.Fatalln("metadata is empty")
 	}
+	metadata := meta.Data.(*storage.StreamFile_Metadata_).Metadata
 
-	file, err := os.OpenFile("/Users/ihor/work/storage/test_data/"+model.NewId()[:5]+".mp4", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fileLoc := testFolder + "/" + model.NewId()[:5]
+	if fetchThumbnail && metadata.Thumbnail != nil {
+		fileLoc += ".png"
+	} else {
+		fileLoc += ".mp4"
+	}
+
+	file, err := os.OpenFile(fileLoc, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer file.Close()
 
 	for {
