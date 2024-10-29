@@ -7,27 +7,21 @@ import (
 	"fmt"
 	"github.com/webitel/storage/model"
 	"google.golang.org/grpc"
+	"log"
 	"os"
 	"testing"
 	"time"
 )
 
 var service = "10.10.10.25:8767"
-
-//var fileLoc = "/Users/ihor/work/storage/1/img.png"
-
-//var fileLoc = "/tmp/1/ddd.mp4"
-
-//var fileLoc = "/Users/ihor/work/storage/1/1.jpg"
-
-// var fileLoc = "/Users/ihor/work/storage/1/1.avi"
-var fileLoc = "/Users/ihor/work/storage/1/2.mp4"
+var testFolder = "../test_data"
 
 func TestFile(t *testing.T) {
 	var uploadId *string
-	uploadId = sendFile(uploadId)
+	fileLoc := testFolder + "/2.mp4"
+	uploadId = sendFile(uploadId, fileLoc)
 	for {
-		uploadId = sendFile(uploadId)
+		uploadId = sendFile(uploadId, fileLoc)
 		if uploadId == nil {
 			fmt.Println("OK")
 			return
@@ -35,14 +29,57 @@ func TestFile(t *testing.T) {
 		fmt.Println("send")
 	}
 	return
-	for uploadId = sendFile(uploadId); uploadId != nil; {
+	for uploadId = sendFile(uploadId, fileLoc); uploadId != nil; {
 		fmt.Println("send")
 		time.Sleep(time.Millisecond * 100)
 	}
 
 }
 
-func sendFile(uploadId *string) (newUploadId *string) {
+func downloadFile() {
+	c, err := grpc.Dial(service, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(2*time.Second))
+	check(err)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+	}()
+
+	api := gogrpc.NewFileServiceClient(c)
+
+	s, err := api.DownloadFile(ctx, &storage.DownloadFileRequest{
+		Id:             107167,
+		DomainId:       1,
+		Metadata:       true,
+		Offset:         0,
+		BufferSize:     0,
+		FetchThumbnail: false,
+	})
+	check(err)
+
+	meta, err := s.Recv()
+	check(err)
+	if meta == nil {
+		log.Fatalln("metadata is empty")
+	}
+
+	file, err := os.OpenFile("/Users/ihor/work/storage/test_data/"+model.NewId()[:5]+".mp4", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	defer file.Close()
+
+	for {
+		msg, err := s.Recv()
+		if err != nil {
+			break
+		}
+		switch msg.Data.(type) {
+		case *storage.StreamFile_Chunk:
+			file.Write(msg.GetChunk())
+		default:
+			panic(1)
+		}
+	}
+}
+
+func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 	c, err := grpc.Dial(service, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(2*time.Second))
 	check(err)
 
