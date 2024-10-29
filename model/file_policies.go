@@ -19,6 +19,7 @@ type FilePolicy struct {
 	Channels      StringArray `json:"channels" db:"channels"`
 	SpeedDownload int64       `json:"speed_download" db:"speed_download"`
 	SpeedUpload   int64       `json:"speed_upload" db:"speed_upload"`
+	RetentionDays int32       `json:"retention_days" db:"retention_days"`
 }
 
 type FilePolicyPath struct {
@@ -32,6 +33,7 @@ type FilePolicyPath struct {
 	Channels      StringArray `json:"channels" db:"channels"`
 	SpeedDownload *int64      `json:"speed_download" db:"speed_download"`
 	SpeedUpload   *int64      `json:"speed_upload" db:"speed_upload"`
+	RetentionDays *int32      `json:"retention_days" db:"retention_days"`
 }
 
 func (p *FilePolicy) Patch(path *FilePolicyPath) {
@@ -59,6 +61,9 @@ func (p *FilePolicy) Patch(path *FilePolicyPath) {
 	if path.SpeedUpload != nil {
 		p.SpeedUpload = *path.SpeedUpload
 	}
+	if path.RetentionDays != nil {
+		p.RetentionDays = *path.RetentionDays
+	}
 }
 
 type SearchFilePolicy struct {
@@ -72,7 +77,7 @@ func (FilePolicy) DefaultOrder() string {
 
 func (FilePolicy) AllowFields() []string {
 	return []string{"id", "created_at", "created_by", "updated_at", "updated_by",
-		"name", "description", "enabled", "mime_types", "channels", "speed_download", "speed_upload",
+		"name", "description", "enabled", "mime_types", "channels", "speed_download", "speed_upload", "retention_days",
 	}
 }
 
