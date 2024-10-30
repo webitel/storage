@@ -85,12 +85,11 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 		sf.Thumbnail = thumbnail.UserData.(*model.Thumbnail)
 	}
 
-	// TODO
-	err = app.storeFile(store, sf)
+	file.Id, err = app.storeFile(store, sf)
 	if err != nil {
 		return err
 	}
-	file.Id = sf.Id
+
 	return nil
 }
 
@@ -160,13 +159,12 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 }
 
 // storeFile зберігає інформацію про файл у базі даних
-func (app *App) storeFile(store utils.FileBackend, file *model.File) engine.AppError {
+func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, engine.AppError) {
 	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
-		return res.Err
+		return 0, res.Err
 	}
 
-	file.Id = res.Data.(int64)
 	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.SHA256Sum))
-	return nil
+	return res.Data.(int64), nil
 }
