@@ -202,14 +202,16 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 
 	case **model.Thumbnail:
 		binder := func(holder, target interface{}) error {
-			s, ok := holder.(*string)
+			s, ok := holder.(*[]byte)
 			if !ok {
 				return errors.New(utils.T("store.sql.convert_model"))
 			}
-			b := []byte(*s)
-			return json.Unmarshal(b, target)
+			if *s == nil {
+				return nil
+			}
+			return json.Unmarshal(*s, target)
 		}
-		return gorp.CustomScanner{Holder: new(string), Target: target, Binder: binder}, true
+		return gorp.CustomScanner{Holder: &[]byte{}, Target: target, Binder: binder}, true
 
 	case *model.Lookup:
 		binder := func(holder, target interface{}) error {
