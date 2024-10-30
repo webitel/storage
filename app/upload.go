@@ -85,7 +85,13 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 		sf.Thumbnail = thumbnail.UserData.(*model.Thumbnail)
 	}
 
-	return app.storeFile(store, sf)
+	// TODO
+	err = app.storeFile(store, sf)
+	if err != nil {
+		return err
+	}
+	file.Id = sf.Id
+	return nil
 }
 
 // setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
