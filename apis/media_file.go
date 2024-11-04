@@ -66,6 +66,11 @@ func streamMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
+	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	if c.Err != nil {
+		return
+	}
+
 	if w.Header().Get("Content-Encoding") == "" {
 		w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 	}
@@ -108,6 +113,11 @@ func downloadMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer reader.Close()
+
+	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	if c.Err != nil {
+		return
+	}
 
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.Name)))
 	w.Header().Set("Content-Type", file.MimeType)

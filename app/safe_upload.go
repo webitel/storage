@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/pkg/errors"
 	engine "github.com/webitel/engine/model"
@@ -27,7 +28,7 @@ type SafeUpload struct {
 	id              string
 	state           SafeUploadState
 	app             *App
-	reader          *io.PipeReader
+	reader          io.Reader
 	writer          *io.PipeWriter
 	backend         utils.FileBackend
 	request         *model.JobUploadFile
@@ -143,10 +144,18 @@ func (s *SafeUpload) WaitUploaded() chan struct{} {
 	return s.uploaded
 }
 
-func RecoverySafeUploadProcess(id string) (*SafeUpload, error) {
+func RecoverySafeUploadProcess(ctx context.Context, id string) (*SafeUpload, error) {
 	su, ok := getSafeUploadProcess(id)
 	if !ok {
 		return nil, errors.New("not found " + id)
+	}
+
+	if su.State() == SafeUploadStateActive {
+		// TODO buffered write ?
+		select {
+		case <-time.After(time.Second):
+		case <-ctx.Done():
+		}
 	}
 
 	if su.State() != SafeUploadStateSleep {
@@ -168,15 +177,17 @@ func getSafeUploadProcess(id string) (*SafeUpload, bool) {
 	return s.(*SafeUpload), true
 }
 
-func (app *App) NewSafeUpload(profileId *int, req *model.JobUploadFile) *SafeUpload {
+func (app *App) NewSafeUpload(profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
 	return newSafeUpload(app, profileId, req)
 }
 
-func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) *SafeUpload {
+func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
+	var err engine.AppError
 	r, w := io.Pipe()
 	if profileId != nil {
 		req.Name = fmt.Sprintf("%s_%s", model.NewId()[0:7], req.Name)
 	}
+
 	s := &SafeUpload{
 		app:       app,
 		state:     SafeUploadStateActive,
@@ -185,13 +196,16 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) *SafeUplo
 		err:       make(chan error),
 		uploaded:  make(chan struct{}),
 		request:   req,
-		reader:    r,
 		writer:    w,
+	}
+	s.reader, err = app.FilePolicyForUpload(req.DomainId, &req.BaseFile, r)
+	if err != nil {
+		return nil, err
 	}
 
 	go s.run()
 
-	return s
+	return s, nil
 }
 
 func schedule(what func(), delay time.Duration) chan struct{} {

@@ -46,23 +46,12 @@ func (s SqlSyncFileStore) SetRemoveJobs(localExpDay int) engine.AppError {
 	_, err := s.GetMaster().Exec(`insert into storage.file_jobs (file_id, action)
 select f.id, :Action
 from (
-    select (extract(epoch from now() - (p.expire_day || ' day')::interval) * 1000)::int8 as exp, p.id::int4
-    from storage.file_backend_profiles p
-    where p.expire_day > 0
-    union all
-    select (extract(epoch from now() - (:LocalExpire || ' day')::interval) * 1000)::int8 as exp, 0::int4
-    where :LocalExpire > 0
-) p
-inner join lateral (
-   select  f.id as id
-    from storage.files f
-    where coalesce(f.profile_id, 0) = p.id
-        and f.created_at < p.exp
-        and not exists(select 1 from storage.file_jobs j where j.file_id = f.id)
-    order by f.created_at
-	limit 1000
-	for update skip locked
-) f on p.exp notnull
+    select id
+    from storage.files
+    where retention_until < now()
+    order by retention_until
+    limit 1000
+ ) f
 union all
 select id, :Action
 from (
@@ -72,8 +61,7 @@ from (
         and not exists(select 1 from storage.file_jobs j where j.file_id = f.id)
     order by f.created_at
 	limit 1000
-	for update skip locked
-) t`, map[string]interface{}{
+) t;`, map[string]interface{}{
 		"LocalExpire": localExpDay,
 		"Action":      model.SyncJobRemove,
 	})

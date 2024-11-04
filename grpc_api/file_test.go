@@ -8,6 +8,7 @@ import (
 	"github.com/webitel/storage/model"
 	"google.golang.org/grpc"
 	"log"
+	"net"
 	"os"
 	"testing"
 	"time"
@@ -22,6 +23,7 @@ func TestFile(t *testing.T) {
 	fileLoc := testFolder + "/2.mp4"
 	uploadId = sendFile(uploadId, fileLoc)
 	for {
+		time.Sleep(time.Millisecond * 500)
 		uploadId = sendFile(uploadId, fileLoc)
 		if uploadId == nil {
 			fmt.Println("OK")
@@ -91,7 +93,30 @@ func downloadFile() {
 }
 
 func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
-	c, err := grpc.Dial(service, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(2*time.Second))
+	d := grpc.WithContextDialer(func(ctx context.Context, s string) (net.Conn, error) {
+		var d net.Dialer
+		c, err := d.Dial("tcp", s)
+		if err != nil {
+			return nil, err
+		}
+		tcpConn := c.(*net.TCPConn)
+		//err = tcpConn.SetWriteBuffer(1 * 1024 * 1024)
+		//if err != nil {
+		//	return nil, err
+		//}
+		//
+		//err = tcpConn.SetReadBuffer(1 * 1024 * 1024)
+		//if err != nil {
+		//	return nil, err
+		//}
+		//err = tcpConn.SetNoDelay(true)
+		//if err != nil {
+		//	return nil, err
+		//}
+
+		return tcpConn, nil
+	})
+	c, err := grpc.Dial(service, d, grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(2*time.Second))
 	check(err)
 
 	stats, err := os.Stat(fileLoc)
@@ -123,7 +148,7 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 					DomainId: 1,
 					Name:     stats.Name(),
 					//MimeType: "image/png",
-					MimeType:          "video/mp4",
+					MimeType:          "audio/mp4",
 					Uuid:              "blabla",
 					StreamResponse:    false,
 					ProfileId:         221,

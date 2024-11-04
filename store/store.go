@@ -167,11 +167,12 @@ type ImportTemplateStore interface {
 }
 
 type FilePoliciesStore interface {
-	CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError)
-	Create(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError)
-	GetAllPage(domainId int64, req *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError)
-	GetAllPageByGroups(domainId int64, groups []int, search *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError)
-	Get(domainId int64, id int32) (*model.FilePolicy, engine.AppError)
-	Update(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError)
-	Delete(domainId int64, id int32) engine.AppError
+	Create(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError)
+	GetAllPage(ctx context.Context, domainId int64, req *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError)
+	Get(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError)
+	Update(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError)
+	Delete(ctx context.Context, domainId int64, id int32) engine.AppError
+	ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError
+	// AllByDomainId internal
+	AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, engine.AppError)
 }

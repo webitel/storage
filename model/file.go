@@ -2,16 +2,19 @@ package model
 
 import (
 	"encoding/json"
+	"time"
 )
 
 type BaseFile struct {
-	Name       string          `db:"name" json:"name"`
-	ViewName   *string         `db:"view_name" json:"view_name,omitempty"`
-	Size       int64           `db:"size" json:"size"`
-	MimeType   string          `db:"mime_type" json:"mime_type"`
-	Properties StringInterface `db:"properties" json:"properties"`
-	SHA256Sum  *string         `db:"sha256sum" json:"sha256sum,omitempty"`
-	Instance   string          `db:"instance" json:"-"`
+	Name           string          `db:"name" json:"name"`
+	ViewName       *string         `db:"view_name" json:"view_name,omitempty"`
+	Size           int64           `db:"size" json:"size"`
+	MimeType       string          `db:"mime_type" json:"mime_type"`
+	Properties     StringInterface `db:"properties" json:"properties"`
+	SHA256Sum      *string         `db:"sha256sum" json:"sha256sum,omitempty"`
+	Instance       string          `db:"instance" json:"-"`
+	Channel        *string         `db:"channel" json:"channel"`
+	RetentionUntil *time.Time      `db:"retention_until" json:"retention_until"`
 }
 
 type File struct {
@@ -24,7 +27,6 @@ type File struct {
 	Removed   *bool      `db:"removed" json:"-"`
 	NotExists *bool      `db:"not_exists" json:"-"`
 	Safe      bool       `db:"-" json:"-"`
-	Channel   *string    `db:"channel" json:"channel"`
 	Thumbnail *Thumbnail `db:"thumbnail" json:"thumbnail"`
 }
 
@@ -60,6 +62,11 @@ func (f *BaseFile) GetViewName() string {
 	}
 
 	return f.Name
+}
+
+func (f *BaseFile) GetChannel() *string {
+
+	return f.Channel
 }
 
 type RemoveFile struct {

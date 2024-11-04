@@ -42,6 +42,7 @@ func (c *Controller) SearchBackendProfile(session *auth_manager.Session, domainI
 	var err engine.AppError
 	var endOfList bool
 
+	// TODO DELME
 	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
 		list, endOfList, err = c.app.GetFileBackendProfilePageByGroups(session.Domain(domainId), session.RoleIds, search)
 	} else {

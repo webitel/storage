@@ -1,24 +1,23 @@
 package app
 
 import (
-	"fmt"
 	"io"
 
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model.MediaFile, engine.AppError) {
+func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, engine.AppError) {
 	var size int64
 	var err engine.AppError
+
+	mediaFile.Channel = model.NewString(model.UploadFileChannelMedia)
 
 	if err = mediaFile.IsValid(); err != nil {
 		return nil, err
 	}
 
-	if err = app.AllowMimeType(mediaFile.MimeType); err != nil {
-		return nil, err
-	}
+	src, err = app.FilePolicyForUpload(mediaFile.DomainId, &mediaFile.BaseFile, src)
 
 	size, err = app.MediaFileStore.Write(src, mediaFile)
 	if err != nil {
@@ -26,11 +25,6 @@ func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model
 	}
 	mediaFile.Size = size
 	mediaFile.Instance = app.GetInstanceId()
-
-	if app.Config().MediaFileStoreSettings.MaxSizeByte != nil && *app.Config().MediaFileStoreSettings.MaxSizeByte < int(size) {
-		app.MediaFileStore.Remove(mediaFile) //fixme check error
-		return nil, engine.NewBadRequestError("model.media_file.size.app_error", "")
-	}
 
 	if mediaFile, err = app.Store.MediaFile().Create(mediaFile); err != nil {
 		if err.GetId() != "store.sql_media_file.save.saving.duplicate" {
@@ -40,18 +34,6 @@ func (app *App) SaveMediaFile(src io.Reader, mediaFile *model.MediaFile) (*model
 	} else {
 		return mediaFile, nil
 	}
-}
-
-func (app *App) AllowMimeType(mimeType string) engine.AppError {
-	allow := app.Config().MediaFileStoreSettings.AllowMime
-	if len(allow) == 0 {
-		return nil
-	}
-	if !model.StringInSlice(mimeType, app.Config().MediaFileStoreSettings.AllowMime) {
-		return engine.NewBadRequestError("model.media_file.mime_type.app_error", fmt.Sprintf("Not allowed mime type %s", mimeType))
-	}
-
-	return nil
 }
 
 func (app *App) GetMediaFilePage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, engine.AppError) {
@@ -64,8 +46,12 @@ func (app *App) GetMediaFilePage(domainId int64, search *model.SearchMediaFile) 
 	return files, search.EndOfList(), nil
 }
 
-func (app *App) GetMediaFile(domainId int64, id int) (*model.MediaFile, engine.AppError) {
-	return app.Store.MediaFile().Get(domainId, id)
+func (app *App) GetMediaFile(domainId int64, id int) (mf *model.MediaFile, err engine.AppError) {
+	mf, err = app.Store.MediaFile().Get(domainId, id)
+	if mf != nil {
+		mf.Channel = model.NewString(model.UploadFileChannelMedia)
+	}
+	return
 }
 
 func (app *App) DeleteMediaFile(domainId int64, id int) (*model.MediaFile, engine.AppError) {

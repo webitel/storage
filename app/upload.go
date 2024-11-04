@@ -64,9 +64,11 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 		if err != nil {
 			return err
 		}
-		defer func() {
-			thumbnail.Close()
-		}()
+		if thumbnail != nil {
+			defer func() {
+				thumbnail.Close()
+			}()
+		}
 	} else {
 		reader = src
 	}
@@ -131,15 +133,16 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 		Uuid:      file.Uuid,
 		CreatedAt: model.GetMillis(),
 		BaseFile: model.BaseFile{
-			Size:       file.Size,
-			Name:       file.Name,
-			ViewName:   file.ViewName,
-			MimeType:   file.MimeType,
-			Properties: model.StringInterface{},
-			Instance:   app.GetInstanceId(),
+			Size:           file.Size,
+			Name:           file.Name,
+			ViewName:       file.ViewName,
+			MimeType:       file.MimeType,
+			Properties:     model.StringInterface{},
+			Instance:       app.GetInstanceId(),
+			Channel:        file.Channel,
+			RetentionUntil: file.RetentionUntil,
 		},
 		ProfileId: profileId,
-		Channel:   file.Channel,
 	}
 
 	h := sha256.New()

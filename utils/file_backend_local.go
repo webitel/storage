@@ -28,8 +28,8 @@ func (self *LocalFileBackend) Name() string {
 	return self.name
 }
 
-func (self *LocalFileBackend) GetStoreDirectory(domain int64) string {
-	return path.Join(parseStorePattern(self.pathPattern, domain))
+func (self *LocalFileBackend) GetStoreDirectory(f File) string {
+	return path.Join(parseStorePattern(self.pathPattern, f))
 }
 
 func (self *LocalFileBackend) TestConnection() engine.AppError {
@@ -37,7 +37,7 @@ func (self *LocalFileBackend) TestConnection() engine.AppError {
 }
 
 func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.AppError) {
-	directory := self.GetStoreDirectory(file.Domain())
+	directory := self.GetStoreDirectory(file)
 	root := path.Join(self.directory, directory)
 	allPath := path.Join(root, file.GetStoreName())
 	var err error

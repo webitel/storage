@@ -107,6 +107,11 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
+	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	if c.Err != nil {
+		return
+	}
+
 	if w.Header().Get("Content-Encoding") == "" {
 		w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
 	}
@@ -160,6 +165,11 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer reader.Close()
+
+	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	if c.Err != nil {
+		return
+	}
 
 	var name = file.GetViewName()
 	if c.Params.Name != "" {

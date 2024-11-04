@@ -5,28 +5,24 @@ import (
 )
 
 const (
-	UploadFileChannelCall = "call"
-	UploadFileChannelChat = "chat"
-	UploadFileChannelMail = "mail"
+	UploadFileChannelCall  = "call"
+	UploadFileChannelChat  = "chat"
+	UploadFileChannelMail  = "mail"
+	UploadFileChannelMedia = "media"
 )
 
 type JobUploadFile struct {
+	BaseFile
+
 	Id        int64      `db:"id"`
 	State     int        `db:"state"`
-	Name      string     `db:"name"`
-	ViewName  *string    `db:"view_name"`
 	Uuid      string     `db:"uuid"`
 	DomainId  int64      `db:"domain_id"`
-	MimeType  string     `db:"mime_type"`
-	Size      int64      `db:"size"`
 	EmailMsg  string     `db:"email_msg"`
 	EmailSub  string     `db:"email_sub"`
-	Instance  string     `db:"instance"`
 	CreatedAt int64      `db:"created_at"`
 	UpdatedAt int64      `db:"updated_at"`
 	Attempts  int        `db:"attempts,default:0" json:"attempts"`
-	SHA256Sum *string    `db:"sha256sum" json:"sha256sum"`
-	Channel   *string    `db:"channel" json:"channel"`
 	Thumbnail *Thumbnail `db:"thumbnail" json:"thumbnail"`
 
 	GenerateThumbnail bool `db:"-"`
@@ -63,6 +59,10 @@ func (self *JobUploadFile) GetViewName() string {
 	}
 
 	return self.Name
+}
+
+func (self *JobUploadFile) GetChannel() *string {
+	return self.Channel
 }
 
 // TODO

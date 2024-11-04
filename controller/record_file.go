@@ -24,12 +24,14 @@ func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFi
 }
 
 func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int, file *model.JobUploadFile) engine.AppError {
+	//c.app.FilePolicy(file.DomainId, &file.BaseFile, src)
 	return c.app.SyncUploadToProfile(src, profileId, file)
 }
 
 func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, engine.AppError) {
 	return c.app.GeneratePreSignedResourceSignature(resource, action, id, domainId)
 }
+
 func (c *Controller) GeneratePreSignedResourceSignatureBulk(id int64, domainId int64, resource string, action string, source string, queryParams map[string]string) (string, engine.AppError) {
 	return c.app.GeneratePreSignedResourceSignatureBulk(id, domainId, resource, action, source, queryParams)
 }

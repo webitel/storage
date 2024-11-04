@@ -4,6 +4,7 @@ import (
 	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
 	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	"context"
+	"errors"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
 )
@@ -32,9 +33,10 @@ func (api *filePolicies) CreateFilePolicy(ctx context.Context, in *storage.Creat
 		MimeTypes:     in.MimeTypes,
 		Channels:      in.Channels,
 		RetentionDays: in.RetentionDays,
+		MaxUploadSize: in.MaxUploadSize,
 	}
 
-	policy, err = api.ctrl.CreateFilePolicy(session, policy)
+	policy, err = api.ctrl.CreateFilePolicy(ctx, session, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +64,7 @@ func (api *filePolicies) SearchFilePolicies(ctx context.Context, in *storage.Sea
 		Ids: in.Id,
 	}
 
-	list, endOfData, err = api.ctrl.SearchFilePolicies(session, rec)
+	list, endOfData, err = api.ctrl.SearchFilePolicies(ctx, session, rec)
 
 	if err != nil {
 		return nil, err
@@ -85,7 +87,7 @@ func (api *filePolicies) ReadFilePolicy(ctx context.Context, in *storage.ReadFil
 	}
 	var policy *model.FilePolicy
 
-	policy, err = api.ctrl.GetFilePolicy(session, in.GetId())
+	policy, err = api.ctrl.GetFilePolicy(ctx, session, in.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -110,9 +112,10 @@ func (api *filePolicies) UpdateFilePolicy(ctx context.Context, in *storage.Updat
 		MimeTypes:     in.MimeTypes,
 		Channels:      in.Channels,
 		RetentionDays: in.RetentionDays,
+		MaxUploadSize: in.MaxUploadSize,
 	}
 
-	policy, err = api.ctrl.UpdateFilePolicy(session, in.Id, policy)
+	policy, err = api.ctrl.UpdateFilePolicy(ctx, session, in.Id, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -148,10 +151,12 @@ func (api *filePolicies) PatchFilePolicy(ctx context.Context, in *storage.PatchF
 			patch.SpeedUpload = &in.SpeedUpload
 		case "retention_days":
 			patch.RetentionDays = &in.RetentionDays
+		case "max_upload_size":
+			patch.MaxUploadSize = &in.MaxUploadSize
 		}
 	}
 
-	policy, err = api.ctrl.PatchFilePolicy(session, in.GetId(), patch)
+	policy, err = api.ctrl.PatchFilePolicy(ctx, session, in.GetId(), patch)
 	if err != nil {
 		return nil, err
 	}
@@ -166,12 +171,33 @@ func (api *filePolicies) DeleteFilePolicy(ctx context.Context, in *storage.Delet
 	}
 
 	var policy *model.FilePolicy
-	policy, err = api.ctrl.DeleteFilePolicy(session, in.GetId())
+	policy, err = api.ctrl.DeleteFilePolicy(ctx, session, in.GetId())
 	if err != nil {
 		return nil, err
 	}
 
 	return toGrpcFilePolicy(policy), nil
+}
+
+func (api *filePolicies) MovePositionFilePolicy(ctx context.Context, in *storage.MovePositionFilePolicyRequest) (*storage.MovePositionFilePolicyResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.ctrl.ChangePositionFilePolicy(ctx, session, in.FromId, in.ToId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.MovePositionFilePolicyResponse{
+		Success: true,
+	}, nil
+
+}
+
+func (api *filePolicies) FilePolicyApply(ctx context.Context, in *storage.FilePolicyApplyRequest) (*storage.FilePolicyApplyResponse, error) {
+	return nil, errors.New("TODO")
 }
 
 func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {
@@ -189,5 +215,7 @@ func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {
 		MimeTypes:     src.MimeTypes,
 		Channels:      src.Channels,
 		RetentionDays: src.RetentionDays,
+		MaxUploadSize: src.MaxUploadSize,
+		Position:      src.Position, //
 	}
 }

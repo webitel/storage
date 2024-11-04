@@ -29,24 +29,25 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		id, err := self.GetMaster().SelectInt(`
 			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name, 
-			                          profile_id, sha256sum, channel, thumbnail)
+			                          profile_id, sha256sum, channel, thumbnail, retention_until)
             values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName, 
-                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb)
+                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz)
 			returning id
 		`, map[string]interface{}{
-			"Name":      file.Name,
-			"Uuid":      file.Uuid,
-			"Size":      file.Size,
-			"DomainId":  file.DomainId,
-			"Mime":      file.MimeType,
-			"Props":     file.Properties.ToJson(),
-			"CreatedAt": file.CreatedAt,
-			"Inst":      file.Instance,
-			"VName":     file.ViewName,
-			"ProfileId": file.ProfileId,
-			"SHA256Sum": file.SHA256Sum,
-			"Channel":   file.Channel,
-			"Thumbnail": file.Thumbnail.ToJson(),
+			"Name":           file.Name,
+			"Uuid":           file.Uuid,
+			"Size":           file.Size,
+			"DomainId":       file.DomainId,
+			"Mime":           file.MimeType,
+			"Props":          file.Properties.ToJson(),
+			"CreatedAt":      file.CreatedAt,
+			"Inst":           file.Instance,
+			"VName":          file.ViewName,
+			"ProfileId":      file.ProfileId,
+			"SHA256Sum":      file.SHA256Sum,
+			"Channel":        file.Channel,
+			"Thumbnail":      file.Thumbnail.ToJson(),
+			"RetentionUntil": file.RetentionUntil,
 		})
 
 		if err != nil {
