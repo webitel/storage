@@ -32,10 +32,6 @@
     "translation": "Encountered an error opening a reader from local server file storage"
   },
   {
-    "id": "utils.file.locally.writing.app_error",
-    "translation": "Encountered an error writing to local server storage"
-  },
-  {
     "id": "utils.file.locally.writing.limit",
     "translation": "This file is too large."
   },
