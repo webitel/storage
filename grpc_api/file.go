@@ -300,6 +300,7 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 
 func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) error {
 	var su *app.SafeUpload
+	ctx := in.Context()
 	res, gErr := in.Recv()
 	if gErr != nil {
 		wlog.Error(gErr.Error())
@@ -308,7 +309,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 
 	switch r := res.Data.(type) {
 	case *storage.SafeUploadFileRequest_UploadId:
-		su, gErr = app.RecoverySafeUploadProcess(r.UploadId)
+		su, gErr = app.RecoverySafeUploadProcess(ctx, r.UploadId)
 		if gErr != nil {
 			return gErr
 		}
@@ -327,7 +328,10 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		if r.Metadata.ProfileId > 0 {
 			pid = model.NewInt(int(r.Metadata.ProfileId))
 		}
-		su = api.ctrl.App().NewSafeUpload(pid, &fileRequest)
+		su, gErr = api.ctrl.App().NewSafeUpload(pid, &fileRequest)
+		if gErr != nil {
+			return gErr
+		}
 		su.SetProgress(r.Metadata.Progress)
 		break
 	default:

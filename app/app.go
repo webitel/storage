@@ -45,6 +45,7 @@ type App struct {
 	sessionManager auth_manager.AuthManager
 	Uploader       interfaces.UploadRecordingsFilesInterface
 	Synchronizer   interfaces.SynchronizerFilesInterface
+	filePolicies   *DomainFilePolicy
 
 	preSigned presign.PreSign
 
@@ -71,6 +72,11 @@ func New(options ...string) (outApp *App, outErr error) {
 	}
 	app.Srv.Router = app.Srv.RootRouter.PathPrefix("/").Subrouter()
 	app.InternalSrv.Router = app.InternalSrv.RootRouter.PathPrefix("/").Subrouter()
+
+	app.filePolicies = &DomainFilePolicy{
+		app:      app,
+		policies: utils.NewLruWithParams(100, "domain policies", 30, ""),
+	}
 
 	defer func() {
 		if outErr != nil {

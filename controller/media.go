@@ -8,7 +8,7 @@ import (
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.Reader, mediaFile *model.MediaFile) (*model.MediaFile, engine.AppError) {
+func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, engine.AppError) {
 	//var err engine.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanCreate() {

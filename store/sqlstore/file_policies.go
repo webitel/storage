@@ -1,9 +1,9 @@
 package sqlstore
 
 import (
+	"context"
 	"fmt"
 	"github.com/lib/pq"
-	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -19,26 +19,8 @@ func NewSqlFilePoliciesStore(sqlStore SqlStore) store.FilePoliciesStore {
 	return us
 }
 
-func (s *SqlFilePoliciesStore) CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
-	res, err := s.GetReplica().SelectNullInt(`select 1
-		where exists(
-          select 1
-          from storage.file_policies_acl a
-          where a.dc = :DomainId
-            and a.object = :Id
-            and a.subject = any (:Groups::int[])
-            and a.access & :Access = :Access
-        )`, map[string]interface{}{"DomainId": domainId, "Id": id, "Groups": pq.Array(groups), "Access": access.Value()})
-
-	if err != nil {
-		return false, nil
-	}
-
-	return res.Valid && res.Int64 == 1, nil
-}
-
-func (s *SqlFilePoliciesStore) Create(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
-	err := s.GetMaster().SelectOne(&policy, `with p as (
+func (s *SqlFilePoliciesStore) Create(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `with p as (
     insert into storage.file_policies (domain_id, created_at, created_by, updated_at, updated_by, name, enabled, mime_types,
                                        speed_download, speed_upload, description, channels, retention_days)
     values (:DomainId, :CreatedAt, :CreatedBy, :UpdatedAt, :UpdatedBy, :Name, :Enabled, :MimeTypes,
@@ -83,7 +65,7 @@ FROM p
 	return policy, nil
 }
 
-func (s *SqlFilePoliciesStore) GetAllPage(domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) GetAllPage(ctx context.Context, domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError) {
 	var list []*model.FilePolicy
 
 	f := map[string]interface{}{
@@ -105,36 +87,9 @@ func (s *SqlFilePoliciesStore) GetAllPage(domainId int64, search *model.SearchFi
 	return list, nil
 }
 
-func (s *SqlFilePoliciesStore) GetAllPageByGroups(domainId int64, groups []int, search *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError) {
-	var list []*model.FilePolicy
-
-	f := map[string]interface{}{
-		"DomainId": domainId,
-		"Ids":      pq.Array(search.Ids),
-		"Q":        search.GetQ(),
-		"Groups":   pq.Array(groups),
-		"Access":   auth_manager.PERMISSION_ACCESS_READ.Value(),
-	}
-
-	err := s.ListQuery(&list, search.ListRequest,
-		`domain_id = :DomainId
-				and exists(select 1
-				  from storage.file_policies_acl a
-				  where a.dc = t.domain_id and a.object = t.id and a.subject = any(:Groups::int[]) and a.access&:Access = :Access)
-				and (:Ids::int[] isnull or id = any(:Ids))
-				and (:Q::varchar isnull or (name ilike :Q::varchar or description ilike :Q::varchar ))`,
-		model.FilePolicy{}, f)
-
-	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file_policy.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
-	}
-
-	return list, nil
-}
-
-func (s *SqlFilePoliciesStore) Get(domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) Get(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
 	var policy *model.FilePolicy
-	err := s.GetMaster().SelectOne(&policy, `SELECT p.id,
+	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `SELECT p.id,
        p.created_at,
        storage.get_lookup(c.id, COALESCE(c.name, c.username::text)::character varying) AS created_by,
        p.updated_at,
@@ -163,8 +118,8 @@ where p.domain_id = :DomainId
 	return policy, nil
 }
 
-func (s *SqlFilePoliciesStore) Update(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
-	err := s.GetMaster().SelectOne(&policy, `with p as (
+func (s *SqlFilePoliciesStore) Update(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `with p as (
     update storage.file_policies
         set updated_at = :UpdatedAt,
             updated_by = :UpdatedBy,
@@ -218,10 +173,61 @@ FROM p
 	return policy, nil
 }
 
-func (s *SqlFilePoliciesStore) Delete(domainId int64, id int32) engine.AppError {
-	if _, err := s.GetMaster().Exec(`delete from storage.file_policies p where id = :Id and domain_id = :DomainId`,
+func (s *SqlFilePoliciesStore) Delete(ctx context.Context, domainId int64, id int32) engine.AppError {
+	if _, err := s.GetMaster().WithContext(ctx).Exec(`delete from storage.file_policies p where id = :Id and domain_id = :DomainId`,
 		map[string]interface{}{"Id": id, "DomainId": domainId}); err != nil {
 		return engine.NewCustomCodeError("store.sql_file_policy.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return nil
+}
+
+func (s *SqlFilePoliciesStore) ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError {
+	i, err := s.GetMaster().WithContext(ctx).SelectInt(`with t as (
+		select p.id,
+           case when p.position > lead(p.position) over () then lead(p.position) over () else lag(p.position) over (order by p.position desc) end as new_pos,
+           count(*) over () cnt
+        from storage.file_policies p
+        where p.id in (:FromId, :ToId) and p.domain_id = :DomainId
+        order by p.position desc
+	),
+	u as (
+		update storage.file_policies u
+		set position = t.new_pos
+		from t
+		where t.id = u.id and t.cnt = 2 and  :FromId != :ToId
+		returning u.id
+	)
+	select count(*)
+	from u`, map[string]interface{}{
+		"FromId":   fromId,
+		"ToId":     toId,
+		"DomainId": domainId,
+	})
+
+	if err != nil {
+		return engine.NewCustomCodeError("store.sql_file_policy.change_position.app_error", fmt.Sprintf("FromId=%v, ToId=%v %s", fromId, toId, err.Error()), extractCodeFromErr(err))
+	}
+
+	if i == 0 {
+		return engine.NewNotFoundError("store.sql_file_policy.change_position.not_found", fmt.Sprintf("FromId=%v, ToId=%v", fromId, toId))
+	}
+
+	return nil
+}
+
+func (s *SqlFilePoliciesStore) AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, engine.AppError) {
+	var list []model.FilePolicy
+	_, err := s.GetReplica().WithContext(ctx).Select(&list, `select id, channels, mime_types, p.name, p.speed_download, p.speed_upload, p.retention_days, max(updated_at) over ()
+from storage.file_policies p
+where p.domain_id = :DomainId
+    and p.enabled
+order by position desc;`, map[string]interface{}{
+		"DomainId": domainId,
+	})
+
+	if err != nil {
+		return nil, engine.NewCustomCodeError("store.sql_file_policy.all_by_domain.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return list, nil
 }

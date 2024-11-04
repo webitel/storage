@@ -40,8 +40,8 @@ func (self *S3FileBackend) Name() string {
 	return self.name
 }
 
-func (self *S3FileBackend) GetStoreDirectory(domain int64) string {
-	return path.Join(parseStorePattern(self.pathPattern, domain))
+func (self *S3FileBackend) GetStoreDirectory(f File) string {
+	return path.Join(parseStorePattern(self.pathPattern, f))
 }
 
 func (self *S3FileBackend) getEndpoint() *string {
@@ -86,7 +86,7 @@ func (self *S3FileBackend) Write(src io.Reader, file File) (int64, engine.AppErr
 }
 
 func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppError) {
-	directory := self.GetStoreDirectory(file.Domain())
+	directory := self.GetStoreDirectory(file)
 	location := path.Join(directory, file.GetStoreName())
 
 	params := &s3manager.UploadInput{
@@ -118,7 +118,7 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 }
 
 func (self *S3FileBackend) Remove(file File) engine.AppError {
-	directory := self.GetStoreDirectory(file.Domain())
+	directory := self.GetStoreDirectory(file)
 	location := path.Join(directory, file.GetStoreName())
 
 	_, err := self.svc.DeleteObject(&s3.DeleteObjectInput{

@@ -1,21 +1,17 @@
 package app
 
 import (
-	"github.com/webitel/engine/auth_manager"
+	"context"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) FilePolicyCheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
-	return app.Store.FilePolicies().CheckAccess(domainId, id, groups, access)
+func (app *App) CreateFilePolicy(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+	return app.Store.FilePolicies().Create(ctx, domainId, policy)
 }
 
-func (app *App) CreateFilePolicy(domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
-	return app.Store.FilePolicies().Create(domainId, policy)
-}
-
-func (app *App) SearchFilePolicies(domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, engine.AppError) {
-	res, err := app.Store.FilePolicies().GetAllPage(domainId, search)
+func (app *App) SearchFilePolicies(ctx context.Context, domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, engine.AppError) {
+	res, err := app.Store.FilePolicies().GetAllPage(ctx, domainId, search)
 	if err != nil {
 		return nil, false, err
 	}
@@ -23,21 +19,16 @@ func (app *App) SearchFilePolicies(domainId int64, search *model.SearchFilePolic
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) SearchFilePoliciesByGroups(domainId int64, groups []int, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, engine.AppError) {
-	res, err := app.Store.FilePolicies().GetAllPageByGroups(domainId, groups, search)
-	if err != nil {
-		return nil, false, err
-	}
-	search.RemoveLastElemIfNeed(&res)
-	return res, search.EndOfList(), nil
+func (app *App) GetFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
+	return app.Store.FilePolicies().Get(ctx, domainId, id)
 }
 
-func (app *App) GetFilePolicy(domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
-	return app.Store.FilePolicies().Get(domainId, id)
+func (app *App) ChangePositionFilePolicy(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError {
+	return app.Store.FilePolicies().ChangePosition(ctx, domainId, fromId, toId)
 }
 
-func (app *App) UpdateFilePolicy(domainId int64, id int32, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
-	oldPolicy, err := app.GetFilePolicy(domainId, id)
+func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+	oldPolicy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return nil, err
 	}
@@ -54,12 +45,12 @@ func (app *App) UpdateFilePolicy(domainId int64, id int32, policy *model.FilePol
 	oldPolicy.SpeedDownload = policy.SpeedDownload
 	oldPolicy.RetentionDays = policy.RetentionDays
 
-	return app.Store.FilePolicies().Update(domainId, oldPolicy)
+	return app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
 
 }
 
-func (app *App) PatchFilePolicy(domainId int64, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, engine.AppError) {
-	oldPolicy, err := app.GetFilePolicy(domainId, id)
+func (app *App) PatchFilePolicy(ctx context.Context, domainId int64, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, engine.AppError) {
+	oldPolicy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return nil, err
 	}
@@ -70,15 +61,15 @@ func (app *App) PatchFilePolicy(domainId int64, id int32, patch *model.FilePolic
 		return nil, err
 	}
 
-	return app.Store.FilePolicies().Update(domainId, oldPolicy)
+	return app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
 }
 
-func (app *App) DeleteFilePolicy(domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
-	policy, err := app.GetFilePolicy(domainId, id)
+func (app *App) DeleteFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
+	policy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return nil, err
 	}
-	err = app.Store.FilePolicies().Delete(domainId, id)
+	err = app.Store.FilePolicies().Delete(ctx, domainId, id)
 	if err != nil {
 		return nil, err
 	}

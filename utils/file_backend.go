@@ -15,7 +15,7 @@ const (
 	convert = 0.000001
 )
 
-var regCompileMask = regexp.MustCompile(`\$DOMAIN|\$Y|\$M|\$D|\$H|\$m`)
+var regCompileMask = regexp.MustCompile(`(\$MIME)|(\$DOMAIN)|(\$Y)|(\$M)|(\$D)|(\$H)|(\$m)|(\$CHANNEL)`)
 
 type BaseFileBackend struct {
 	sync.RWMutex
@@ -56,6 +56,7 @@ type File interface {
 	GetStoreName() string
 	GetPropertyString(name string) string
 	SetPropertyString(name, value string)
+	GetChannel() *string
 }
 
 type FileBackend interface {
@@ -107,12 +108,12 @@ func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, engine.App
 	return nil, engine.NewInternalError("api.file.no_driver.app_error", "")
 }
 
-func parseStorePattern(pattern string, domain int64) string {
+func parseStorePattern(pattern string, f File) string {
 	now := time.Now()
 	return regCompileMask.ReplaceAllStringFunc(pattern, func(s string) string {
 		switch s {
 		case "$DOMAIN":
-			return fmt.Sprintf("%d", domain)
+			return fmt.Sprintf("%d", f.Domain())
 		case "$Y":
 			return fmt.Sprintf("%d", now.Year())
 		case "$M":
@@ -123,6 +124,14 @@ func parseStorePattern(pattern string, domain int64) string {
 			return fmt.Sprintf("%d", now.Hour())
 		case "$m":
 			return fmt.Sprintf("%d", now.Minute())
+		case "$CHANNEL":
+			ch := f.GetChannel()
+			if ch != nil {
+				return *ch
+			}
+			return "undef"
+		case "$MIME":
+			return f.GetMimeType()
 		}
 		return s
 	})

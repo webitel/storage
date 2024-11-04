@@ -1,13 +1,14 @@
 package controller
 
 import (
+	"context"
 	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"time"
 )
 
-func (c *Controller) CreateFilePolicy(session *auth_manager.Session, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+func (c *Controller) CreateFilePolicy(ctx context.Context, session *auth_manager.Session, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
 	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanCreate() {
@@ -26,48 +27,28 @@ func (c *Controller) CreateFilePolicy(session *auth_manager.Session, policy *mod
 		return nil, err
 	}
 
-	return c.app.CreateFilePolicy(session.Domain(0), policy)
+	return c.app.CreateFilePolicy(ctx, session.Domain(0), policy)
 }
 
-func (c *Controller) SearchFilePolicies(session *auth_manager.Session, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, engine.AppError) {
+func (c *Controller) SearchFilePolicies(ctx context.Context, session *auth_manager.Session, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, engine.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanRead() {
 		return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	}
 
-	var list []*model.FilePolicy
-	var err engine.AppError
-	var endOfList bool
-
-	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
-		list, endOfList, err = c.app.SearchFilePoliciesByGroups(session.Domain(0), session.RoleIds, search)
-	} else {
-		list, endOfList, err = c.app.SearchFilePolicies(session.Domain(0), search)
-	}
-
-	return list, endOfList, err
+	return c.app.SearchFilePolicies(ctx, session.Domain(0), search)
 }
 
-func (c *Controller) GetFilePolicy(session *auth_manager.Session, id int32) (*model.FilePolicy, engine.AppError) {
-	var err engine.AppError
+func (c *Controller) GetFilePolicy(ctx context.Context, session *auth_manager.Session, id int32) (*model.FilePolicy, engine.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	}
 
-	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_READ, permission) {
-		var perm bool
-		if perm, err = c.app.FilePolicyCheckAccess(session.Domain(0), id, session.RoleIds, auth_manager.PERMISSION_ACCESS_READ); err != nil {
-			return nil, err
-		} else if !perm {
-			return nil, c.app.MakeResourcePermissionError(session, int64(id), permission, auth_manager.PERMISSION_ACCESS_READ)
-		}
-	}
-
-	return c.app.GetFilePolicy(session.Domain(0), id)
+	return c.app.GetFilePolicy(ctx, session.Domain(0), id)
 }
 
-func (c *Controller) UpdateFilePolicy(session *auth_manager.Session, id int32, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+func (c *Controller) UpdateFilePolicy(ctx context.Context, session *auth_manager.Session, id int32, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
 	var err engine.AppError
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanRead() {
@@ -78,14 +59,6 @@ func (c *Controller) UpdateFilePolicy(session *auth_manager.Session, id int32, p
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
 	}
 
-	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_UPDATE, permission) {
-		var perm bool
-		if perm, err = c.app.FilePolicyCheckAccess(session.Domain(0), id, session.RoleIds, auth_manager.PERMISSION_ACCESS_READ); err != nil {
-			return nil, err
-		} else if !perm {
-			return nil, c.app.MakeResourcePermissionError(session, int64(id), permission, auth_manager.PERMISSION_ACCESS_READ)
-		}
-	}
 	t := time.Now()
 	policy.UpdatedAt = &t
 	policy.UpdatedBy = &model.Lookup{
@@ -96,11 +69,10 @@ func (c *Controller) UpdateFilePolicy(session *auth_manager.Session, id int32, p
 		return nil, err
 	}
 
-	return c.app.UpdateFilePolicy(session.Domain(0), id, policy)
+	return c.app.UpdateFilePolicy(ctx, session.Domain(0), id, policy)
 }
 
-func (c *Controller) PatchFilePolicy(session *auth_manager.Session, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, engine.AppError) {
-	var err engine.AppError
+func (c *Controller) PatchFilePolicy(ctx context.Context, session *auth_manager.Session, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, engine.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -110,25 +82,15 @@ func (c *Controller) PatchFilePolicy(session *auth_manager.Session, id int32, pa
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
 	}
 
-	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_UPDATE, permission) {
-		var perm bool
-		if perm, err = c.app.FilePolicyCheckAccess(session.Domain(0), id, session.RoleIds, auth_manager.PERMISSION_ACCESS_READ); err != nil {
-			return nil, err
-		} else if !perm {
-			return nil, c.app.MakeResourcePermissionError(session, int64(id), permission, auth_manager.PERMISSION_ACCESS_READ)
-		}
-	}
-
 	patch.UpdatedAt = time.Now()
 	patch.UpdatedBy = model.Lookup{
 		Id: int(session.UserId),
 	}
 
-	return c.app.PatchFilePolicy(session.Domain(0), id, patch)
+	return c.app.PatchFilePolicy(ctx, session.Domain(0), id, patch)
 }
 
-func (c *Controller) DeleteFilePolicy(session *auth_manager.Session, id int32) (*model.FilePolicy, engine.AppError) {
-	var err engine.AppError
+func (c *Controller) DeleteFilePolicy(ctx context.Context, session *auth_manager.Session, id int32) (*model.FilePolicy, engine.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -138,14 +100,18 @@ func (c *Controller) DeleteFilePolicy(session *auth_manager.Session, id int32) (
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
 	}
 
-	if session.UseRBAC(auth_manager.PERMISSION_ACCESS_DELETE, permission) {
-		var perm bool
-		if perm, err = c.app.FilePolicyCheckAccess(session.Domain(0), id, session.RoleIds, auth_manager.PERMISSION_ACCESS_DELETE); err != nil {
-			return nil, err
-		} else if !perm {
-			return nil, c.app.MakeResourcePermissionError(session, int64(id), permission, auth_manager.PERMISSION_ACCESS_DELETE)
-		}
+	return c.app.DeleteFilePolicy(ctx, session.Domain(0), id)
+}
+
+func (c *Controller) ChangePositionFilePolicy(ctx context.Context, session *auth_manager.Session, fromId, toId int32) engine.AppError {
+	permission := session.GetPermission(model.PermissionScopeFilePolicy)
+	if !permission.CanRead() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	}
 
-	return c.app.DeleteFilePolicy(session.Domain(0), id)
+	if !permission.CanUpdate() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
+	}
+
+	return c.app.ChangePositionFilePolicy(ctx, session.Domain(0), fromId, toId)
 }
