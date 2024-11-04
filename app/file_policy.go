@@ -192,7 +192,7 @@ func (ph *DomainFilePolicy) policyReaderForUpload(domainId int64, file *model.Ba
 		maxSize: policy.maxUploadSize,
 	}
 
-	if file.Channel != nil && *file.Channel != model.UploadFileChannelMedia {
+	if file.Channel == nil || *file.Channel != model.UploadFileChannelMedia {
 		// TODO check all channel ?
 		r.mimeTyme = file.MimeType
 	}
