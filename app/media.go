@@ -18,6 +18,9 @@ func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*m
 	}
 
 	src, err = app.FilePolicyForUpload(mediaFile.DomainId, &mediaFile.BaseFile, src)
+	if err != nil {
+		return nil, err
+	}
 
 	size, err = app.MediaFileStore.Write(src, mediaFile)
 	if err != nil {

@@ -277,7 +277,7 @@ func (r *PolicyReader) testMimeType(bytes []byte) error {
 		return ErrorExtUnknown
 	}
 
-	if strings.HasPrefix(r.f.MimeType, kind.MIME.Value) {
+	if strings.HasPrefix(r.f.MimeType, kind.MIME.Value) || (r.f.MimeType == "audio/wav" && kind.Extension == "wav") {
 		return nil
 	}
 
