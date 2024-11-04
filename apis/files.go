@@ -72,6 +72,10 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	generateThumbnail := r.URL.Query().Get("thumbnail") == "true"
+	channel := r.URL.Query().Get("channel")
+	if channel == "" {
+		channel = "unknown"
+	}
 
 	if strings.HasPrefix(mediaType, "multipart/form-data") {
 		writer := multipart.NewReader(r.Body, params["boundary"])
@@ -95,14 +99,24 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.DomainId = c.Session.DomainId
 			file.Uuid = c.Params.Id
 			file.GenerateThumbnail = generateThumbnail
+			file.Channel = &channel
+
+			var reader io.ReadCloser
+			reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, part)
+			if c.Err != nil {
+				return
+			}
 
 			// TODO PERMISSION
-			if c.Err = c.App.SyncUpload(utils.NewSecureReader(part, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), file); c.Err != nil {
+			if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
 				if c.Err.GetId() == utils.ErrMaxLimitId {
 					c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 				}
+				reader.Close()
 				return
 			}
+
+			reader.Close()
 			sig, _ := c.App.GeneratePreSignedResourceSignature(model.AnyFileRouteName, "download", file.Id, file.DomainId)
 
 			files = append(files, &fileResponse{
@@ -123,9 +137,17 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.DomainId = c.Session.DomainId
 		file.Uuid = c.Params.Id
 		file.GenerateThumbnail = generateThumbnail
+		file.Channel = &channel
+
+		var reader io.ReadCloser
+		reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, r.Body)
+		if c.Err != nil {
+			return
+		}
+		defer reader.Close()
 
 		// TODO PERMISSION
-		if c.Err = c.App.SyncUpload(utils.NewSecureReader(r.Body, c.App.MaxUploadFileSize(), file.MimeType, c.App.Config().MediaFileStoreSettings.AllowMime), file); c.Err != nil {
+		if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
 			if c.Err.GetId() == utils.ErrMaxLimitId {
 				c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 			}
