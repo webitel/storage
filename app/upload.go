@@ -78,6 +78,7 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 	if err != nil {
 		return err
 	}
+	file.Size = sf.Size
 
 	// Завершення обробки мініатюри, якщо вона існує
 	if ch != nil {
@@ -85,6 +86,7 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 			return err
 		}
 		sf.Thumbnail = thumbnail.UserData.(*model.Thumbnail)
+		file.Thumbnail = sf.Thumbnail
 	}
 
 	file.Id, err = app.storeFile(store, sf)
