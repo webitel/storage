@@ -65,6 +65,10 @@ type DomainFilePolicy struct {
 }
 
 func (app *App) FilePolicyForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, engine.AppError) {
+	//TODO for old files
+	if file.Channel == nil {
+		return src, nil
+	}
 	return app.filePolicies.policyReaderForDownload(domainId, file, src)
 }
 
