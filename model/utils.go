@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/pborman/uuid"
 )
@@ -122,4 +123,12 @@ func EncodeURIComponent(str string) string {
 	r := url.QueryEscape(str)
 	r = strings.Replace(r, "+", "%20", -1)
 	return r
+}
+
+func TimeToInt64(t *time.Time) int64 {
+	if t == nil {
+		return 0
+	}
+
+	return t.UnixNano() / int64(time.Millisecond)
 }

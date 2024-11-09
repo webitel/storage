@@ -1,6 +1,7 @@
 package sqlstore
 
 import (
+	"context"
 	_ "github.com/lib/pq"
 	"github.com/webitel/storage/model"
 
@@ -13,4 +14,5 @@ type SqlStore interface {
 	GetAllConns() []*gorp.DbMap
 
 	ListQuery(out interface{}, req model.ListRequest, where string, e Entity, params map[string]interface{}) error
+	ListQueryCtx(ctx context.Context, out interface{}, req model.ListRequest, where string, e Entity, params map[string]interface{}) error
 }

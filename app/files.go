@@ -8,12 +8,13 @@ import (
 	"github.com/webitel/storage/utils"
 )
 
-func (app *App) ListFiles(domain string, page, perPage int) ([]*model.File, engine.AppError) {
-	if result := <-app.Store.File().GetAllPageByDomain(domain, page*perPage, perPage); result.Err != nil {
-		return nil, result.Err
-	} else {
-		return result.Data.([]*model.File), nil
+func (app *App) SearchFiles(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, engine.AppError) {
+	res, err := app.Store.File().GetAllPage(ctx, domainId, search)
+	if err != nil {
+		return nil, false, err
 	}
+	search.RemoveLastElemIfNeed(&res)
+	return res, search.EndOfList(), nil
 }
 
 func (app *App) CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError) {

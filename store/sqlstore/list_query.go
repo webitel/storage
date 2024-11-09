@@ -1,6 +1,7 @@
 package sqlstore
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -66,7 +67,7 @@ func GetOrderBy(t, s string) string {
 	return "" //TODO
 }
 
-//TODO filter
+// TODO filter
 func Build(req *model.ListRequest, schema string, where string, e Entity, args map[string]interface{}) string {
 	s := GetFields(req.Fields, e)
 	sort := ""
@@ -106,7 +107,17 @@ func (s *SqlSupplier) ListQuery(out interface{}, req model.ListRequest, where st
 	return nil
 }
 
-//todo
+func (s *SqlSupplier) ListQueryCtx(ctx context.Context, out interface{}, req model.ListRequest, where string, e Entity, params map[string]interface{}) error {
+	q := Build(&req, "storage", where, e, params)
+	_, err := s.GetReplica().WithContext(ctx).Select(out, q, params)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// todo
 func (s *SqlSupplier) ListQueryFromSchema(out interface{}, schema string, req model.ListRequest, where string, e Entity, params map[string]interface{}) error {
 	q := Build(&req, schema, where, e, params)
 	_, err := s.GetReplica().Select(out, q, params)

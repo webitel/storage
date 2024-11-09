@@ -88,12 +88,12 @@ type FileBackendProfileStore interface {
 }
 
 type FileStore interface {
+	GetAllPage(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, engine.AppError)
 	Create(file *model.File) StoreChannel
 	GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, engine.AppError)
 	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, engine.AppError)
 	MarkRemove(domainId int64, ids []int64) engine.AppError
 
-	GetAllPageByDomain(domain string, offset, limit int) StoreChannel
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) StoreChannel
 	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError)
 }

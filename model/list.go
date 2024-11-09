@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 const (
@@ -77,4 +78,17 @@ func (l *ListRequest) valid() {
 	if l.PerPage < 1 || l.PerPage > PER_PAGE_MAXIMUM {
 		l.PerPage = PER_PAGE_DEFAULT
 	}
+}
+
+type FilterBetween struct {
+	From int64
+	To   int64
+}
+
+func GetBetweenFromTime(src *FilterBetween) *time.Time {
+	if src == nil || src.From == 0 {
+		return nil
+	}
+	t := time.Unix(0, src.From*int64(time.Millisecond))
+	return &t
 }

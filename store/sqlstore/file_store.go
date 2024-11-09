@@ -21,8 +21,31 @@ func NewSqlFileStore(sqlStore SqlStore) store.FileStore {
 	return us
 }
 
-func (self SqlFileStore) CreateIndexesIfNotExists() {
+func (self *SqlFileStore) CreateIndexesIfNotExists() {
 
+}
+
+func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, engine.AppError) {
+	var files []*model.File
+
+	f := map[string]interface{}{
+		"DomainId":     domainId,
+		"Ids":          pq.Array(search.Ids),
+		"ReferenceIds": pq.Array(search.ReferenceIds),
+	}
+
+	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
+		`domain_id = :DomainId
+				and (:Ids::int[] isnull or id = any(:Ids))
+				and (:ReferenceIds::varchar[] isnull or reference_id = any(:ReferenceIds))
+		`,
+		model.File{}, f)
+
+	if err != nil {
+		return nil, engine.NewCustomCodeError("store.sql_file.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return files, nil
 }
 
 func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
@@ -123,22 +146,6 @@ func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId 
 	}
 	return exists == 1, nil
 
-}
-
-func (self SqlFileStore) GetAllPageByDomain(domain string, offset, limit int) store.StoreChannel {
-	return store.Do(func(result *store.StoreResult) {
-		var recordings []*model.File
-
-		query := `SELECT * FROM files 
-			WHERE domain = :Domain  
-			LIMIT :Limit OFFSET :Offset`
-
-		if _, err := self.GetReplica().Select(&recordings, query, map[string]interface{}{"Domain": domain, "Offset": offset, "Limit": limit}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_file.get_all.finding.app_error", err.Error())
-		} else {
-			result.Data = recordings
-		}
-	})
 }
 
 func (s SqlFileStore) GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, engine.AppError) {

@@ -9,6 +9,8 @@ const (
 	UploadFileChannelChat  = "chat"
 	UploadFileChannelMail  = "mail"
 	UploadFileChannelMedia = "media"
+	UploadFileChannelLog   = "log"
+	UploadFileChannelCases = "cases"
 )
 
 type JobUploadFile struct {

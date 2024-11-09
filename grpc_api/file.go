@@ -425,14 +425,134 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 		}})
 }
 
+func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest) (*storage.ListFile, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var list []*model.File
+	var endOfData bool
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Q:       in.GetQ(),
+			Page:    int(in.GetPage()),
+			PerPage: int(in.GetSize()),
+			Fields:  in.Fields,
+			Sort:    in.Sort,
+		},
+		Ids:            in.Id,
+		UploadedAt:     nil,
+		UploadedBy:     in.UploadedBy,
+		ReferenceIds:   in.ReferenceId,
+		Channels:       channelsType(in.Channel),
+		RetentionUntil: nil,
+	}
+
+	if in.UploadedAt != nil {
+		search.UploadedAt = &model.FilterBetween{
+			From: in.GetUploadedAt().GetFrom(),
+			To:   in.GetUploadedAt().GetTo(),
+		}
+	}
+
+	if in.RetentionUntil != nil {
+		search.RetentionUntil = &model.FilterBetween{
+			From: in.GetRetentionUntil().GetFrom(),
+			To:   in.GetRetentionUntil().GetTo(),
+		}
+	}
+
+	list, endOfData, err = api.ctrl.SearchFile(ctx, session, search)
+
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*storage.File, 0, len(list))
+	for _, v := range list {
+		items = append(items, toGrpcFile(v))
+	}
+	return &storage.ListFile{
+		Next:  !endOfData,
+		Items: items,
+	}, nil
+}
+
+func channelsType(channels []storage.UploadFileChannel) []string {
+	l := make([]string, 0, len(channels))
+	for _, v := range channels {
+		l = append(l, channelType(v))
+	}
+	return l
+}
+
+func toGrpcFile(src *model.File) *storage.File {
+	f := &storage.File{
+		Id:             src.Id,
+		UploadedAt:     model.TimeToInt64(src.UploadedAt),
+		UploadedBy:     GetProtoLookup(src.UploadedBy),
+		Name:           src.Name,
+		MimeType:       src.MimeType,
+		ReferenceId:    src.Uuid,
+		Size:           src.Size,
+		Thumbnail:      nil,
+		RetentionUntil: model.TimeToInt64(src.RetentionUntil),
+		Uuid:           src.Uuid,
+	}
+
+	if src.ViewName != nil {
+		f.ViewName = *src.ViewName
+	}
+
+	if src.SHA256Sum != nil {
+		f.Sha256Sum = *src.SHA256Sum
+	}
+
+	if src.Channel != nil {
+		f.Channel = channelTypeGrpc(*src.Channel)
+	}
+
+	if src.Thumbnail != nil {
+		f.Thumbnail = &storage.Thumbnail{
+			MimeType: src.Thumbnail.MimeType,
+			Size:     src.Thumbnail.Size,
+			Scale:    src.Thumbnail.Scale,
+		}
+	}
+
+	return f
+}
+
 func channelType(channel storage.UploadFileChannel) string {
 	switch channel {
 	case storage.UploadFileChannel_CallChannel:
 		return model.UploadFileChannelCall
 	case storage.UploadFileChannel_MailChannel:
 		return model.UploadFileChannelMail
+	case storage.UploadFileChannel_MediaChannel:
+		return model.UploadFileChannelMedia
+	case storage.UploadFileChannel_LogChannel:
+		return model.UploadFileChannelLog
 	default:
 		return model.UploadFileChannelChat
+
+	}
+}
+
+func channelTypeGrpc(channel string) storage.UploadFileChannel {
+	switch channel {
+	case model.UploadFileChannelCall:
+		return storage.UploadFileChannel_CallChannel
+	case model.UploadFileChannelMail:
+		return storage.UploadFileChannel_MailChannel
+	case model.UploadFileChannelMedia:
+		return storage.UploadFileChannel_MediaChannel
+	case model.UploadFileChannelLog:
+		return storage.UploadFileChannel_LogChannel
+	default:
+		return storage.UploadFileChannel_UnknownChannel
 
 	}
 }
