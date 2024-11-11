@@ -151,9 +151,22 @@ func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId 
 
 func (s SqlFileStore) GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, engine.AppError) {
 	var file *model.FileWithProfile
-	err := s.GetReplica().SelectOne(&file, `SELECT f.*, p.updated_at as profile_updated_at
-	FROM storage.files f
-		left join storage.file_backend_profiles p on p.id = f.profile_id
+	err := s.GetReplica().SelectOne(&file, `SELECT f.id,
+       f.name,
+       f.size,
+       f.mime_type,
+       f.properties,
+       f.instance,
+       f.uuid,
+       f.profile_id,
+       f.created_at,
+       f.domain_id,
+       f.view_name,
+       f.channel,
+       f.thumbnail,
+       p.updated_at as profile_updated_at
+FROM storage.files f
+         left join storage.file_backend_profiles p on p.id = f.profile_id
 	WHERE f.id = :Id
 	  AND f.domain_id = :DomainId`, map[string]interface{}{
 		"Id":       id,
@@ -168,9 +181,22 @@ func (s SqlFileStore) GetFileWithProfile(domainId, id int64) (*model.FileWithPro
 
 func (s SqlFileStore) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, engine.AppError) {
 	var file *model.FileWithProfile
-	err := s.GetReplica().SelectOne(&file, `SELECT f.*, p.updated_at as profile_updated_at
-	FROM storage.files f
-		left join storage.file_backend_profiles p on p.id = f.profile_id
+	err := s.GetReplica().SelectOne(&file, `SELECT f.id,
+       f.name,
+       f.size,
+       f.mime_type,
+       f.properties,
+       f.instance,
+       f.uuid,
+       f.profile_id,
+       f.created_at,
+       f.domain_id,
+       f.view_name,
+       f.channel,
+       f.thumbnail,
+       p.updated_at as profile_updated_at
+FROM storage.files f
+         left join storage.file_backend_profiles p on p.id = f.profile_id
 	WHERE f.uuid = :Uuid
 	  AND f.domain_id = :DomainId
 	order by created_at desc
