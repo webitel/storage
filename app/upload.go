@@ -143,6 +143,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			Instance:       app.GetInstanceId(),
 			Channel:        file.Channel,
 			RetentionUntil: file.RetentionUntil,
+			UploadedBy:     file.UploadedBy,
 		},
 		ProfileId: profileId,
 	}

@@ -52,9 +52,9 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		id, err := self.GetMaster().SelectInt(`
 			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name, 
-			                          profile_id, sha256sum, channel, thumbnail, retention_until)
+			                          profile_id, sha256sum, channel, thumbnail, retention_until, uploaded_by)
             values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName, 
-                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz)
+                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz, :UploadedBy::int8)
 			returning id
 		`, map[string]interface{}{
 			"Name":           file.Name,
@@ -71,6 +71,7 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 			"Channel":        file.Channel,
 			"Thumbnail":      file.Thumbnail.ToJson(),
 			"RetentionUntil": file.RetentionUntil,
+			"UploadedBy":     file.UploadedBy.GetSafeId(),
 		})
 
 		if err != nil {
