@@ -152,7 +152,7 @@ func (api *file) BulkGenerateFileLink(ctx context.Context, in *storage.BulkGener
 	var err error
 
 	for k, v := range in.GetFiles() {
-		uri, err = api.ctrl.GeneratePreSignedResourceSignatureBulk(v.GetFileId(), v.GetDomainId(), model.AnyFileRouteName, v.GetAction(), v.GetSource(), v.GetQuery())
+		uri, err = api.ctrl.GeneratePreSignetResourceSignature(model.AnyFileRouteName, v.GetAction(), v.GetFileId(), v.GetDomainId())
 		if err == nil {
 			items[k] = &storage.GenerateFileLinkResponse{
 				Url: uri,
