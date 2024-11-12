@@ -145,6 +145,26 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 	return &storage.GenerateFileLinkResponse{Url: uri}, nil
 }
 
+func (api *file) BulkGenerateFileLink(ctx context.Context, in *storage.BulkGenerateFileLinkRequest) (*storage.BulkGenerateFileLinkResponse, error) {
+	l := len(in.Files)
+	items := make([]*storage.GenerateFileLinkResponse, l, l)
+	var uri string
+	var err error
+
+	for k, v := range in.GetFiles() {
+		uri, err = api.ctrl.GeneratePreSignedResourceSignatureBulk(v.GetFileId(), v.GetDomainId(), model.AnyFileRouteName, v.GetAction(), v.GetSource(), v.GetQuery())
+		if err == nil {
+			items[k] = &storage.GenerateFileLinkResponse{
+				Url: uri,
+			}
+		}
+	}
+
+	return &storage.BulkGenerateFileLinkResponse{
+		Links: items,
+	}, nil
+}
+
 func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.FileService_DownloadFileServer) error {
 	var sFile io.ReadCloser
 	var err error
