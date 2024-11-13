@@ -1,7 +1,6 @@
 package private
 
 import (
-	"io"
 	"net/http"
 	"strconv"
 
@@ -31,7 +30,23 @@ func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	if size != nil {
 		w.Header().Set("Content-Length", strconv.Itoa(*size))
 	}
-	io.Copy(w, out)
+
+	w.WriteHeader(http.StatusOK)
+
+	buf := make([]byte, 8192/2) // SWITCH_RECOMMENDED_BUFFER_SIZE / 2
+
+	var n int
+	var err2 error
+	for {
+		n, _ = out.Read(buf)
+		if n <= 0 {
+			return
+		}
+		_, err2 = w.Write(buf[:n])
+		if err2 != nil {
+			return
+		}
+	}
 }
 
 func ttsByProvider(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -51,5 +66,21 @@ func ttsByProvider(c *Context, w http.ResponseWriter, r *http.Request) {
 	if size != nil {
 		w.Header().Set("Content-Length", strconv.Itoa(*size))
 	}
-	io.Copy(w, out)
+
+	w.WriteHeader(http.StatusOK)
+
+	buf := make([]byte, 8192/2) // SWITCH_RECOMMENDED_BUFFER_SIZE / 2
+
+	var n int
+	var err2 error
+	for {
+		n, _ = out.Read(buf)
+		if n <= 0 {
+			return
+		}
+		_, err2 = w.Write(buf[:n])
+		if err2 != nil {
+			return
+		}
+	}
 }
