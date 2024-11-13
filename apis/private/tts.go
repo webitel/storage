@@ -33,7 +33,11 @@ func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	ttsCopy(out, w)
+	if params.Format == "mp3" {
+		ttsCopy(w, out)
+	} else {
+		io.Copy(w, out)
+	}
 }
 
 func ttsByProvider(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -55,10 +59,14 @@ func ttsByProvider(c *Context, w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	ttsCopy(out, w)
+	if params.Format == "mp3" {
+		ttsCopy(w, out)
+	} else {
+		io.Copy(w, out)
+	}
 }
 
-func ttsCopy(src io.Reader, dst io.Writer) {
+func ttsCopy(dst io.Writer, src io.Reader) {
 	buf := make([]byte, 8192/2) // SWITCH_RECOMMENDED_BUFFER_SIZE / 2
 
 	var n int
