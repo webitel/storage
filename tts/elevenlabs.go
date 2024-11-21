@@ -59,6 +59,9 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 		if params.VoiceSettings.Has("use_speaker_boost") {
 			req.VoiceSettings.UseSpeakerBoost = params.VoiceSettings.Get("use_speaker_boost") == "true"
 		}
+		if params.VoiceSettings.Has("model") {
+			req.ModelId = params.VoiceSettings.Get("model")
+		}
 	}
 
 	jsonData, err := json.Marshal(&req)
