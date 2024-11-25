@@ -3,9 +3,9 @@ module github.com/webitel/storage
 go 1.22
 
 require (
-	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.35.1-20240402125447-cb375844242f.1
-	buf.build/gen/go/webitel/storage/grpc/go v1.5.1-20241112142745-95d51eefa581.1
-	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.35.1-20241112142745-95d51eefa581.1
+	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.35.2-20240402125447-cb375844242f.1
+	buf.build/gen/go/webitel/storage/grpc/go v1.5.1-20241125101117-a8721cf589c4.1
+	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.35.2-20241125101117-a8721cf589c4.1
 	cloud.google.com/go/speech v1.23.1
 	cloud.google.com/go/storage v1.39.1
 	cloud.google.com/go/texttospeech v1.7.7
@@ -30,11 +30,11 @@ require (
 	google.golang.org/api v0.177.0
 	google.golang.org/genproto v0.0.0-20240506185236-b8a5c65736ae
 	google.golang.org/grpc v1.64.1
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.35.2
 )
 
 require (
-	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.35.1-20231027202514-3f42134f4c56.1 // indirect
+	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.35.2-20231027202514-3f42134f4c56.1 // indirect
 	cloud.google.com/go v0.112.2 // indirect
 	cloud.google.com/go/auth v0.3.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect

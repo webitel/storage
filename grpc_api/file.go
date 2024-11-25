@@ -142,7 +142,10 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 	if err != nil {
 		return nil, err
 	}
-	return &storage.GenerateFileLinkResponse{Url: uri}, nil
+	return &storage.GenerateFileLinkResponse{
+		Url:     uri,
+		BaseUrl: api.publicHost,
+	}, nil
 }
 
 func (api *file) BulkGenerateFileLink(ctx context.Context, in *storage.BulkGenerateFileLinkRequest) (*storage.BulkGenerateFileLinkResponse, error) {
@@ -155,7 +158,8 @@ func (api *file) BulkGenerateFileLink(ctx context.Context, in *storage.BulkGener
 		uri, err = api.ctrl.GeneratePreSignetResourceSignature(model.AnyFileRouteName, v.GetAction(), v.GetFileId(), v.GetDomainId())
 		if err == nil {
 			items[k] = &storage.GenerateFileLinkResponse{
-				Url: uri,
+				Url:     uri,
+				BaseUrl: api.publicHost,
 			}
 		}
 	}

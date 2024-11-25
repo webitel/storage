@@ -2,6 +2,7 @@ package grpc_api
 
 import (
 	"context"
+	"github.com/webitel/storage/app"
 
 	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
 	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
@@ -11,11 +12,15 @@ import (
 
 type media struct {
 	ctrl *controller.Controller
+	app  *app.App
 	gogrpc.UnsafeMediaFileServiceServer
 }
 
-func NewMediaApi(c *controller.Controller) *media {
-	return &media{ctrl: c}
+func NewMediaApi(c *controller.Controller, a *app.App) *media {
+	return &media{
+		ctrl: c,
+		app:  a,
+	}
 }
 
 func (api *media) SearchMediaFile(ctx context.Context, in *storage.SearchMediaFileRequest) (*storage.ListMedia, error) {
@@ -62,6 +67,15 @@ func (api *media) ReadMediaFile(ctx context.Context, in *storage.ReadMediaFileRe
 	var file *model.MediaFile
 
 	file, err = api.ctrl.GetMediaFile(session, in.GetDomainId(), int(in.GetId()))
+	if err != nil {
+		return nil, err
+	}
+
+	return toGrpcMediaFile(file), nil
+}
+
+func (api *media) ReadMediaFileNA(ctx context.Context, in *storage.ReadMediaFileRequest) (*storage.MediaFile, error) {
+	file, err := api.app.GetMediaFile(in.GetDomainId(), int(in.GetId()))
 	if err != nil {
 		return nil, err
 	}
