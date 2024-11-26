@@ -74,6 +74,9 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 			params.Background.FadeOut, _ = strconv.ParseInt(tmp, 10, 64)
 		}
 	}
+	if query.Get("bg") == "true" {
+		params.BackgroundPlayback = true
+	}
 
 	params.KeyLocation = query.Get("keyLocation")
 	params.VoiceSettings = query
