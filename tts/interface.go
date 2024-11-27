@@ -38,7 +38,8 @@ type TTSParams struct {
 	VolumeGainDb     float64  `json:"-"`
 	EffectsProfileId []string `json:"-"`
 
-	VoiceSettings url.Values
+	VoiceSettings      url.Values
+	BackgroundPlayback bool
 }
 
 func (p TTSParams) BackgroundNode() string {
