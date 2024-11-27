@@ -22,7 +22,8 @@ func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	params := TtsParamsFromRequest(r)
 
 	w.WriteHeader(http.StatusOK)
-	if params.BackgroundPlayback && params.Format == "mp3" {
+	//TODO
+	if false && params.BackgroundPlayback && params.Format == "mp3" {
 		switch params.Rate {
 		case 16000:
 			w.Write(silenceMP3_16khz)
