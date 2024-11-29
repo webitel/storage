@@ -56,7 +56,7 @@ func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-TTS-Prepare") == "true" {
 		t := time.Now()
 		tts := &ttsPerform{
-			id:  params.Id,
+			id:  c.RequestId,
 			key: r.RequestURI,
 		}
 		tts.src, tts.mime, tts.size, c.Err = c.App.TTS(c.Params.Id, params)
