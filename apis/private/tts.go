@@ -52,6 +52,7 @@ func (api *API) InitTTS() {
 }
 
 func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
+	wlog.Debug(fmt.Sprintf("[%s] start %s", c.RequestId, r.RequestURI))
 	params := TtsParamsFromRequest(r)
 	if r.Header.Get("X-TTS-Prepare") == "true" {
 		t := time.Now()
@@ -113,7 +114,7 @@ func ttsByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", strconv.Itoa(*size))
 	}
 
-	wlog.Debug(fmt.Sprintf("[%s] play tts", params.Id))
+	wlog.Debug(fmt.Sprintf("[%s] play tts", c.RequestId))
 
 	if params.Format == "mp3" {
 		ttsCopy(w, out)
