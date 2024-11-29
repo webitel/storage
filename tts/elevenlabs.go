@@ -85,7 +85,7 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 		return nil, nil, nil, err
 	}
 
-	ct := "audio/wav"
+	ct := "audio/mp3"
 
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
