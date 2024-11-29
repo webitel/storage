@@ -43,7 +43,6 @@ func (tts *ttsPerform) timeout() {
 func (tts *ttsPerform) store() {
 	tts.cancelSleepChan = schedule(tts.timeout, time.Second*5)
 	ttsPerformCache.Add(tts.key, tts)
-	wlog.Debug(fmt.Sprintf("[%s] store tts", tts.id))
 }
 
 func (api *API) InitTTS() {
@@ -55,6 +54,7 @@ func (api *API) InitTTS() {
 func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	params := TtsParamsFromRequest(r)
 	if r.Header.Get("X-TTS-Prepare") == "true" {
+		t := time.Now()
 		tts := &ttsPerform{
 			id:  params.Id,
 			key: r.RequestURI,
@@ -65,6 +65,7 @@ func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 
 		tts.store()
+		wlog.Debug(fmt.Sprintf("[%s] store tts, generate duration %v", tts.id, time.Since(t)))
 		w.WriteHeader(http.StatusOK)
 	} else {
 		u, ok := ttsPerformCache.Get(r.RequestURI)
