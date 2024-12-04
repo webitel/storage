@@ -1,7 +1,10 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	otelsdk "github.com/webitel/webitel-go-kit/otel/sdk"
+	"go.opentelemetry.io/otel/sdk/resource"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -17,6 +20,15 @@ import (
 	"github.com/webitel/storage/store/sqlstore"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+
+	// -------------------- plugin(s) -------------------- //
+	_ "github.com/webitel/webitel-go-kit/otel/sdk/log/otlp"
+	_ "github.com/webitel/webitel-go-kit/otel/sdk/log/stdout"
+	_ "github.com/webitel/webitel-go-kit/otel/sdk/metric/otlp"
+	_ "github.com/webitel/webitel-go-kit/otel/sdk/metric/stdout"
+	_ "github.com/webitel/webitel-go-kit/otel/sdk/trace/otlp"
+	_ "github.com/webitel/webitel-go-kit/otel/sdk/trace/stdout"
 )
 
 type App struct {
@@ -52,6 +64,9 @@ type App struct {
 	upTime time.Time
 
 	thumbnailSettings model.ThumbnailSettings
+
+	ctx              context.Context
+	otelShutdownFunc otelsdk.ShutdownFunc
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -88,7 +103,9 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 
-	app.thumbnailSettings = app.Config().Thumbnail
+	config := app.Config()
+
+	app.thumbnailSettings = config.Thumbnail
 
 	if utils.T == nil {
 		if err := utils.TranslationsPreInit(app.Config().TranslationsDirectory); err != nil {
@@ -98,10 +115,37 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	engine.AppErrorInit(utils.T)
 
-	app.Log = wlog.NewLogger(&wlog.LoggerConfiguration{
-		EnableConsole: true,
-		ConsoleLevel:  wlog.LevelDebug,
-	})
+	logConfig := &wlog.LoggerConfiguration{
+		EnableConsole: config.Log.Console,
+		ConsoleJson:   false,
+		ConsoleLevel:  config.Log.Lvl,
+	}
+
+	if config.Log.File != "" {
+		logConfig.FileLocation = config.Log.File
+		logConfig.EnableFile = true
+		logConfig.FileJson = true
+		logConfig.FileLevel = config.Log.Lvl
+	}
+
+	if config.Log.Otel {
+		// TODO
+		var err error
+		logConfig.EnableExport = true
+		app.otelShutdownFunc, err = otelsdk.Configure(
+			app.ctx,
+			otelsdk.WithResource(resource.NewSchemaless(
+				semconv.ServiceName(model.APP_SERVICE_NAME),
+				semconv.ServiceVersion(model.CurrentVersion),
+				semconv.ServiceInstanceID(*app.id),
+				semconv.ServiceNamespace("webitel"),
+			)),
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+	app.Log = wlog.NewLogger(logConfig)
 
 	wlog.RedirectStdLog(app.Log)
 	wlog.InitGlobalLogger(app.Log)
@@ -203,6 +247,10 @@ func (app *App) Shutdown() {
 
 	if app.cluster != nil {
 		app.cluster.Stop()
+	}
+
+	if app.otelShutdownFunc != nil {
+		app.otelShutdownFunc(app.ctx)
 	}
 }
 
