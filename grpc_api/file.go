@@ -30,13 +30,13 @@ type file struct {
 	gogrpc.UnsafeFileServiceServer
 }
 
-func NewFileApi(proxy *string, ph string, api *controller.Controller) *file {
+func NewFileApi(proxy string, ph string, api *controller.Controller) *file {
 	c := &file{
 		ctrl:       api,
 		publicHost: ph,
 	}
-	if proxy != nil {
-		proxyUrl, err := url.Parse(*proxy)
+	if proxy != "" {
+		proxyUrl, err := url.Parse(proxy)
 		if err != nil {
 			panic(err.Error())
 		}
