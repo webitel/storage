@@ -2,136 +2,50 @@ package app
 
 import (
 	"encoding/json"
-	"flag"
-	"fmt"
-	"strings"
-	"time"
-
-	"github.com/webitel/storage/tts"
-
-	"github.com/webitel/storage/utils"
-
+	"github.com/BoRuDar/configuration/v4"
 	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
-)
-
-var (
-	appId                 = flag.String("id", "1", "Service id")
-	translationsDirectory = flag.String("translations_directory", "i18n", "Translations directory")
-	consulHost            = flag.String("consul", "consul:8500", "Host to consul")
-	dataSource            = flag.String("data_source", "postgres://opensips:webitel@postgres:5432/webitel?fallback_application_name=storage&sslmode=disable&connect_timeout=10&search_path=storage", "Data source")
-	grpcServerPort        = flag.Int("grpc_port", 0, "GRPC port")
-	grpcServerAddr        = flag.String("grpc_addr", "", "GRPC host")
-	dev                   = flag.Bool("dev", false, "enable dev mode")
-	internalServerAddress = flag.String("internal_address", ":10021", "Internal server address")
-	publicServerAddress   = flag.String("public_address", ":10023", "Public server address")
-	mediaDirectory        = flag.String("media_directory", "/data", "Media file directory")
-	mediaStorePattern     = flag.String("media_store_pattern", "$DOMAIN", "Media store pattern")
-
-	defaultFileStoreType  = flag.String("file_store_type", "", "Default file store type")
-	defaultFileStoreProps = flag.String("file_store_props", "", "Default file store props")
-	defaultFileExpireDay  = flag.Int("file_store_expire_day", 0, "Default file expire day (0 - never delete)")
-	allowMediaMime        = flag.String("allow_media", "", "Allow upload media mime type")
-	maxUploadFileSize     = flag.String("max_upload_file_size", "20MB", "Maximum upload file size")
-
-	presignedCertFile = flag.String("presigned_cert", "/opt/storage/key.pem", "Location to pre signed certificate")
-	presignedTimeout  = flag.Int64("presigned_timeout", 1000*60*15, "Pre signed timeout")
-
-	proxyUpload = flag.String("proxy_upload", "", "Proxy upload url")
-	publicHost  = flag.String("public_host", "https://dev.webitel.com/", "Public host")
-
-	wbtTTSEndpoint     = flag.String("wbt_tts_endpoint", "", "Offline TTS endpoint")
-	maxSafeUploadSleep = flag.Duration("safe_upload_max_sleep", time.Second*60, "Maximum upload second sleep process")
-
-	thumbnailDefaultScale = flag.String("thumbnail_default_scale", "", "Default scale for thumbnail")
-	//thumbnailMinSize      = flag.String("thumbnail_min_size", "500kB", "Minimum size for create thumbnail")
+	"github.com/webitel/storage/tts"
+	"github.com/webitel/storage/utils"
 )
 
 func loadConfig(fileName string) (*model.Config, engine.AppError) {
-	flag.Parse()
-	var mimeTypes []string
-	if *allowMediaMime != "" {
-		mimeTypes = strings.Split(*allowMediaMime, ",")
+	var config model.Config
+	configurator := configuration.New(
+		&config,
+		configuration.NewEnvProvider(),
+		configuration.NewFlagProvider(),
+		configuration.NewDefaultProvider(),
+	).SetOptions(configuration.OnFailFnOpt(func(err error) {
+		//log.Println(err)
+	}))
+
+	if err := configurator.InitValues(); err != nil {
+		//return nil, err
 	}
 
-	maxUploadSizeInByte, err := utils.FromHumanSize(*maxUploadFileSize)
+	maxUploadSizeInByte, err := utils.FromHumanSize(config.MediaFileStoreSettings.MaxUploadFileSizeString)
 	if err != nil {
 		panic(err.Error())
 	}
+	config.MediaFileStoreSettings.MaxUploadFileSize = maxUploadSizeInByte
 
-	cfg := &model.Config{
-		TranslationsDirectory:        *translationsDirectory,
-		PreSignedCertificateLocation: *presignedCertFile,
-		PreSignedTimeout:             *presignedTimeout,
-		NodeName:                     fmt.Sprintf("%s-%s", model.APP_SERVICE_NAME, *appId),
-		IsDev:                        *dev,
-		LocalizationSettings: model.LocalizationSettings{
-			DefaultClientLocale: model.NewString(model.DEFAULT_LOCALE),
-			DefaultServerLocale: model.NewString(model.DEFAULT_LOCALE),
-			AvailableLocales:    model.NewString(model.DEFAULT_LOCALE),
-		},
-		ServiceSettings: model.ServiceSettings{
-			ListenAddress:         publicServerAddress,
-			ListenInternalAddress: internalServerAddress,
-			PublicHost:            *publicHost,
-		},
-		MediaFileStoreSettings: model.MediaFileStoreSettings{
-			MaxSizeByte:       model.NewInt(100 * 1000000),
-			Directory:         mediaDirectory,
-			PathPattern:       mediaStorePattern,
-			AllowMime:         mimeTypes,
-			MaxUploadFileSize: maxUploadSizeInByte,
-		},
-		SqlSettings: model.SqlSettings{
-			DriverName:                  model.NewString("postgres"),
-			DataSource:                  dataSource,
-			MaxIdleConns:                model.NewInt(5),
-			MaxOpenConns:                model.NewInt(5),
-			ConnMaxLifetimeMilliseconds: model.NewInt(3600000),
-			Trace:                       false,
-		},
-		DiscoverySettings: model.DiscoverySettings{
-			Url: *consulHost,
-		},
-		ServerSettings: model.ServerSettings{
-			Address: *grpcServerAddr,
-			Port:    *grpcServerPort,
-			Network: "tcp",
-		},
-		MaxSafeUploadSleep: *maxSafeUploadSleep,
-		Thumbnail: model.ThumbnailSettings{
-			ForceEnabled: false,
-			DefaultScale: *thumbnailDefaultScale,
-		},
-	}
-
-	if proxyUpload != nil && *proxyUpload != "" {
-		cfg.ProxyUploadUrl = proxyUpload
-	}
-
-	if defaultFileStoreType != nil && *defaultFileStoreType != "" {
-		cfg.DefaultFileStore = &model.DefaultFileStore{
-			Type:      *defaultFileStoreType,
-			ExpireDay: *defaultFileExpireDay,
-		}
-
-		if defaultFileStoreProps != nil {
-			err := json.Unmarshal([]byte(*defaultFileStoreProps), &cfg.DefaultFileStore.Props)
+	if config.DefaultFileStore != nil && config.DefaultFileStore.Type != "" {
+		if config.DefaultFileStore.PropsString != "" {
+			err = json.Unmarshal([]byte(config.DefaultFileStore.PropsString), &config.DefaultFileStore.Props)
 			if err != nil {
 				panic(err)
 			}
 		}
+	} else {
+		config.DefaultFileStore = nil
 	}
 
-	if strings.HasSuffix(cfg.ServiceSettings.PublicHost, "/") {
-		cfg.ServiceSettings.PublicHost = cfg.ServiceSettings.PublicHost[:len(cfg.ServiceSettings.PublicHost)-1]
+	if config.TtsEndpoint != "" {
+		tts.SetWbtTTSEndpoint(config.TtsEndpoint)
 	}
 
-	if wbtTTSEndpoint != nil && len(*wbtTTSEndpoint) != 0 {
-		tts.SetWbtTTSEndpoint(*wbtTTSEndpoint) // TODO
-	}
-
-	return cfg, nil
+	return &config, nil
 }
 
 func (a *App) Config() *model.Config {
