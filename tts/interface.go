@@ -12,6 +12,7 @@ type TTSEngine interface {
 }
 
 type TTSParams struct {
+	Id          string
 	DomainId    int             `json:"-"`
 	ProfileId   int             `json:"-"`
 	Key         json.RawMessage `json:"key"`

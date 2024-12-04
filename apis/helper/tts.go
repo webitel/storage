@@ -24,6 +24,7 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 	}
 
 	params := tts2.TTSParams{
+		Id:        query.Get("id"),
 		DomainId:  domainId,
 		ProfileId: profileId,
 
