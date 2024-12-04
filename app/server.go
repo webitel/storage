@@ -76,7 +76,7 @@ func (a *App) StartServer() error {
 		ErrorLog: a.Log.StdLog(wlog.String("source", "httpserver")),
 	}
 
-	addr := *a.Config().ServiceSettings.ListenAddress
+	addr := a.Config().ServiceSettings.ListenAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		errors.Wrapf(err, utils.T("api.server.start_server.starting.critical"), err)
@@ -111,7 +111,7 @@ func (a *App) StartInternalServer() error {
 		ErrorLog: a.Log.StdLog(wlog.String("source", "httpserver")),
 	}
 
-	addr := *a.Config().ServiceSettings.ListenInternalAddress
+	addr := a.Config().ServiceSettings.ListenInternalAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		errors.Wrapf(err, utils.T("api.server.start_server.starting.critical"), err)

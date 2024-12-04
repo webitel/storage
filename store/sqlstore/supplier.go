@@ -166,13 +166,6 @@ func (s *SqlSupplier) initConnection() {
 			s.replicas[i] = setupConnection(fmt.Sprintf("replica-%v", i), replica, s.settings)
 		}
 	}
-
-	if len(s.settings.DataSourceSearchReplicas) > 0 {
-		s.searchReplicas = make([]*gorp.DbMap, len(s.settings.DataSourceSearchReplicas))
-		for i, replica := range s.settings.DataSourceSearchReplicas {
-			s.searchReplicas[i] = setupConnection(fmt.Sprintf("search-replica-%v", i), replica, s.settings)
-		}
-	}
 }
 
 type typeConverter struct{}

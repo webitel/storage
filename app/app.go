@@ -168,7 +168,7 @@ func (app *App) initLocalFileStores() engine.AppError {
 	if app.MediaFileStore, appErr = utils.NewBackendStore(&model.FileBackendProfile{
 		Name:       "Media store",
 		Type:       model.FileDriverLocal,
-		Properties: model.StringInterface{"directory": *mediaSettings.Directory, "path_pattern": *mediaSettings.PathPattern},
+		Properties: model.StringInterface{"directory": mediaSettings.Directory, "path_pattern": mediaSettings.PathPattern},
 	}); appErr != nil {
 		return appErr
 	}

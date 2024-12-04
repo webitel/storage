@@ -9,6 +9,7 @@ require (
 	cloud.google.com/go/speech v1.23.1
 	cloud.google.com/go/storage v1.39.1
 	cloud.google.com/go/texttospeech v1.7.7
+	github.com/BoRuDar/configuration/v4 v4.2.2
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
