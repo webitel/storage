@@ -84,6 +84,7 @@ func New(options ...string) (outApp *App, outErr error) {
 		fileBackendCache: utils.NewLru(model.BackendCacheSize),
 		sttProfilesCache: utils.NewLru(model.SttCacheSize),
 		jobCallback:      utils.NewLru(model.JobCacheSize),
+		ctx:              context.Background(),
 	}
 	app.Srv.Router = app.Srv.RootRouter.PathPrefix("/").Subrouter()
 	app.InternalSrv.Router = app.InternalSrv.RootRouter.PathPrefix("/").Subrouter()
@@ -256,7 +257,10 @@ func (app *App) Shutdown() {
 
 func (a *App) Handle404(w http.ResponseWriter, r *http.Request) {
 	err := engine.NewNotFoundError("api.context.404.app_error", r.URL.String())
-	wlog.Debug(fmt.Sprintf("%v: code=404 ip=%v", r.URL.Path, utils.GetIpAddress(r)))
+	ip := utils.GetIpAddress(r)
+	a.Log.Debug(fmt.Sprintf("%v: code=404 ip=%v", r.URL.Path, ip),
+		wlog.String("ip", ip),
+	)
 	utils.RenderWebAppError(a.Config(), w, r, err)
 }
 
