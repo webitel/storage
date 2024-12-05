@@ -23,6 +23,7 @@ type UploaderInterfaceImpl struct {
 	pool              interfaces.PoolInterface
 	mx                sync.RWMutex
 	stopped           bool
+	log               *wlog.Logger
 }
 
 func init() {
@@ -36,12 +37,16 @@ func init() {
 			stopSignal:        make(chan struct{}),
 			pollingInterval:   time.Second * 2,
 			pool:              pool.NewPool(100, 10), //FIXME added config
+			log: a.Log.With(
+				wlog.Namespace("context"),
+				wlog.String("scope", "uploader"),
+			),
 		}
 	})
 }
 
 func (u *UploaderInterfaceImpl) Start() {
-	wlog.Debug("Run uploader")
+	u.log.Debug("Run uploader")
 	go u.run()
 }
 
@@ -56,18 +61,25 @@ func (u *UploaderInterfaceImpl) run() {
 		case <-time.After(u.pollingInterval):
 		start:
 			if result = <-u.App.Store.UploadJob().UpdateWithProfile(u.limit, u.App.GetInstanceId(), u.betweenAttemptSec, u.App.UseDefaultStore()); result.Err != nil {
-				wlog.Critical(fmt.Sprint(result.Err))
+				u.log.Critical(result.Err.Error(),
+					wlog.Err(result.Err),
+				)
 				continue
 			}
 			jobs = result.Data.([]*model.JobUploadFileWithProfile)
 
 			count = len(jobs)
 			if count > 0 {
-				wlog.Debug(fmt.Sprintf("fetch %d jobs upload files", count))
+				u.log.Debug(fmt.Sprintf("fetch %d jobs upload files", count))
 				for i = 0; i < count; i++ {
+					j := jobs[i]
 					u.pool.Exec(&UploadTask{
 						app: u.App,
 						job: jobs[i],
+						log: u.log.With(
+							wlog.Int64("file_id", j.Id),
+							wlog.String("call_id", j.Uuid), // TODO
+						),
 					})
 				}
 
@@ -76,7 +88,7 @@ func (u *UploaderInterfaceImpl) run() {
 				}
 			}
 		case <-u.stopSignal:
-			wlog.Debug("Uploader received stop signal.")
+			u.log.Debug("Uploader received stop signal.")
 			return
 		}
 	}
@@ -96,5 +108,5 @@ func (u *UploaderInterfaceImpl) Stop() {
 	u.stopSignal <- struct{}{}
 	u.pool.Close()
 	u.pool.Wait()
-	wlog.Debug("Uploader stopped.")
+	u.log.Debug("Uploader stopped.")
 }
