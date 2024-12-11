@@ -40,19 +40,18 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, engine.App
 	directory := self.GetStoreDirectory(file)
 	root := path.Join(self.directory, directory)
 	allPath := path.Join(root, file.GetStoreName())
-	var err error
 
-	_, err = os.Stat(allPath)
-	if err != nil && !os.IsNotExist(err) {
+	fi, _ := os.Stat(allPath)
+	if fi != nil && fi.Size() > 0 {
 		file.SetPropertyString("directory", directory)
-		return 0, engine.NewBadRequestError(ErrFileWriteExistsId, "root="+root+" name="+file.GetStoreName())
+		return 0, engine.NewBadRequestError(ErrFileWriteExistsId, "name="+file.GetStoreName())
 	}
 
-	if err = os.MkdirAll(root, 0774); err != nil {
-		return 0, engine.NewInternalError("utils.file.locally.create_dir.app_error", "root="+root+", err="+err.Error())
+	if err := os.MkdirAll(root, 0774); err != nil {
+		return 0, engine.NewInternalError("utils.file.locally.create_dir.app_error", err.Error())
 	}
 
-	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return 0, engine.NewInternalError("utils.file.locally.writing.app_error", err.Error())
 	}
@@ -91,14 +90,14 @@ func (self *LocalFileBackend) Remove(file File) engine.AppError {
 
 func (self *LocalFileBackend) RemoveFile(directory, name string) engine.AppError {
 	if err := os.Remove(path.Join(self.directory, directory, name)); err != nil {
-		return engine.NewInternalError("utils.file.locally.removing.app_error", err.Error())
+		return engine.NewInternalError("utils.file.locally.removing.app_error", "Encountered an error opening a reader from local server file storage")
 	}
 	return nil
 }
 
 func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, engine.AppError) {
 	if f, err := os.Open(filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
-		return nil, engine.NewInternalError("api.file.reader.reading_local.app_error", err.Error())
+		return nil, engine.NewInternalError("api.file.reader.reading_local.app_error", "Encountered an error opening a reader from local server file storage")
 	} else {
 		if offset > 0 {
 			f.Seek(offset, 0)
