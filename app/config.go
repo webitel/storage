@@ -45,6 +45,10 @@ func loadConfig(fileName string) (*model.Config, engine.AppError) {
 		tts.SetWbtTTSEndpoint(config.TtsEndpoint)
 	}
 
+	if !config.Log.Console && !config.Log.Otel && len(config.Log.File) == 0 {
+		config.Log.Console = true
+	}
+
 	return &config, nil
 }
 
