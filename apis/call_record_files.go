@@ -1,10 +1,12 @@
 package apis
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
@@ -80,6 +82,14 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO DEV-4661
+	if file.Channel != nil && *file.Channel == model.UploadFileChannelCall {
+		if !allowTimeLimited(r.Context(), c, file.CreatedAt) {
+			c.Err = errNoPermissionRecordFile
+			return
+		}
+	}
+
 	if file.Thumbnail != nil && query.Get("fetch_thumbnail") == "true" {
 		file.BaseFile = file.Thumbnail.BaseFile
 	}
@@ -153,6 +163,14 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO DEV-4661
+	if file.Channel != nil && *file.Channel == model.UploadFileChannelCall {
+		if !allowTimeLimited(r.Context(), c, file.CreatedAt) {
+			c.Err = errNoPermissionRecordFile
+			return
+		}
+	}
+
 	if file.Thumbnail != nil && query.Get("fetch_thumbnail") == "true" {
 		file.BaseFile = file.Thumbnail.BaseFile
 	}
@@ -184,8 +202,23 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, reader)
 }
 
+func allowTimeLimited(ctx context.Context, c *Context, createdAt int64) bool {
+	if c.Session.HasAction(auth_manager.PermissionRecordFile) {
+		return true
+	}
+
+	if c.Session.HasAction(auth_manager.PermissionTimeLimitedRecordFile) {
+		if showFilePeriodDay, _ := c.App.GetCachedSystemSetting(ctx, c.Session.Domain(0), engine.SysNamePeriodToPlaybackRecord); showFilePeriodDay.Int() != nil {
+			t := time.Now().Add(-(time.Hour * 24 * time.Duration(*showFilePeriodDay.Int())))
+			return time.Unix(0, createdAt*int64(time.Millisecond)).After(t)
+		}
+	}
+
+	return false
+}
+
 func checkCallRecordPermission(c *Context, r *http.Request) (bool, engine.AppError) {
-	if !c.Session.HasAction(model.PermissionActionAccessCallRecordings) {
+	if !c.Session.HasAction(auth_manager.PermissionRecordFile) {
 		session := c.Session
 		permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
 		if !permission.CanRead() {

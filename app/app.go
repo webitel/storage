@@ -184,7 +184,8 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, outErr
 	}
 
-	app.sessionManager = auth_manager.NewAuthManager(model.SESSION_CACHE_SIZE, model.SESSION_CACHE_TIME, app.cluster.discovery)
+	app.sessionManager = auth_manager.NewAuthManager(model.SESSION_CACHE_SIZE, model.SESSION_CACHE_TIME,
+		app.cluster.discovery, app.Log)
 	if err := app.sessionManager.Start(); err != nil {
 		return nil, err
 	}

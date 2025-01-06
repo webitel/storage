@@ -80,3 +80,7 @@ func (s *LayeredStore) ImportTemplate() ImportTemplateStore {
 func (s *LayeredStore) FilePolicies() FilePoliciesStore {
 	return s.DatabaseLayer.FilePolicies()
 }
+
+func (s *LayeredStore) SystemSettings() SystemSettingsStore {
+	return s.DatabaseLayer.SystemSettings()
+}

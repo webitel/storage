@@ -1,12 +1,13 @@
 package app
 
 import (
+	"context"
 	"github.com/webitel/engine/auth_manager"
 	engine "github.com/webitel/engine/model"
 )
 
 func (app *App) GetSession(token string) (*auth_manager.Session, engine.AppError) {
-	session, err := app.sessionManager.GetSession(token)
+	session, err := app.sessionManager.GetSession(context.Background(), token)
 
 	if err != nil {
 		switch err {
@@ -32,5 +33,5 @@ func (app *App) GetSession(token string) (*auth_manager.Session, engine.AppError
 		}
 	}
 
-	return session, nil
+	return &session, nil
 }

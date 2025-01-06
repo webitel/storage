@@ -44,6 +44,7 @@ type SqlSupplierOldStores struct {
 	transcriptFile     store.TranscriptFileStore
 	importTemplate     store.ImportTemplateStore
 	filePolicies       store.FilePoliciesStore
+	sysSettings        store.SystemSettingsStore
 }
 
 type SqlSupplier struct {
@@ -78,6 +79,7 @@ func NewSqlSupplier(settings model.SqlSettings) *SqlSupplier {
 	supplier.oldStores.transcriptFile = NewSqlTranscriptFileStore(supplier)
 	supplier.oldStores.importTemplate = NewSqlImportTemplateStore(supplier)
 	supplier.oldStores.filePolicies = NewSqlFilePoliciesStore(supplier)
+	supplier.oldStores.sysSettings = NewSqlSysSettingsStore(supplier)
 
 	err := supplier.GetMaster().CreateTablesIfNotExists()
 	if err != nil {
@@ -389,4 +391,8 @@ func (ss *SqlSupplier) ImportTemplate() store.ImportTemplateStore {
 
 func (ss *SqlSupplier) FilePolicies() store.FilePoliciesStore {
 	return ss.oldStores.filePolicies
+}
+
+func (ss *SqlSupplier) SystemSettings() store.SystemSettingsStore {
+	return ss.oldStores.sysSettings
 }

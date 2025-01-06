@@ -3,11 +3,11 @@ module github.com/webitel/storage
 go 1.22.5
 
 require (
-	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.35.2-20240402125447-cb375844242f.1
+	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.36.1-20250103094420-c77bbc1e2f66.1
 	buf.build/gen/go/webitel/storage/grpc/go v1.5.1-20241125101117-a8721cf589c4.1
 	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.35.2-20241125101117-a8721cf589c4.1
 	cloud.google.com/go/speech v1.23.1
-	cloud.google.com/go/storage v1.39.1
+	cloud.google.com/go/storage v1.40.0
 	cloud.google.com/go/texttospeech v1.7.7
 	github.com/BoRuDar/configuration/v4 v4.2.2
 	github.com/aws/aws-sdk-go v1.55.5
@@ -24,7 +24,7 @@ require (
 	github.com/pborman/uuid v1.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine v0.0.0-20240409111830-4781844bb052
+	github.com/webitel/engine v0.0.0-20250106103225-20d39179f6df
 	github.com/webitel/webitel-go-kit v0.0.13-0.20240908192731-3abe573c0e41
 	github.com/webitel/wlog v0.0.0-20240909100805-822697e17a45
 	go.opentelemetry.io/otel v1.29.0
@@ -34,11 +34,13 @@ require (
 	google.golang.org/api v0.177.0
 	google.golang.org/genproto v0.0.0-20240506185236-b8a5c65736ae
 	google.golang.org/grpc v1.65.0
-	google.golang.org/protobuf v1.35.2
+	google.golang.org/protobuf v1.36.1
 )
 
 require (
-	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.35.2-20231027202514-3f42134f4c56.1 // indirect
+	buf.build/gen/go/grpc-ecosystem/grpc-gateway/protocolbuffers/go v1.36.1-20231027202514-3f42134f4c56.1 // indirect
+	buf.build/gen/go/webitel/webitel-go/grpc/go v1.4.0-20240725111140-8ade8003e454.2 // indirect
+	buf.build/gen/go/webitel/webitel-go/protocolbuffers/go v1.34.2-20240725111140-8ade8003e454.2 // indirect
 	cloud.google.com/go v0.112.2 // indirect
 	cloud.google.com/go/auth v0.3.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
