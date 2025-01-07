@@ -12,16 +12,22 @@ import (
 	"time"
 )
 
-var ttsPerformCache *utils.Cache = utils.NewLru(4000)
+var ttsPerformCache = utils.NewLru(4000)
 
 type ttsPerform struct {
 	id              string
+	requestId       string
+	callId          string
 	key             string
 	src             io.ReadCloser
 	size            *int
 	mime            *string
 	cancelSleepChan chan struct{}
 	mx              sync.RWMutex
+}
+
+func (tts *ttsPerform) String() string {
+	return fmt.Sprintf("%s/%s/%s", tts.callId, tts.id, tts.requestId)
 }
 
 func (tts *ttsPerform) stopPerform() {
@@ -36,12 +42,16 @@ func (tts *ttsPerform) stopPerform() {
 
 func (tts *ttsPerform) timeout() {
 	tts.stopPerform()
-	wlog.Debug(fmt.Sprintf("[%s] timeout tts", tts.id))
+	wlog.Debug(fmt.Sprintf("[%s] timeout tts", tts))
 	tts.src.Close()
 }
 
 func (tts *ttsPerform) store() {
 	tts.cancelSleepChan = schedule(tts.timeout, time.Second*5)
+	if _, ok := ttsPerformCache.Get(tts.key); ok {
+		wlog.Error(fmt.Sprintf("[%s] tts key in cache", tts))
+		return
+	}
 	ttsPerformCache.Add(tts.key, tts)
 }
 
@@ -57,8 +67,10 @@ func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-TTS-Prepare") == "true" {
 		t := time.Now()
 		tts := &ttsPerform{
-			id:  c.RequestId,
-			key: r.RequestURI,
+			id:        r.Header.Get("X-TTS-Prepare-Id"),
+			callId:    r.Header.Get("X-TTS-Call-Id"),
+			requestId: c.RequestId,
+			key:       r.RequestURI,
 		}
 		tts.src, tts.mime, tts.size, c.Err = c.App.TTS(c.Params.Id, params)
 		if c.Err != nil {
@@ -66,14 +78,14 @@ func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 
 		tts.store()
-		wlog.Debug(fmt.Sprintf("[%s] store tts, generate duration %v", tts.id, time.Since(t)))
+		wlog.Debug(fmt.Sprintf("[%s] store tts, generate duration %v", tts, time.Since(t)))
 		w.WriteHeader(http.StatusOK)
 	} else {
 		u, ok := ttsPerformCache.Get(r.RequestURI)
 		if ok {
 			tts := u.(*ttsPerform)
 			tts.stopPerform()
-			wlog.Debug(fmt.Sprintf("[%s] play tts", tts.id))
+			wlog.Debug(fmt.Sprintf("[%s] play tts", tts))
 
 			defer tts.src.Close()
 			if tts.mime != nil {
