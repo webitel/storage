@@ -69,7 +69,15 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 		return nil, nil, nil, err
 	}
 
-	url := fmt.Sprintf("https://api.elevenlabs.io/v1/text-to-speech/%s/stream?output_format=mp3_22050_32", voiceId)
+	outFormat := ""
+	ct := "audio/mp3"
+	switch params.Format {
+	case "ulaw":
+		outFormat = "?output_format=ulaw_8000"
+		ct = "audio/ulaw"
+	}
+
+	url := fmt.Sprintf("https://api.elevenlabs.io/v1/text-to-speech/%s/stream%s", voiceId, outFormat)
 	payload := strings.NewReader(string(jsonData))
 
 	request, err := http.NewRequest("POST", url, payload)
@@ -84,8 +92,6 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
-	ct := "audio/mp3"
 
 	if res.StatusCode != http.StatusOK {
 		defer res.Body.Close()
