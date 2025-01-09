@@ -31,6 +31,8 @@ import (
 	_ "github.com/webitel/webitel-go-kit/otel/sdk/trace/stdout"
 )
 
+const filePolicyExpire = 5
+
 type App struct {
 	id          *string
 	Srv         *Server
@@ -91,7 +93,7 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	app.filePolicies = &DomainFilePolicy{
 		app:      app,
-		policies: utils.NewLruWithParams(100, "domain policies", 30, ""),
+		policies: utils.NewLruWithParams(100, "domain policies", filePolicyExpire, ""),
 	}
 
 	defer func() {
