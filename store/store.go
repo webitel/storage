@@ -55,6 +55,7 @@ type StoreData interface {
 	TranscriptFile() TranscriptFileStore
 	ImportTemplate() ImportTemplateStore
 	FilePolicies() FilePoliciesStore
+	SystemSettings() SystemSettingsStore
 }
 
 type UploadJobStore interface {
@@ -175,4 +176,8 @@ type FilePoliciesStore interface {
 	ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError
 	// AllByDomainId internal
 	AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, engine.AppError)
+}
+
+type SystemSettingsStore interface {
+	ValueByName(ctx context.Context, domainId int64, name string) (engine.SysValue, engine.AppError)
 }

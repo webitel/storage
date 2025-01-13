@@ -10,7 +10,3 @@ const (
 	PermissionScopeFilePolicy       = "storage_profile" //"file_policies"
 	PermissionScopeFiles            = "files"           //"file_policies"
 )
-
-const (
-	PermissionActionAccessCallRecordings = "playback_record_file"
-)
