@@ -7,11 +7,23 @@ import (
 	"errors"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
+	"unicode"
 )
 
 type filePolicies struct {
 	ctrl *controller.Controller
 	gogrpc.UnsafeFilePoliciesServiceServer
+}
+
+var uploadFileChannelName = map[storage.UploadFileChannel]string{
+	0: model.UploadFileChannelUnknown,
+	1: model.UploadFileChannelChat,
+	2: model.UploadFileChannelMail,
+	3: model.UploadFileChannelCall,
+	4: model.UploadFileChannelLog,
+	5: model.UploadFileChannelMedia,
+	6: model.UploadFileChannelKnowledgebase,
+	7: model.UploadFileChannelCases,
 }
 
 func NewFilePoliciesApi(c *controller.Controller) *filePolicies {
@@ -31,7 +43,7 @@ func (api *filePolicies) CreateFilePolicy(ctx context.Context, in *storage.Creat
 		SpeedUpload:   in.SpeedUpload,
 		SpeedDownload: in.SpeedDownload,
 		MimeTypes:     in.MimeTypes,
-		Channels:      in.Channels,
+		Channels:      fileChannelsFromProto(in.Channels),
 		RetentionDays: in.RetentionDays,
 		MaxUploadSize: in.MaxUploadSize,
 	}
@@ -110,7 +122,7 @@ func (api *filePolicies) UpdateFilePolicy(ctx context.Context, in *storage.Updat
 		SpeedUpload:   in.SpeedUpload,
 		SpeedDownload: in.SpeedDownload,
 		MimeTypes:     in.MimeTypes,
-		Channels:      in.Channels,
+		Channels:      fileChannelsFromProto(in.Channels),
 		RetentionDays: in.RetentionDays,
 		MaxUploadSize: in.MaxUploadSize,
 	}
@@ -144,7 +156,7 @@ func (api *filePolicies) PatchFilePolicy(ctx context.Context, in *storage.PatchF
 		case "mime_types":
 			patch.MimeTypes = in.MimeTypes
 		case "channels":
-			patch.Channels = in.Channels
+			patch.Channels = fileChannelsFromProto(in.Channels)
 		case "speed_download":
 			patch.SpeedDownload = &in.SpeedDownload
 		case "speed_upload":
@@ -213,9 +225,55 @@ func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {
 		SpeedDownload: src.SpeedDownload,
 		SpeedUpload:   src.SpeedUpload,
 		MimeTypes:     src.MimeTypes,
-		Channels:      src.Channels,
+		Channels:      fileChannelsProto(src.Channels),
 		RetentionDays: src.RetentionDays,
 		MaxUploadSize: src.MaxUploadSize,
 		Position:      src.Position, //
 	}
+
+}
+
+func fileChannelsFromProto(in []storage.UploadFileChannel) []string {
+	var res []string
+	var channel string
+	var ok bool
+
+	for _, v := range in {
+		channel, ok = uploadFileChannelName[v]
+		if !ok {
+			channel = model.UploadFileChannelUnknown
+		}
+
+		res = append(res, channel)
+	}
+
+	return res
+}
+
+func fileChannelsProto(in []string) []storage.UploadFileChannel {
+	var res []storage.UploadFileChannel
+	var channel int32
+	var ok bool
+	for _, v := range in {
+		channel, ok = storage.UploadFileChannel_value[capitalizeFirstLetterUnicode(v, true)+"Channel"]
+		if !ok {
+			channel = int32(storage.UploadFileChannel_UnknownChannel)
+		}
+		res = append(res, storage.UploadFileChannel(channel))
+	}
+
+	return res
+}
+
+func capitalizeFirstLetterUnicode(s string, upper bool) string {
+	if len(s) == 0 {
+		return s
+	}
+	runes := []rune(s)
+	if upper {
+		runes[0] = unicode.ToUpper(runes[0])
+	} else {
+		runes[0] = unicode.ToLower(runes[0])
+	}
+	return string(runes)
 }

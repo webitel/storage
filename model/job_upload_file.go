@@ -5,12 +5,14 @@ import (
 )
 
 const (
-	UploadFileChannelCall  = "call"
-	UploadFileChannelChat  = "chat"
-	UploadFileChannelMail  = "mail"
-	UploadFileChannelMedia = "media"
-	UploadFileChannelLog   = "log"
-	UploadFileChannelCases = "cases"
+	UploadFileChannelUnknown       = "unknown"
+	UploadFileChannelCall          = "call"
+	UploadFileChannelChat          = "chat"
+	UploadFileChannelMail          = "mail"
+	UploadFileChannelMedia         = "media"
+	UploadFileChannelLog           = "log"
+	UploadFileChannelKnowledgebase = "knowledgebase"
+	UploadFileChannelCases         = "cases"
 )
 
 type JobUploadFile struct {
