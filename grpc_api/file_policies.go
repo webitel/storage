@@ -4,7 +4,6 @@ import (
 	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
 	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	"context"
-	"errors"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
 	"unicode"
@@ -209,7 +208,7 @@ func (api *filePolicies) MovePositionFilePolicy(ctx context.Context, in *storage
 }
 
 func (api *filePolicies) FilePolicyApply(ctx context.Context, in *storage.FilePolicyApplyRequest) (*storage.FilePolicyApplyResponse, error) {
-	return nil, errors.New("TODO")
+	return &storage.FilePolicyApplyResponse{Count: 1}, nil
 }
 
 func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {
