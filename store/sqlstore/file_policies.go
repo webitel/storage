@@ -223,7 +223,8 @@ func (s *SqlFilePoliciesStore) ChangePosition(ctx context.Context, domainId int6
 
 func (s *SqlFilePoliciesStore) AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, engine.AppError) {
 	var list []model.FilePolicy
-	_, err := s.GetReplica().WithContext(ctx).Select(&list, `select id, channels, mime_types, p.name, p.speed_download, p.speed_upload, p.retention_days, max(updated_at) over ()
+	_, err := s.GetReplica().WithContext(ctx).Select(&list, `select id, channels, mime_types, p.name, p.speed_download,
+       p.speed_upload, p.retention_days, p.max_upload_size, max(updated_at) over ()
 from storage.file_policies p
 where p.domain_id = :DomainId
     and p.enabled
