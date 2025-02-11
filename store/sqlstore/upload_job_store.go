@@ -91,7 +91,8 @@ from (
          t.email_msg,
          t.email_sub,
          profile.id as profile_id,
-         profile.updated_at profile_updated_at
+         profile.updated_at profile_updated_at,
+         t.channel
        FROM storage.upload_file_jobs as t
          left join lateral (              select
                                              tmp.domain_id,
