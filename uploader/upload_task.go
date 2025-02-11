@@ -2,6 +2,7 @@ package uploader
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/webitel/storage/utils"
 
@@ -51,15 +52,27 @@ func (u *UploadTask) Execute() {
 		ProfileId: u.job.ProfileId,
 		CreatedAt: u.job.CreatedAt,
 		BaseFile: model.BaseFile{
-			Size:       u.job.Size,
-			Name:       u.job.Name,
-			MimeType:   u.job.MimeType,
-			Properties: model.StringInterface{},
-			Instance:   u.job.Instance,
+			Size:           u.job.Size,
+			Name:           u.job.Name,
+			MimeType:       u.job.MimeType,
+			Properties:     model.StringInterface{},
+			Instance:       u.job.Instance,
+			RetentionUntil: nil,
 		},
 	}
+	var reader io.ReadCloser
+	reader, err = u.app.FilePolicyForUpload(f.DomainId, &f.BaseFile, r)
+	if err != nil {
+		u.log.Error(err.Error(),
+			wlog.Err(err),
+		)
+		// TODO drop call file ???
+		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
+		return
+	}
+	defer reader.Close()
 
-	if _, err = store.Write(r, f); err != nil && err.GetId() != utils.ErrFileWriteExistsId {
+	if _, err = store.Write(reader, f); err != nil && err.GetId() != utils.ErrFileWriteExistsId {
 		u.log.Error(err.Error(),
 			wlog.Err(err),
 		)
