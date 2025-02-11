@@ -176,6 +176,7 @@ type FilePoliciesStore interface {
 	ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError
 	// AllByDomainId internal
 	AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, engine.AppError)
+	SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy) (int64, engine.AppError)
 }
 
 type SystemSettingsStore interface {

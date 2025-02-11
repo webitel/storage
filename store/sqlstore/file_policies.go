@@ -231,3 +231,50 @@ order by position desc;`, map[string]interface{}{
 
 	return list, nil
 }
+
+func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy) (int64, engine.AppError) {
+	m := make([]string, 0, len(policy.MimeTypes))
+	for _, v := range policy.MimeTypes {
+		m = append(m, policyMaskToLike(v))
+	}
+
+	res, err := s.GetMaster().WithContext(ctx).Exec(`update storage.files
+set retention_until = uploaded_at + (:RetentionDays || 'days')::interval
+where domain_id = :DomainId
+    and channel = any(:Channels::varchar[])
+    and mime_type ilike any (:Mime::varchar[])`, map[string]any{
+		"DomainId":      domainId,
+		"Channels":      pq.Array(policy.Channels),
+		"Mime":          pq.Array(m),
+		"RetentionDays": policy.RetentionDays,
+	})
+
+	if err != nil {
+		return 0, engine.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	u, err := res.RowsAffected()
+	if err != nil {
+		return 0, engine.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return u, nil
+}
+
+func policyMaskToLike(s string) string {
+	out := []rune(s)
+
+	for k, v := range s {
+		switch v {
+		case '*':
+			out[k] = '%'
+		case '?':
+			out[k] = '_'
+		default:
+			out[k] = v
+
+		}
+	}
+
+	return string(out)
+}

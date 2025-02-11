@@ -115,3 +115,16 @@ func (c *Controller) ChangePositionFilePolicy(ctx context.Context, session *auth
 
 	return c.app.ChangePositionFilePolicy(ctx, session.Domain(0), fromId, toId)
 }
+
+func (c *Controller) ApplyFilePolicy(ctx context.Context, session *auth_manager.Session, policyId int32) (int64, engine.AppError) {
+	permission := session.GetPermission(model.PermissionScopeFilePolicy)
+	if !permission.CanRead() {
+		return 0, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+	}
+
+	if !permission.CanUpdate() {
+		return 0, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
+	}
+
+	return c.app.ApplyFilePolicy(ctx, session.Domain(0), policyId)
+}

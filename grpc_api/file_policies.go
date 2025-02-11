@@ -208,7 +208,18 @@ func (api *filePolicies) MovePositionFilePolicy(ctx context.Context, in *storage
 }
 
 func (api *filePolicies) FilePolicyApply(ctx context.Context, in *storage.FilePolicyApplyRequest) (*storage.FilePolicyApplyResponse, error) {
-	return &storage.FilePolicyApplyResponse{Count: 1}, nil
+	var count int64
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err = api.ctrl.ApplyFilePolicy(ctx, session, in.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.FilePolicyApplyResponse{Count: count}, nil
 }
 
 func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {

@@ -76,3 +76,16 @@ func (app *App) DeleteFilePolicy(ctx context.Context, domainId int64, id int32) 
 
 	return policy, nil
 }
+
+func (app *App) ApplyFilePolicy(ctx context.Context, domainId int64, id int32) (int64, engine.AppError) {
+	policy, err := app.GetFilePolicy(ctx, domainId, id)
+	if err != nil {
+		return 0, err
+	}
+
+	if policy.RetentionDays <= 0 {
+		return 0, engine.NewBadRequestError("file_policy.apply.valid.retention_days", "retention_days ")
+	}
+
+	return app.Store.FilePolicies().SetRetentionDay(ctx, domainId, policy)
+}
