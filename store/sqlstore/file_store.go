@@ -3,6 +3,7 @@ package sqlstore
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/webitel/engine/auth_manager"
@@ -98,16 +99,18 @@ where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
 }
 
 // TODO reference tables ?
-func (self SqlFileStore) MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) store.StoreChannel {
+func (self SqlFileStore) MoveFromJob(jobId int64, profileId *int, properties model.StringInterface, retentionUntil *time.Time) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		_, err := self.GetMaster().Exec(`with del as (
   delete from storage.upload_file_jobs
   where id = $1
   returning id, name, uuid, size, domain_id, mime_type, created_at, instance, view_name, channel
 )
-insert into storage.files(id, name, uuid, profile_id, size, domain_id, mime_type, properties, created_at, instance, view_name, channel)
-select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $3, del.created_at, del.instance, del.view_name, del.channel
-from del`, jobId, profileId, properties.ToJson())
+insert into storage.files(id, name, uuid, profile_id, size, domain_id, mime_type, properties, created_at, instance, view_name, 
+	channel, retention_until)
+select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $3, del.created_at, del.instance, del.view_name, 
+	del.channel, $4::timestamptz
+from del`, jobId, profileId, properties.ToJson(), retentionUntil)
 
 		if err != nil {
 			result.Err = engine.NewInternalError("store.sql_file.move_from_job.app_error", err.Error())

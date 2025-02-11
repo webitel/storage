@@ -52,13 +52,12 @@ func (u *UploadTask) Execute() {
 		ProfileId: u.job.ProfileId,
 		CreatedAt: u.job.CreatedAt,
 		BaseFile: model.BaseFile{
-			Size:           u.job.Size,
-			Name:           u.job.Name,
-			MimeType:       u.job.MimeType,
-			Properties:     model.StringInterface{},
-			Instance:       u.job.Instance,
-			Channel:        u.job.Channel,
-			RetentionUntil: nil,
+			Size:       u.job.Size,
+			Name:       u.job.Name,
+			MimeType:   u.job.MimeType,
+			Properties: model.StringInterface{},
+			Instance:   u.job.Instance,
+			Channel:    u.job.Channel,
 		},
 	}
 	var reader io.ReadCloser
@@ -83,7 +82,7 @@ func (u *UploadTask) Execute() {
 
 	u.log.Debug(fmt.Sprintf("store %s to %s %d bytes", u.job.GetStoreName(), store.Name(), u.job.Size))
 
-	result := <-u.app.Store.File().MoveFromJob(u.job.Id, u.job.ProfileId, f.Properties)
+	result := <-u.app.Store.File().MoveFromJob(u.job.Id, u.job.ProfileId, f.Properties, f.RetentionUntil)
 	if result.Err != nil {
 		u.log.Error(result.Err.Error(),
 			wlog.Err(result.Err),

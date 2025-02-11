@@ -95,7 +95,7 @@ type FileStore interface {
 	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, engine.AppError)
 	MarkRemove(domainId int64, ids []int64) engine.AppError
 
-	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface) StoreChannel
+	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface, retentionUntil *time.Time) StoreChannel
 	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError)
 }
 
