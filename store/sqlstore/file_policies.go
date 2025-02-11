@@ -22,9 +22,9 @@ func NewSqlFilePoliciesStore(sqlStore SqlStore) store.FilePoliciesStore {
 func (s *SqlFilePoliciesStore) Create(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
 	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `with p as (
     insert into storage.file_policies (domain_id, created_at, created_by, updated_at, updated_by, name, enabled, mime_types,
-                                       speed_download, speed_upload, description, channels, retention_days)
+                                       speed_download, speed_upload, description, channels, retention_days, max_upload_size)
     values (:DomainId, :CreatedAt, :CreatedBy, :UpdatedAt, :UpdatedBy, :Name, :Enabled, :MimeTypes,
-            :SpeedDownload, :SpeedUpload, :Description, :Channels, :RetentionDays)
+            :SpeedDownload, :SpeedUpload, :Description, :Channels, :RetentionDays, :MaxUploadSize)
    returning *
 )
 SELECT p.id,
@@ -39,7 +39,8 @@ SELECT p.id,
        p.mime_types,
        p.speed_download,
        p.speed_upload,
-       p.retention_days		
+       p.retention_days,
+       p.max_upload_size
 FROM p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by;`, map[string]interface{}{
@@ -56,6 +57,7 @@ FROM p
 		"Description":   policy.Description,
 		"Channels":      pq.Array(policy.Channels),
 		"RetentionDays": policy.RetentionDays,
+		"MaxUploadSize": policy.MaxUploadSize,
 	})
 
 	if err != nil {
@@ -101,7 +103,8 @@ func (s *SqlFilePoliciesStore) Get(ctx context.Context, domainId int64, id int32
        p.mime_types,
        p.speed_download,
        p.speed_upload,
-       p.retention_days
+       p.retention_days,
+       p.max_upload_size
 FROM storage.file_policies p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by
@@ -130,7 +133,8 @@ func (s *SqlFilePoliciesStore) Update(ctx context.Context, domainId int64, polic
             speed_download = :SpeedDownload,
             mime_types = :MimeTypes,
             channels = :Channels,
-			retention_days = :RetentionDays
+			retention_days = :RetentionDays,
+			max_upload_size = :MaxUploadSize
         where domain_id = :DomainId and id = :Id
 		returning *
 )
@@ -146,7 +150,8 @@ SELECT p.id,
        p.mime_types,
        p.speed_download,
        p.speed_upload,
-	   p.retention_days
+	   p.retention_days,
+       p.max_upload_size
 FROM p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by`, map[string]interface{}{
@@ -161,6 +166,7 @@ FROM p
 		"MimeTypes":     pq.Array(policy.MimeTypes),
 		"Channels":      pq.Array(policy.Channels),
 		"RetentionDays": policy.RetentionDays,
+		"MaxUploadSize": policy.MaxUploadSize,
 
 		"DomainId": domainId,
 		"Id":       policy.Id,
