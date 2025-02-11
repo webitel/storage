@@ -57,6 +57,7 @@ func (u *UploadTask) Execute() {
 			MimeType:       u.job.MimeType,
 			Properties:     model.StringInterface{},
 			Instance:       u.job.Instance,
+			Channel:        u.job.Channel,
 			RetentionUntil: nil,
 		},
 	}

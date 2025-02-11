@@ -226,7 +226,7 @@ func (ph *PoliciesHub) appendPolicy(channels []string, policy *FilePolicy) {
 func (ph *PoliciesHub) Policy(channel *string, mime string) (*FilePolicy, engine.AppError) {
 	if channel == nil {
 		// TODO
-		return nil, engine.NewNotFoundError("app.file_policy.valid.channel", "Not found")
+		return nil, engine.NewNotFoundError("app.file_policy.valid.channel", "Not found channel")
 	}
 	policies, ok := ph.channels[*channel]
 	if !ok {
