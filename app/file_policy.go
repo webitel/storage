@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/h2non/filetype"
 	"github.com/juju/ratelimit"
@@ -17,17 +16,11 @@ import (
 )
 
 var (
-	ErrorMaxLimit      = errors.New("max size")
-	ErrorExtUnknown    = errors.New("extension of file is unknown")
-	ErrorExtSuspicious = errors.New("actual file extension doesn't match declared Content-Type")
-	ErrorExtNotAllowed = errors.New("file extension is not allowed")
-)
-
-var (
 	policiesStoreGroup singleflight.Group
 )
 
 type PolicyReader struct {
+	name       string
 	r          io.ReadCloser // underlying reader
 	bytesCount int64
 	bucket     *ratelimit.Bucket
@@ -37,6 +30,7 @@ type PolicyReader struct {
 }
 
 type FilePolicy struct {
+	name string
 	mime []string
 
 	speedDownload int64
@@ -100,6 +94,7 @@ func (app *App) newPoliciesHub(domainId int64, policies []model.FilePolicy) *Pol
 		}
 
 		p := FilePolicy{
+			name:          v.Name,
 			speedDownload: v.SpeedDownload * 1024, // kbs
 			speedUpload:   v.SpeedUpload * 1024,   // kbs
 			maxUploadSize: v.MaxUploadSize,        // bytes
@@ -166,6 +161,7 @@ func (ph *DomainFilePolicy) policyReaderForDownload(domainId int64, file *model.
 		r:        src,
 		f:        file,
 		mimeTyme: file.MimeType,
+		name:     policy.name,
 	}
 
 	if policy.speedDownload > 0 {
@@ -194,6 +190,7 @@ func (ph *DomainFilePolicy) policyReaderForUpload(domainId int64, file *model.Ba
 		r:       src,
 		f:       file,
 		maxSize: policy.maxUploadSize,
+		name:    policy.name,
 	}
 
 	if file.Channel == nil || *file.Channel != model.UploadFileChannelMedia {
@@ -252,7 +249,7 @@ func (r *PolicyReader) Read(buf []byte) (n int, err error) {
 	r.bytesCount += int64(n)
 
 	if r.maxSize > 0 && r.bytesCount > r.maxSize {
-		err = ErrorMaxLimit
+		err = model.PolicyErrorMaxLimit
 		return
 	}
 
@@ -283,7 +280,7 @@ func (r *PolicyReader) testMimeType(bytes []byte) error {
 
 	if kind == filetype.Unknown {
 		// TODO
-		return ErrorExtUnknown
+		return model.PolicyErrorExtUnknown
 	}
 
 	if strings.HasPrefix(r.f.MimeType, kind.MIME.Value) || (r.f.MimeType == "audio/wav" && kind.Extension == "wav") {
@@ -291,11 +288,11 @@ func (r *PolicyReader) testMimeType(bytes []byte) error {
 	}
 
 	if r.f.MimeType != kind.MIME.Value {
-		return ErrorExtSuspicious
+		return model.PolicyErrorExtSuspicious
 	}
 
 	// File mime type is not in the allowed list
-	return ErrorExtNotAllowed
+	return model.PolicyErrorExtNotAllowed
 }
 
 // MatchPattern перевіряє, чи відповідає рядок заданому патерну

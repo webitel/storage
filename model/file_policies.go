@@ -5,6 +5,13 @@ import (
 	"time"
 )
 
+var (
+	PolicyErrorMaxLimit      = engine.NewForbiddenError("policy.file.allow", "max size")
+	PolicyErrorExtUnknown    = engine.NewForbiddenError("policy.file.allow", "extension of file is unknown")
+	PolicyErrorExtSuspicious = engine.NewForbiddenError("policy.file.allow", "actual file extension doesn't match declared Content-Type")
+	PolicyErrorExtNotAllowed = engine.NewForbiddenError("policy.file.allow", "file extension is not allowed")
+)
+
 type FilePolicy struct {
 	Id        int32      `json:"id" db:"id"`
 	CreatedAt *time.Time `json:"created_at" db:"created_at"`

@@ -98,7 +98,12 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 	res, err := self.uploader.Upload(params)
 
 	if err != nil {
-		return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
+		switch err.(type) {
+		case engine.AppError:
+			return 0, err.(engine.AppError)
+		default:
+			return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
+		}
 	}
 	file.SetPropertyString("location", location)
 	wlog.Debug(fmt.Sprintf("[%s] create new file %s", self.name, res.Location))
