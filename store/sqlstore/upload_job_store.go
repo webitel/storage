@@ -135,8 +135,15 @@ where id = $1`, id, model.GetMillis())
 	})
 }
 
-func (self *SqlUploadJobStore) RemoveById(id int) store.StoreChannel {
-	return store.Do(func(result *store.StoreResult) {
-		panic("TODO")
+func (self *SqlUploadJobStore) RemoveById(id int64) engine.AppError {
+	_, err := self.GetMaster().Exec(`delete from storage.upload_file_jobs 
+		where id = :Id`, map[string]any{
+		"Id": id,
 	})
+
+	if err != nil {
+		return engine.NewInternalError("store.sql_upload_job.delete.app_error", err.Error())
+	}
+
+	return nil
 }

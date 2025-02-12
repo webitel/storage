@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"io"
 	"path"
 	"strconv"
@@ -98,9 +99,12 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 	res, err := self.uploader.Upload(params)
 
 	if err != nil {
-		switch err.(type) {
+		if _, ok := err.(awserr.Error); ok {
+			err = err.(awserr.Error).OrigErr()
+		}
+		switch e := err.(type) {
 		case engine.AppError:
-			return 0, err.(engine.AppError)
+			return 0, e
 		default:
 			return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
 		}

@@ -64,6 +64,7 @@ type UploadJobStore interface {
 	GetAllPageByInstance(limit int, instance string) StoreChannel
 	UpdateWithProfile(limit int, instance string, betweenAttemptSec int64, defStore bool) StoreChannel
 	SetStateError(id int, errMsg string) StoreChannel
+	RemoveById(id int64) engine.AppError
 }
 
 type SyncFileStore interface {

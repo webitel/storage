@@ -2,6 +2,7 @@ package uploader
 
 import (
 	"fmt"
+	engine "github.com/webitel/engine/model"
 	"io"
 
 	"github.com/webitel/storage/utils"
@@ -27,10 +28,7 @@ func (u *UploadTask) Execute() {
 	store, err := u.app.GetFileBackendStore(u.job.ProfileId, u.job.ProfileUpdatedAt)
 
 	if err != nil {
-		u.log.Error(err.Error(),
-			wlog.Err(err),
-		)
-		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
+		u.storeError(err)
 		return
 	}
 
@@ -38,10 +36,7 @@ func (u *UploadTask) Execute() {
 
 	r, err := u.app.FileCache.Reader(u.job, 0)
 	if err != nil {
-		u.log.Error(err.Error(),
-			wlog.Err(err),
-		)
-		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
+		u.storeError(err)
 		return
 	}
 	defer r.Close()
@@ -63,20 +58,17 @@ func (u *UploadTask) Execute() {
 	var reader io.ReadCloser
 	reader, err = u.app.FilePolicyForUpload(f.DomainId, &f.BaseFile, r)
 	if err != nil {
-		u.log.Error(err.Error(),
-			wlog.Err(err),
-		)
-		// TODO drop call file ???
-		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
+		u.cancelUpload(err)
 		return
 	}
 	defer reader.Close()
 
 	if _, err = store.Write(reader, f); err != nil && err.GetId() != utils.ErrFileWriteExistsId {
-		u.log.Error(err.Error(),
-			wlog.Err(err),
-		)
-		u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
+		if model.IsFilePolicyError(err) {
+			u.cancelUpload(err)
+		} else {
+			u.storeError(err)
+		}
 		return
 	}
 
@@ -84,20 +76,38 @@ func (u *UploadTask) Execute() {
 
 	result := <-u.app.Store.File().MoveFromJob(u.job.Id, u.job.ProfileId, f.Properties, f.RetentionUntil)
 	if result.Err != nil {
-		u.log.Error(result.Err.Error(),
-			wlog.Err(result.Err),
-		)
 		store.Remove(f)
-		u.app.Store.UploadJob().SetStateError(int(u.job.Id), result.Err.Error())
+		u.storeError(result.Err)
 		return
 	}
 
-	err = u.app.FileCache.Remove(u.job)
+	u.removeCacheFile()
+	u.log.Debug(fmt.Sprintf("finish upload task %d [%s]", u.job.Id, u.Name()))
+}
+
+func (u *UploadTask) cancelUpload(err engine.AppError) {
+	u.log.Error(err.Error(),
+		wlog.Err(err),
+	)
+	err = u.app.Store.UploadJob().RemoveById(u.job.Id)
 	if err != nil {
+		u.log.Error(err.Error(), wlog.Err(err))
+	}
+
+	u.removeCacheFile()
+}
+
+func (u *UploadTask) removeCacheFile() {
+	if err := u.app.FileCache.Remove(u.job); err != nil {
 		u.log.Error(err.Error(),
 			wlog.Err(err),
 		)
 	}
+}
 
-	u.log.Debug(fmt.Sprintf("finish upload task %d [%s]", u.job.Id, u.Name()))
+func (u *UploadTask) storeError(err engine.AppError) {
+	u.log.Error(err.Error(),
+		wlog.Err(err),
+	)
+	u.app.Store.UploadJob().SetStateError(int(u.job.Id), err.Error())
 }

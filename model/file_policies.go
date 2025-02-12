@@ -5,11 +5,17 @@ import (
 	"time"
 )
 
+const (
+	filePolicyErrorId = "policy.file.allow"
+)
+
 var (
-	PolicyErrorMaxLimit      = engine.NewForbiddenError("policy.file.allow", "max size")
-	PolicyErrorExtUnknown    = engine.NewForbiddenError("policy.file.allow", "extension of file is unknown")
-	PolicyErrorExtSuspicious = engine.NewForbiddenError("policy.file.allow", "actual file extension doesn't match declared Content-Type")
-	PolicyErrorExtNotAllowed = engine.NewForbiddenError("policy.file.allow", "file extension is not allowed")
+	PolicyErrorMaxLimit      = engine.NewForbiddenError(filePolicyErrorId, "max size")
+	PolicyErrorExtUnknown    = engine.NewForbiddenError(filePolicyErrorId, "extension of file is unknown")
+	PolicyErrorExtSuspicious = engine.NewForbiddenError(filePolicyErrorId, "actual file extension doesn't match declared Content-Type")
+	PolicyErrorExtNotAllowed = engine.NewForbiddenError(filePolicyErrorId, "file extension is not allowed")
+	PolicyErrorForbidden     = engine.NewForbiddenError(filePolicyErrorId, "forbidden")
+	PolicyErrorChannel       = engine.NewForbiddenError(filePolicyErrorId, "not found channel")
 )
 
 type FilePolicy struct {
@@ -103,4 +109,8 @@ func (FilePolicy) EntityName() string {
 func (c *FilePolicy) IsValid() engine.AppError {
 
 	return nil
+}
+
+func IsFilePolicyError(err engine.AppError) bool {
+	return err != nil && err.GetId() == filePolicyErrorId
 }
