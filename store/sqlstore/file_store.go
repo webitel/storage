@@ -213,3 +213,19 @@ FROM storage.files f
 	}
 	return file, nil
 }
+
+func (s SqlFileStore) Metadata(domainId int64, id int64) (model.BaseFile, engine.AppError) {
+	var m model.BaseFile
+	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size
+from storage.files
+where domain_id = :DomainId and id = :Id`, map[string]any{
+		"DomainId": domainId,
+		"Id":       id,
+	})
+
+	if err != nil {
+		return model.BaseFile{}, engine.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return m, nil
+}

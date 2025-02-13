@@ -142,10 +142,34 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 	if err != nil {
 		return nil, err
 	}
-	return &storage.GenerateFileLinkResponse{
+
+	response := &storage.GenerateFileLinkResponse{
 		Url:     uri,
 		BaseUrl: api.publicHost,
-	}, nil
+	}
+
+	if in.Metadata {
+		var f model.BaseFile
+		switch in.Source {
+		case "file":
+			f, err = api.ctrl.App().Store.File().Metadata(in.GetDomainId(), in.GetFileId())
+		default:
+			f, err = api.ctrl.App().Store.MediaFile().Metadata(in.GetDomainId(), in.GetFileId())
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		response.Metadata = &storage.GenerateFileLinkResponse_Metadata{
+			Id:       in.GetFileId(),
+			Name:     f.GetViewName(),
+			MimeType: f.GetMimeType(),
+			Size:     f.GetSize(),
+		}
+	}
+
+	return response, nil
 }
 
 func (api *file) BulkGenerateFileLink(ctx context.Context, in *storage.BulkGenerateFileLinkRequest) (*storage.BulkGenerateFileLinkResponse, error) {

@@ -224,3 +224,19 @@ func (self *SqlMediaFileStore) DeleteById(id int64) store.StoreChannel {
 		}
 	})
 }
+
+func (s SqlMediaFileStore) Metadata(domainId int64, id int64) (model.BaseFile, engine.AppError) {
+	var m model.BaseFile
+	err := s.GetReplica().SelectOne(&m, `select mime_type, name, size
+from storage.media_files
+where domain_id = :DomainId and id = :Id`, map[string]any{
+		"DomainId": domainId,
+		"Id":       id,
+	})
+
+	if err != nil {
+		return model.BaseFile{}, engine.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return m, nil
+}

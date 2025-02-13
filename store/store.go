@@ -95,6 +95,7 @@ type FileStore interface {
 	GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, engine.AppError)
 	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, engine.AppError)
 	MarkRemove(domainId int64, ids []int64) engine.AppError
+	Metadata(domainId int64, id int64) (model.BaseFile, engine.AppError)
 
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface, retentionUntil *time.Time) StoreChannel
 	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, engine.AppError)
@@ -112,6 +113,7 @@ type MediaFileStore interface {
 	GetByName(name, domain string) StoreChannel
 	DeleteByName(name, domain string) StoreChannel
 	DeleteById(id int64) StoreChannel
+	Metadata(domainId int64, id int64) (model.BaseFile, engine.AppError)
 }
 
 type ScheduleStore interface {
