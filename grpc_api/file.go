@@ -317,12 +317,12 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	}
 
 	result := &storage.UploadFileUrlResponse{
-		Id:   fileRequest.Id,
-		Code: storage.UploadStatusCode_Ok,
-		Url:  publicUrl,
-		Size: fileRequest.Size,
-		Mime: fileRequest.MimeType,
-		// TODO ADD Server
+		Id:     fileRequest.Id,
+		Code:   storage.UploadStatusCode_Ok,
+		Url:    publicUrl,
+		Size:   fileRequest.Size,
+		Mime:   fileRequest.MimeType,
+		Server: api.publicHost,
 	}
 
 	if fileRequest.SHA256Sum != nil {

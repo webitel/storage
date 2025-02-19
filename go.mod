@@ -4,8 +4,8 @@ go 1.22.5
 
 require (
 	buf.build/gen/go/webitel/engine/protocolbuffers/go v1.36.5-20250130131313-1f628ed6696e.1
-	buf.build/gen/go/webitel/storage/grpc/go v1.5.1-20250213145738-5472cad38f90.2
-	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.36.5-20250213145738-5472cad38f90.1
+	buf.build/gen/go/webitel/storage/grpc/go v1.5.1-20250219143134-089fa54cff13.2
+	buf.build/gen/go/webitel/storage/protocolbuffers/go v1.36.5-20250219143134-089fa54cff13.1
 	cloud.google.com/go/speech v1.23.1
 	cloud.google.com/go/storage v1.40.0
 	cloud.google.com/go/texttospeech v1.7.7
