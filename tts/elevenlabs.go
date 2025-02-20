@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/webitel/storage/model"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -19,9 +20,10 @@ type ElevenLabsVoiceSettings struct {
 }
 
 type ElevenLabsRequest struct {
-	ModelId       string                  `json:"model_id"`
-	Text          string                  `json:"text"`
-	VoiceSettings ElevenLabsVoiceSettings `json:"voice_settings"`
+	ModelId                string                  `json:"model_id"`
+	Text                   string                  `json:"text"`
+	VoiceSettings          ElevenLabsVoiceSettings `json:"voice_settings"`
+	ApplyTextNormalization *string                 `json:"apply_text_normalization,omitempty"`
 }
 
 func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
@@ -61,6 +63,9 @@ func ElevenLabs(params TTSParams) (io.ReadCloser, *string, *int, error) {
 		}
 		if params.VoiceSettings.Has("model") {
 			req.ModelId = params.VoiceSettings.Get("model")
+		}
+		if params.VoiceSettings.Has("apply_text_normalization") {
+			req.ApplyTextNormalization = model.NewString(params.VoiceSettings.Get("apply_text_normalization"))
 		}
 	}
 
