@@ -51,7 +51,6 @@ type transcriptRequest struct {
 	Properties  struct {
 		WordLevelTimestampsEnabled bool   `json:"wordLevelTimestampsEnabled"`
 		ProfanityFilterMode        string `json:"profanityFilterMode"`
-		DestinationContainerUrl    string `json:"destinationContainerUrl"`
 	} `json:"properties"`
 	Locale           string                 `json:"locale"`
 	DisplayName      string                 `json:"displayName"`
@@ -185,11 +184,9 @@ func (c *client) TranscriptJob(fileId int64, fileUrl string, locale string) (*Ta
 		Properties: struct {
 			WordLevelTimestampsEnabled bool   `json:"wordLevelTimestampsEnabled"`
 			ProfanityFilterMode        string `json:"profanityFilterMode"`
-			DestinationContainerUrl    string `json:"destinationContainerUrl"`
 		}{
 			WordLevelTimestampsEnabled: false,
 			ProfanityFilterMode:        "None",
-			DestinationContainerUrl:    "",
 		},
 		Locale:      locale,
 		DisplayName: fmt.Sprintf("Transcription using default model for %s", locale),
