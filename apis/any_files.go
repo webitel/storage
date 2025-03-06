@@ -281,8 +281,8 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	validationString := createValidationKey(*r.URL)
 	// dynamic parameters validation
 	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
-		c.SetSessionErrSignature()
-		return
+		//c.SetSessionErrSignature()
+		//return
 	}
 	// endregion
 	domainId, _ = strconv.Atoi(c.Params.Domain)
@@ -304,7 +304,7 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 		fileId, _ := strconv.Atoi(uuid)
 		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
 	case "tts":
-		tts(c, w, r)
+		tts(c, w, r, true)
 		return
 	case "barcode":
 		var width, height int

@@ -10,10 +10,14 @@ import (
 )
 
 func (api *API) InitTts() {
-	api.PublicRoutes.Tts.Handle("/stream", api.ApiSessionRequired(tts)).Methods("GET")
+	api.PublicRoutes.Tts.Handle("/stream", api.ApiSessionRequired(streamTts)).Methods("GET")
 }
 
-func tts(c *Context, w http.ResponseWriter, r *http.Request) {
+func streamTts(c *Context, w http.ResponseWriter, r *http.Request) {
+	tts(c, w, r, false)
+}
+
+func tts(c *Context, w http.ResponseWriter, r *http.Request, download bool) {
 	params := helper.TtsParamsFromRequest(r)
 
 	if params.DomainId == 0 {
@@ -33,6 +37,10 @@ func tts(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	if size != nil {
 		w.Header().Set("Content-Length", strconv.Itoa(*size))
+	}
+
+	if download {
+		w.Header().Set("Content-Disposition", "attachment; filename=\"tts_output.wav\"")
 	}
 
 	io.Copy(w, out)
