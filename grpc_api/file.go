@@ -66,13 +66,19 @@ func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
 
 	var fileRequest model.JobUploadFile
 	fileRequest.DomainId = metadata.Metadata.DomainId
-	fileRequest.Name = metadata.Metadata.Name
-
 	fileRequest.MimeType = metadata.Metadata.MimeType
 	fileRequest.Uuid = metadata.Metadata.Uuid
+
 	fileRequest.ViewName = &metadata.Metadata.Name
 	fileRequest.Channel = model.NewString(channelType(metadata.Metadata.Channel))
 	fileRequest.GenerateThumbnail = metadata.Metadata.GetGenerateThumbnail()
+
+	// TODO DEV-5174
+	if metadata.Metadata.Channel == storage.UploadFileChannel_MailChannel {
+		fileRequest.Name = model.NewId()[:6] + "_" + metadata.Metadata.Name
+	} else {
+		fileRequest.Name = metadata.Metadata.Name
+	}
 
 	pipeReader, pipeWriter := io.Pipe()
 
