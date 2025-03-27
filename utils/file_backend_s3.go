@@ -108,6 +108,8 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 		default:
 			if err != nil {
 				return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
+			} else {
+				return 0, engine.NewInternalError("utils.file.s3.writing.app_error", "unknown S3 upload error")
 			}
 		}
 	}
