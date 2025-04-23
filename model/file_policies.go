@@ -2,6 +2,7 @@ package model
 
 import (
 	engine "github.com/webitel/engine/model"
+	"strings"
 	"time"
 )
 
@@ -107,7 +108,9 @@ func (FilePolicy) EntityName() string {
 }
 
 func (c *FilePolicy) IsValid() engine.AppError {
-
+	for k, v := range c.MimeTypes {
+		c.MimeTypes[k] = strings.Trim(v, " ")
+	}
 	return nil
 }
 
