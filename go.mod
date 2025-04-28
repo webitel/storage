@@ -26,7 +26,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine v0.0.0-20250106103225-20d39179f6df
 	github.com/webitel/webitel-go-kit v0.0.13-0.20240908192731-3abe573c0e41
-	github.com/webitel/wlog v0.0.0-20240909100805-822697e17a45
+	github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7
 	go.opentelemetry.io/otel v1.29.0
 	go.opentelemetry.io/otel/sdk v1.29.0
 	golang.org/x/image v0.12.0
