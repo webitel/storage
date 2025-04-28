@@ -74,6 +74,7 @@ func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 		tts.src, tts.mime, tts.size, c.Err = c.App.TTS(c.Params.Id, params)
 		if c.Err != nil {
+			wlog.Debug(fmt.Sprintf("[%s] store tts error: %s, duration %v", tts, c.Err.Error(), time.Since(t)))
 			return
 		}
 
