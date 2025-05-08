@@ -9,14 +9,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/webitel/wlog"
-
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
-	engine "github.com/webitel/engine/model"
-
 	"github.com/webitel/storage/controller"
+	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
+	"github.com/webitel/wlog"
 )
 
 var (
@@ -27,7 +23,7 @@ type file struct {
 	ctrl       *controller.Controller
 	curl       *http.Client
 	publicHost string
-	gogrpc.UnsafeFileServiceServer
+	storage.UnsafeFileServiceServer
 }
 
 func NewFileApi(proxy string, ph string, api *controller.Controller) *file {
@@ -49,7 +45,7 @@ func NewFileApi(proxy string, ph string, api *controller.Controller) *file {
 	return c
 }
 
-func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
+func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	var chunk *storage.UploadFileRequest_Chunk
 
 	res, gErr := in.Recv()
@@ -110,7 +106,7 @@ func (api *file) UploadFile(in gogrpc.FileService_UploadFileServer) error {
 
 	}(pipeWriter)
 
-	var err engine.AppError
+	var err model.AppError
 	var publicUrl string
 
 	if metadata.Metadata.ProfileId != 0 {
@@ -199,7 +195,7 @@ func (api *file) BulkGenerateFileLink(ctx context.Context, in *storage.BulkGener
 	}, nil
 }
 
-func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.FileService_DownloadFileServer) error {
+func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.FileService_DownloadFileServer) error {
 	var sFile io.ReadCloser
 	var err error
 	var buf []byte
@@ -283,7 +279,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream gogrpc.Fil
 }
 
 func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlRequest) (*storage.UploadFileUrlResponse, error) {
-	var err engine.AppError
+	var err model.AppError
 	var publicUrl string
 
 	if in.Url == "" || in.DomainId == 0 || in.Name == "" {
@@ -352,7 +348,7 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 	return &storage.DeleteFilesResponse{}, nil
 }
 
-func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) error {
+func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) error {
 	var su *app.SafeUpload
 	ctx := in.Context()
 	res, gErr := in.Recv()
@@ -452,7 +448,7 @@ func (api *file) SafeUploadFile(in gogrpc.FileService_SafeUploadFileServer) erro
 
 	<-su.WaitUploaded()
 	fileRequest := su.File()
-	var err engine.AppError
+	var err model.AppError
 	var publicUrl string
 	if publicUrl, err = api.ctrl.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", fileRequest.Id, fileRequest.DomainId); err != nil {
 		return err

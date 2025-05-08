@@ -6,8 +6,7 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -26,7 +25,7 @@ func (self *SqlFileStore) CreateIndexesIfNotExists() {
 
 }
 
-func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, engine.AppError) {
+func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, model.AppError) {
 	var files []*model.File
 
 	f := map[string]interface{}{
@@ -43,7 +42,7 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 		model.File{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return files, nil
@@ -76,14 +75,14 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 		})
 
 		if err != nil {
-			result.Err = engine.NewInternalError("store.sql_file.create.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_file.create.app_error", err.Error())
 		} else {
 			result.Data = id
 		}
 	})
 }
 
-func (self SqlFileStore) MarkRemove(domainId int64, ids []int64) engine.AppError {
+func (self SqlFileStore) MarkRemove(domainId int64, ids []int64) model.AppError {
 	_, err := self.GetMaster().Exec(`update storage.files
 set removed = true
 where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
@@ -92,7 +91,7 @@ where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return engine.NewCustomCodeError("store.sql_file.remove.app_error", err.Error(), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_file.remove.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return nil
@@ -113,13 +112,13 @@ select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $
 from del`, jobId, profileId, properties.ToJson(), retentionUntil)
 
 		if err != nil {
-			result.Err = engine.NewInternalError("store.sql_file.move_from_job.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_file.move_from_job.app_error", err.Error())
 		}
 	})
 }
 
 // get permissions of the call record for user
-func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId int, userId int64, domainId int64, groups []int) (bool, engine.AppError) {
+func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId int, userId int64, domainId int64, groups []int) (bool, model.AppError) {
 
 	exists, err := self.GetReplica().WithContext(ctx).SelectInt(`
 		select exists(select 1
@@ -146,13 +145,13 @@ func (self SqlFileStore) CheckCallRecordPermissions(ctx context.Context, fileId 
 		"Class":         model.PERMISSION_SCOPE_RECORD_FILE,
 	})
 	if err != nil {
-		return false, engine.NewInternalError("store.sql_file.check_call_record_permissions.app_error", err.Error())
+		return false, model.NewInternalError("store.sql_file.check_call_record_permissions.app_error", err.Error())
 	}
 	return exists == 1, nil
 
 }
 
-func (s SqlFileStore) GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, engine.AppError) {
+func (s SqlFileStore) GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, model.AppError) {
 	var file *model.FileWithProfile
 	err := s.GetReplica().SelectOne(&file, `SELECT f.id,
        f.name,
@@ -177,12 +176,12 @@ FROM storage.files f
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file.get_with_profile.app_error", fmt.Sprintf("Id=%d %s", id, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file.get_with_profile.app_error", fmt.Sprintf("Id=%d %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return file, nil
 }
 
-func (s SqlFileStore) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, engine.AppError) {
+func (s SqlFileStore) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, model.AppError) {
 	var file *model.FileWithProfile
 	err := s.GetReplica().SelectOne(&file, `SELECT f.id,
        f.name,
@@ -209,12 +208,12 @@ FROM storage.files f
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file.get_by_uuid_with_profile.app_error", fmt.Sprintf("Uuid=%d %s", uuid, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file.get_by_uuid_with_profile.app_error", fmt.Sprintf("Uuid=%d %s", uuid, err.Error()), extractCodeFromErr(err))
 	}
 	return file, nil
 }
 
-func (s SqlFileStore) Metadata(domainId int64, id int64) (model.BaseFile, engine.AppError) {
+func (s SqlFileStore) Metadata(domainId int64, id int64) (model.BaseFile, model.AppError) {
 	var m model.BaseFile
 	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size
 from storage.files
@@ -224,7 +223,7 @@ where domain_id = :DomainId and id = :Id`, map[string]any{
 	})
 
 	if err != nil {
-		return model.BaseFile{}, engine.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
+		return model.BaseFile{}, model.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return m, nil

@@ -3,8 +3,6 @@ package model
 import (
 	"encoding/json"
 	"io"
-
-	engine "github.com/webitel/engine/model"
 )
 
 const (
@@ -35,19 +33,19 @@ type Job struct {
 	Data           map[string]string `db:"data" json:"data"`
 }
 
-func (j *Job) IsValid() engine.AppError {
+func (j *Job) IsValid() AppError {
 	if len(j.Id) != 26 {
-		return engine.NewBadRequestError("model.job.is_valid.id.app_error", "id="+j.Id)
+		return NewBadRequestError("model.job.is_valid.id.app_error", "id="+j.Id)
 	}
 
 	if j.CreateAt == 0 {
-		return engine.NewBadRequestError("model.job.is_valid.create_at.app_error", "id="+j.Id)
+		return NewBadRequestError("model.job.is_valid.create_at.app_error", "id="+j.Id)
 	}
 
 	switch j.Type {
 	case JOB_TYPE_SYNC_FILES:
 	default:
-		return engine.NewBadRequestError("model.job.is_valid.type.app_error", "id="+j.Id)
+		return NewBadRequestError("model.job.is_valid.type.app_error", "id="+j.Id)
 	}
 
 	switch j.Status {
@@ -58,7 +56,7 @@ func (j *Job) IsValid() engine.AppError {
 	case JOB_STATUS_CANCEL_REQUESTED:
 	case JOB_STATUS_CANCELED:
 	default:
-		return engine.NewBadRequestError("model.job.is_valid.status.app_error", "id="+j.Id)
+		return NewBadRequestError("model.job.is_valid.status.app_error", "id="+j.Id)
 	}
 
 	return nil
@@ -107,5 +105,5 @@ type Scheduler interface {
 	Name() string
 	JobType() string
 	Enabled(cfg *Config) bool
-	ScheduleJob(cfg *Config, pendingJobs bool, lastSuccessfulJob *Job) (*Job, engine.AppError)
+	ScheduleJob(cfg *Config, pendingJobs bool, lastSuccessfulJob *Job) (*Job, AppError)
 }

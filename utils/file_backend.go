@@ -2,13 +2,11 @@ package utils
 
 import (
 	"fmt"
+	"github.com/webitel/storage/model"
 	"io"
 	"regexp"
 	"sync"
 	"time"
-
-	engine "github.com/webitel/engine/model"
-	"github.com/webitel/storage/model"
 )
 
 const (
@@ -60,17 +58,17 @@ type File interface {
 }
 
 type FileBackend interface {
-	TestConnection() engine.AppError
-	Reader(file File, offset int64) (io.ReadCloser, engine.AppError)
-	Remove(file File) engine.AppError
-	Write(src io.Reader, file File) (int64, engine.AppError)
+	TestConnection() model.AppError
+	Reader(file File, offset int64) (io.ReadCloser, model.AppError)
+	Remove(file File) model.AppError
+	Write(src io.Reader, file File) (int64, model.AppError)
 	GetSyncTime() int64
 	GetSize() float64
 	ExpireDay() int
 	Name() string
 }
 
-func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, engine.AppError) {
+func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, model.AppError) {
 	switch profile.Type {
 	case model.FileDriverLocal:
 		return &LocalFileBackend{
@@ -105,7 +103,7 @@ func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, engine.App
 		return d, nil
 	}
 
-	return nil, engine.NewInternalError("api.file.no_driver.app_error", "")
+	return nil, model.NewInternalError("api.file.no_driver.app_error", "")
 }
 
 func parseStorePattern(pattern string, f File) string {

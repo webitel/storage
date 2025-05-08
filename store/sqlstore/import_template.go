@@ -3,8 +3,7 @@ package sqlstore
 import (
 	"fmt"
 
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 
 	"github.com/lib/pq"
 	"github.com/webitel/storage/model"
@@ -20,7 +19,7 @@ func NewSqlImportTemplateStore(sqlStore SqlStore) store.ImportTemplateStore {
 	return us
 }
 
-func (s SqlImportTemplateStore) CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
+func (s SqlImportTemplateStore) CheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, model.AppError) {
 
 	res, err := s.GetReplica().SelectNullInt(`select 1
 		where exists(
@@ -39,7 +38,7 @@ func (s SqlImportTemplateStore) CheckAccess(domainId int64, id int32, groups []i
 	return res.Valid && res.Int64 == 1, nil
 }
 
-func (s SqlImportTemplateStore) Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError) {
+func (s SqlImportTemplateStore) Create(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, model.AppError) {
 	err := s.GetMaster().SelectOne(&template, `with t as (
     insert into storage.import_template (domain_id, name, description, source_type, source_id, parameters, created_at, created_by, updated_at, updated_by)
     values (:DomainId, :Name, :Description, :SourceType, :SourceId, :Parameters, :CreatedAt, :CreatedBy, :UpdatedAt, :UpdatedBy)
@@ -79,12 +78,12 @@ from t
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_import_template.create.app_error", fmt.Sprintf("name=%v, %v", template.Name, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_import_template.create.app_error", fmt.Sprintf("name=%v, %v", template.Name, err.Error()), extractCodeFromErr(err))
 	}
 
 	return template, nil
 }
-func (s SqlImportTemplateStore) GetAllPage(domainId int64, search *model.SearchImportTemplate) ([]*model.ImportTemplate, engine.AppError) {
+func (s SqlImportTemplateStore) GetAllPage(domainId int64, search *model.SearchImportTemplate) ([]*model.ImportTemplate, model.AppError) {
 	var templates []*model.ImportTemplate
 
 	f := map[string]interface{}{
@@ -100,12 +99,12 @@ func (s SqlImportTemplateStore) GetAllPage(domainId int64, search *model.SearchI
 		model.ImportTemplate{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_import_template.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_import_template.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return templates, nil
 }
-func (s SqlImportTemplateStore) GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, engine.AppError) {
+func (s SqlImportTemplateStore) GetAllPageByGroups(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, model.AppError) {
 	var templates []*model.ImportTemplate
 
 	f := map[string]interface{}{
@@ -128,12 +127,12 @@ func (s SqlImportTemplateStore) GetAllPageByGroups(domainId int64, groups []int,
 		model.ImportTemplate{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_import_template.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_import_template.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return templates, nil
 }
-func (s SqlImportTemplateStore) Get(domainId int64, id int32) (*model.ImportTemplate, engine.AppError) {
+func (s SqlImportTemplateStore) Get(domainId int64, id int32) (*model.ImportTemplate, model.AppError) {
 	var template *model.ImportTemplate
 	err := s.GetReplica().SelectOne(&template, `select
     t.id,
@@ -162,13 +161,13 @@ from storage.import_template t
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_import_template.get.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_import_template.get.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return template, nil
 
 }
-func (s SqlImportTemplateStore) Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError) {
+func (s SqlImportTemplateStore) Update(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, model.AppError) {
 	err := s.GetMaster().SelectOne(&template, `with t as (
     update storage.import_template t
     set name = :Name,
@@ -214,15 +213,15 @@ from t
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_import_template.update.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_import_template.update.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return template, nil
 }
-func (s SqlImportTemplateStore) Delete(domainId int64, id int32) engine.AppError {
+func (s SqlImportTemplateStore) Delete(domainId int64, id int32) model.AppError {
 	if _, err := s.GetMaster().Exec(`delete from storage.import_template t where id = :Id and domain_id = :DomainId`,
 		map[string]interface{}{"Id": id, "DomainId": domainId}); err != nil {
-		return engine.NewCustomCodeError("store.sql_import_template.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_import_template.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return nil
 }

@@ -16,7 +16,6 @@ import (
 	"github.com/go-gorp/gorp"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
-	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
 )
 
@@ -199,7 +198,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*[]byte)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_model"))
+				return errors.New("store.sql.convert_model")
 			}
 			if *s == nil {
 				return nil
@@ -212,7 +211,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*string)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_lookup"))
+				return errors.New("store.sql.convert_lookup")
 			}
 			b := []byte(*s)
 			return json.Unmarshal(b, target)
@@ -223,7 +222,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*[]byte)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_lookup"))
+				return errors.New("store.sql.convert_lookup")
 			}
 			if *s == nil {
 				return nil
@@ -236,7 +235,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*model.JSON)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_interface"))
+				return errors.New("store.sql.convert_string_interface")
 			}
 			b := []byte(*s)
 			return json.Unmarshal(b, target)
@@ -247,7 +246,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*model.JSON)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_interface_array"))
+				return errors.New("store.sql.convert_string_interface_array")
 			}
 			b := []byte(*s)
 			return json.Unmarshal(b, target)
@@ -259,7 +258,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(**string)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_interface_array"))
+				return errors.New("store.sql.convert_string_interface_array")
 			}
 
 			if *s == nil {
@@ -276,7 +275,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*string)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_map"))
+				return errors.New("store.sql.convert_string_map")
 			}
 			b := []byte(*s)
 			return json.Unmarshal(b, target)
@@ -287,7 +286,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*string)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_map"))
+				return errors.New("store.sql.convert_string_map")
 			}
 			b := []byte(*s)
 			return json.Unmarshal(b, target)
@@ -299,7 +298,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*[]byte)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_array"))
+				return errors.New("store.sql.convert_string_array")
 			}
 
 			if *s == nil {
@@ -321,7 +320,7 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*string)
 			if !ok {
-				return errors.New(utils.T("store.sql.convert_string_interface"))
+				return errors.New("store.sql.convert_string_interface")
 			}
 			b := []byte(*s)
 			return json.Unmarshal(b, target)

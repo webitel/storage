@@ -1,7 +1,6 @@
 package sqlstore
 
 import (
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -19,7 +18,7 @@ func (self *SqlUploadJobStore) CreateIndexesIfNotExists() {
 
 }
 
-func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, engine.AppError) {
+func (self *SqlUploadJobStore) Create(job *model.JobUploadFile) (*model.JobUploadFile, model.AppError) {
 	job.PreSave()
 	id, err := self.GetMaster().SelectInt(`insert into storage.upload_file_jobs (name, uuid, mime_type, size, instance,
                                       created_at, updated_at, domain_id, view_name, channel)
@@ -39,7 +38,7 @@ returning id
 	})
 
 	if err != nil {
-		return job, engine.NewInternalError("store.sql_upload_job.save.app_error", err.Error())
+		return job, model.NewInternalError("store.sql_upload_job.save.app_error", err.Error())
 	}
 
 	job.Id = id
@@ -53,7 +52,7 @@ func (self *SqlUploadJobStore) GetAllPageByInstance(limit int, instance string) 
 		res, err := self.GetReplica().Query("SELECT id, name, uuid, domain_id, mime_type, size, email_msg, email_sub, instance, attempts "+
 			"		FROM storage.upload_file_jobs LIMIT $1", limit)
 		if err != nil {
-			result.Err = engine.NewInternalError("store.sql_upload_job.list.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_upload_job.list.app_error", err.Error())
 			return
 		}
 		defer res.Close()
@@ -62,7 +61,7 @@ func (self *SqlUploadJobStore) GetAllPageByInstance(limit int, instance string) 
 			job := new(model.JobUploadFile)
 			err = res.Scan(&job.Id, &job.Name, &job.Uuid, &job.DomainId, &job.MimeType, &job.Size, &job.EmailMsg, &job.EmailSub, &job.Instance, &job.Attempts)
 			if err != nil {
-				result.Err = engine.NewInternalError("store.sql_upload_job.list.app_error", err.Error())
+				result.Err = model.NewInternalError("store.sql_upload_job.list.app_error", err.Error())
 				return
 			}
 			jobs = append(jobs, job)
@@ -118,7 +117,7 @@ returning tmp.*`, map[string]interface{}{
 			"UpdatedAt": model.GetMillis() - betweenAttemptSec,
 		})
 		if err != nil {
-			result.Err = engine.NewInternalError("store.sql_upload_job.update_with_profile.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_upload_job.update_with_profile.app_error", err.Error())
 			return
 		}
 
@@ -135,14 +134,14 @@ where id = $1`, id, model.GetMillis())
 	})
 }
 
-func (self *SqlUploadJobStore) RemoveById(id int64) engine.AppError {
+func (self *SqlUploadJobStore) RemoveById(id int64) model.AppError {
 	_, err := self.GetMaster().Exec(`delete from storage.upload_file_jobs 
 		where id = :Id`, map[string]any{
 		"Id": id,
 	})
 
 	if err != nil {
-		return engine.NewInternalError("store.sql_upload_job.delete.app_error", err.Error())
+		return model.NewInternalError("store.sql_upload_job.delete.app_error", err.Error())
 	}
 
 	return nil

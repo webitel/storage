@@ -11,9 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
-	"github.com/webitel/engine/presign"
+	"github.com/webitel/engine/pkg/presign"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -110,14 +109,6 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	app.thumbnailSettings = config.Thumbnail
 
-	if utils.T == nil {
-		if err := utils.TranslationsPreInit(app.Config().TranslationsDirectory); err != nil {
-			return nil, errors.Wrapf(err, "unable to load translation files")
-		}
-	}
-
-	engine.AppErrorInit(utils.T)
-
 	logConfig := &wlog.LoggerConfiguration{
 		EnableConsole: config.Log.Console,
 		ConsoleJson:   false,
@@ -153,10 +144,6 @@ func New(options ...string) (outApp *App, outErr error) {
 	wlog.RedirectStdLog(app.Log)
 	wlog.InitGlobalLogger(app.Log)
 
-	if err := utils.InitTranslations(app.Config().LocalizationSettings); err != nil {
-		return nil, errors.Wrapf(err, "unable to load translation files")
-	}
-
 	if preSign, err := presign.NewPreSigned(app.Config().PreSignedCertificateLocation); err != nil {
 		return nil, errors.Wrapf(err, "unable to load certificate file")
 	} else {
@@ -187,7 +174,7 @@ func New(options ...string) (outApp *App, outErr error) {
 	}
 
 	app.sessionManager = auth_manager.NewAuthManager(model.SESSION_CACHE_SIZE, model.SESSION_CACHE_TIME,
-		app.cluster.discovery, app.Log)
+		app.Config().DiscoverySettings.Url, app.Log)
 	if err := app.sessionManager.Start(); err != nil {
 		return nil, err
 	}
@@ -200,8 +187,8 @@ func New(options ...string) (outApp *App, outErr error) {
 	return app, outErr
 }
 
-func (app *App) initLocalFileStores() engine.AppError {
-	var appErr engine.AppError
+func (app *App) initLocalFileStores() model.AppError {
+	var appErr model.AppError
 	mediaSettings := app.Config().MediaFileStoreSettings
 	fileSettings := app.Config().DefaultFileStore
 
@@ -259,7 +246,7 @@ func (app *App) Shutdown() {
 }
 
 func (a *App) Handle404(w http.ResponseWriter, r *http.Request) {
-	err := engine.NewNotFoundError("api.context.404.app_error", r.URL.String())
+	err := model.NewNotFoundError("api.context.404.app_error", r.URL.String())
 	ip := utils.GetIpAddress(r)
 	a.Log.Debug(fmt.Sprintf("%v: code=404 ip=%v", r.URL.Path, ip),
 		wlog.String("ip", ip),

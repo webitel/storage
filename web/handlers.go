@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
@@ -28,7 +27,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := &Context{}
 	c.App = h.App
 	c.Ctrl = h.Ctrl
-	c.T, _ = utils.GetTranslationsAndLocale(w, r)
 	c.Params = ParamsFromRequest(r)
 	c.RequestId = model.NewId()
 	c.IpAddress = utils.GetIpAddress(r)
@@ -50,7 +48,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err.GetStatusCode() == http.StatusInternalServerError {
 				c.Err = err
 			} else {
-				c.Err = engine.NewInternalError("api.context.session_expired.app_error", "token="+token)
+				c.Err = model.NewInternalError("api.context.session_expired.app_error", "token="+token)
 			}
 		} else {
 			c.Session = *session
@@ -75,7 +73,6 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Handle errors that have occurred
 	if c.Err != nil {
-		c.Err.Translate(c.T)
 		c.Err.SetRequestId(c.RequestId)
 
 		if c.Err.GetId() == "api.context.session_expired.app_error" {

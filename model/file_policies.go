@@ -1,7 +1,6 @@
 package model
 
 import (
-	engine "github.com/webitel/engine/model"
 	"strings"
 	"time"
 )
@@ -11,12 +10,12 @@ const (
 )
 
 var (
-	PolicyErrorMaxLimit      = engine.NewForbiddenError(filePolicyErrorId, "max size")
-	PolicyErrorExtUnknown    = engine.NewForbiddenError(filePolicyErrorId, "extension of file is unknown")
-	PolicyErrorExtSuspicious = engine.NewForbiddenError(filePolicyErrorId, "actual file extension doesn't match declared Content-Type")
-	PolicyErrorExtNotAllowed = engine.NewForbiddenError(filePolicyErrorId, "file extension is not allowed")
-	PolicyErrorForbidden     = engine.NewForbiddenError(filePolicyErrorId, "forbidden")
-	PolicyErrorChannel       = engine.NewForbiddenError(filePolicyErrorId, "not found channel")
+	PolicyErrorMaxLimit      = NewForbiddenError(filePolicyErrorId, "max size")
+	PolicyErrorExtUnknown    = NewForbiddenError(filePolicyErrorId, "extension of file is unknown")
+	PolicyErrorExtSuspicious = NewForbiddenError(filePolicyErrorId, "actual file extension doesn't match declared Content-Type")
+	PolicyErrorExtNotAllowed = NewForbiddenError(filePolicyErrorId, "file extension is not allowed")
+	PolicyErrorForbidden     = NewForbiddenError(filePolicyErrorId, "forbidden")
+	PolicyErrorChannel       = NewForbiddenError(filePolicyErrorId, "not found channel")
 )
 
 type FilePolicy struct {
@@ -107,13 +106,13 @@ func (FilePolicy) EntityName() string {
 	return "file_policies_view"
 }
 
-func (c *FilePolicy) IsValid() engine.AppError {
+func (c *FilePolicy) IsValid() AppError {
 	for k, v := range c.MimeTypes {
 		c.MimeTypes[k] = strings.Trim(v, " ")
 	}
 	return nil
 }
 
-func IsFilePolicyError(err engine.AppError) bool {
+func IsFilePolicyError(err AppError) bool {
 	return err != nil && err.GetId() == filePolicyErrorId
 }

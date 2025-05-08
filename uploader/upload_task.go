@@ -2,7 +2,6 @@ package uploader
 
 import (
 	"fmt"
-	engine "github.com/webitel/engine/model"
 	"io"
 
 	"github.com/webitel/storage/utils"
@@ -85,7 +84,7 @@ func (u *UploadTask) Execute() {
 	u.log.Debug(fmt.Sprintf("finish upload task %d [%s]", u.job.Id, u.Name()))
 }
 
-func (u *UploadTask) cancelUpload(err engine.AppError) {
+func (u *UploadTask) cancelUpload(err model.AppError) {
 	u.log.Error(err.Error(),
 		wlog.Err(err),
 	)
@@ -105,7 +104,7 @@ func (u *UploadTask) removeCacheFile() {
 	}
 }
 
-func (u *UploadTask) storeError(err engine.AppError) {
+func (u *UploadTask) storeError(err model.AppError) {
 	u.log.Error(err.Error(),
 		wlog.Err(err),
 	)

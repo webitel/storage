@@ -1,20 +1,19 @@
 package app
 
 import (
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) ImportTemplateCheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
+func (app *App) ImportTemplateCheckAccess(domainId int64, id int32, groups []int, access auth_manager.PermissionAccess) (bool, model.AppError) {
 	return app.Store.ImportTemplate().CheckAccess(domainId, id, groups, access)
 }
 
-func (app *App) CreateImportTemplate(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError) {
+func (app *App) CreateImportTemplate(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, model.AppError) {
 	return app.Store.ImportTemplate().Create(domainId, template)
 }
 
-func (app *App) SearchImportTemplates(domainId int64, search *model.SearchImportTemplate) ([]*model.ImportTemplate, bool, engine.AppError) {
+func (app *App) SearchImportTemplates(domainId int64, search *model.SearchImportTemplate) ([]*model.ImportTemplate, bool, model.AppError) {
 	res, err := app.Store.ImportTemplate().GetAllPage(domainId, search)
 	if err != nil {
 		return nil, false, err
@@ -23,7 +22,7 @@ func (app *App) SearchImportTemplates(domainId int64, search *model.SearchImport
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) SearchImportTemplatesByGroup(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, bool, engine.AppError) {
+func (app *App) SearchImportTemplatesByGroup(domainId int64, groups []int, search *model.SearchImportTemplate) ([]*model.ImportTemplate, bool, model.AppError) {
 	res, err := app.Store.ImportTemplate().GetAllPageByGroups(domainId, groups, search)
 	if err != nil {
 		return nil, false, err
@@ -32,11 +31,11 @@ func (app *App) SearchImportTemplatesByGroup(domainId int64, groups []int, searc
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) GetImportTemplate(domain int64, id int32) (*model.ImportTemplate, engine.AppError) {
+func (app *App) GetImportTemplate(domain int64, id int32) (*model.ImportTemplate, model.AppError) {
 	return app.Store.ImportTemplate().Get(domain, id)
 }
 
-func (app *App) UpdateImportTemplate(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, engine.AppError) {
+func (app *App) UpdateImportTemplate(domainId int64, template *model.ImportTemplate) (*model.ImportTemplate, model.AppError) {
 	oldTemplate, err := app.GetImportTemplate(domainId, template.Id)
 	if err != nil {
 		return nil, err
@@ -57,7 +56,7 @@ func (app *App) UpdateImportTemplate(domainId int64, template *model.ImportTempl
 	return app.Store.ImportTemplate().Update(domainId, oldTemplate)
 }
 
-func (app *App) PatchImportTemplate(domainId int64, id int32, patch *model.ImportTemplatePatch) (*model.ImportTemplate, engine.AppError) {
+func (app *App) PatchImportTemplate(domainId int64, id int32, patch *model.ImportTemplatePatch) (*model.ImportTemplate, model.AppError) {
 	oldTemplate, err := app.GetImportTemplate(domainId, id)
 	if err != nil {
 		return nil, err
@@ -72,7 +71,7 @@ func (app *App) PatchImportTemplate(domainId int64, id int32, patch *model.Impor
 	return app.Store.ImportTemplate().Update(domainId, oldTemplate)
 }
 
-func (app *App) DeleteImportTemplate(domainId int64, id int32) (*model.ImportTemplate, engine.AppError) {
+func (app *App) DeleteImportTemplate(domainId int64, id int32) (*model.ImportTemplate, model.AppError) {
 	template, err := app.GetImportTemplate(domainId, id)
 	if err != nil {
 		return nil, err

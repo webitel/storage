@@ -3,7 +3,6 @@ package app
 import (
 	"crypto/sha256"
 	"fmt"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
@@ -11,7 +10,7 @@ import (
 )
 
 // AddUploadJobFile додає файл до черги завантаження
-func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engine.AppError {
+func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) model.AppError {
 	size, err := app.FileCache.Write(src, file)
 	if err != nil {
 		return err
@@ -34,16 +33,16 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) engin
 }
 
 // SyncUpload синхронно завантажує файл за замовчуванням
-func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) engine.AppError {
+func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) model.AppError {
 	if !app.UseDefaultStore() {
-		return engine.NewInternalError("SyncUpload", "default store error")
+		return model.NewInternalError("SyncUpload", "default store error")
 	}
 
 	return app.upload(src, nil, app.DefaultFileStore, file)
 }
 
 // SyncUploadToProfile синхронно завантажує файл у профіль користувача
-func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) engine.AppError {
+func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) model.AppError {
 	store, err := app.GetFileBackendStoreById(file.DomainId, profileId)
 	if err != nil {
 		return err
@@ -53,11 +52,11 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 }
 
 // upload - основний метод завантаження файлу з підтримкою мініатюр
-func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) engine.AppError {
+func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) model.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail
-	var ch chan engine.AppError
-	var err engine.AppError
+	var ch chan model.AppError
+	var err model.AppError
 
 	if file.GenerateThumbnail {
 		reader, thumbnail, ch, err = app.setupThumbnail(src, store, file)
@@ -98,14 +97,14 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 }
 
 // setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
-func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan engine.AppError, engine.AppError) {
+func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan model.AppError, model.AppError) {
 	if !utils.IsSupportThumbnail(file.MimeType) {
 		return src, nil, nil, nil
 	}
 
 	thumbnail, err := utils.NewThumbnail(file.MimeType, app.thumbnailSettings.DefaultScale)
 	if err != nil {
-		return nil, nil, nil, engine.NewInternalError("ThumbnailError", err.Error())
+		return nil, nil, nil, model.NewInternalError("ThumbnailError", err.Error())
 	}
 
 	reader := io.TeeReader(src, thumbnail)
@@ -114,7 +113,7 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 	thumbnailFile.Name = "thumbnail_" + file.Name + ".png"
 	thumbnailFile.ViewName = &thumbnailFile.Name
 	thumbnailFile.MimeType = "image/png"
-	ch := make(chan engine.AppError)
+	ch := make(chan model.AppError)
 
 	go func() {
 		if f, e := app.syncUpload(store, thumbnail.Reader(), &thumbnailFile, nil); e != nil {
@@ -129,7 +128,7 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 }
 
 // syncUpload здійснює запис файлу до файлового сховища
-func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) (*model.File, engine.AppError) {
+func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) (*model.File, model.AppError) {
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
@@ -165,7 +164,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 }
 
 // storeFile зберігає інформацію про файл у базі даних
-func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, engine.AppError) {
+func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, model.AppError) {
 	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
 		return 0, res.Err

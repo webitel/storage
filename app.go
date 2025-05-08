@@ -19,6 +19,10 @@ import (
 	"github.com/webitel/storage/apis/private"
 )
 
+//go:generate go run github.com/bufbuild/buf/cmd/buf@latest generate --template buf/buf.gen.engine.yaml
+//go:generate go run github.com/bufbuild/buf/cmd/buf@latest generate --template buf/buf.gen.yaml
+//go:generate go mod tidy
+
 func main() {
 	interruptChan := make(chan os.Signal, 1)
 	a, err := app.New()

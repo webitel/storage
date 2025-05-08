@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/stt/google"
 	"golang.org/x/sync/singleflight"
 
@@ -22,7 +21,7 @@ var (
 	sttGroup singleflight.Group
 )
 
-func (app *App) GetSttProfileById(id int) (*model.CognitiveProfile, engine.AppError) {
+func (app *App) GetSttProfileById(id int) (*model.CognitiveProfile, model.AppError) {
 	return app.Store.CognitiveProfile().GetById(int64(id))
 }
 
@@ -30,9 +29,9 @@ func (app *App) JobCallbackUri(profileId int64) string {
 	return app.Config().ServiceSettings.PublicHost + "/api/storage/jobs/callback?profile_id=" + strconv.Itoa(int(profileId))
 }
 
-func (app *App) GetSttProfile(id *int, syncTime *int64) (*model.CognitiveProfile, engine.AppError) {
+func (app *App) GetSttProfile(id *int, syncTime *int64) (*model.CognitiveProfile, model.AppError) {
 	if id == nil {
-		return nil, engine.NewInternalError("app.stt.valid.id", "Profile ID is required")
+		return nil, model.NewInternalError("app.stt.valid.id", "Profile ID is required")
 	}
 
 	p, err, _ := sttGroup.Do(fmt.Sprintf("stt-%d", *id), func() (interface{}, error) {
@@ -41,17 +40,17 @@ func (app *App) GetSttProfile(id *int, syncTime *int64) (*model.CognitiveProfile
 
 	if err != nil {
 		switch err.(type) {
-		case engine.AppError:
-			return nil, err.(engine.AppError)
+		case model.AppError:
+			return nil, err.(model.AppError)
 		default:
-			return nil, engine.NewInternalError("app.stt.app_err", err.Error())
+			return nil, model.NewInternalError("app.stt.app_err", err.Error())
 		}
 	}
 
 	return p.(*model.CognitiveProfile), nil
 }
 
-func (app *App) getSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfile, appError engine.AppError) {
+func (app *App) getSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfile, appError model.AppError) {
 	var ok bool
 	var cache interface{}
 
@@ -99,7 +98,7 @@ func (app *App) getSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfi
 	return p, nil
 }
 
-func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*model.FileTranscript, engine.AppError) {
+func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*model.FileTranscript, model.AppError) {
 	var fileUri string
 	p, err := app.GetSttProfile(options.ProfileId, options.ProfileSyncTime)
 	if err != nil {
@@ -107,12 +106,12 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	}
 
 	//if !p.Enabled {
-	//	return nil, engine.NewInternalError("app.stt.transcript.valid", "Profile is disabled")
+	//	return nil, model.NewInternalError("app.stt.transcript.valid", "Profile is disabled")
 	//}
 
 	stt, ok := p.Instance.(stt.Stt)
 	if !ok {
-		return nil, engine.NewInternalError("app.stt.transcript.valid", "Bad client interface")
+		return nil, model.NewInternalError("app.stt.transcript.valid", "Bad client interface")
 	}
 
 	fileUri, err = app.GeneratePreSignedResourceSignatureBulk(fileId, p.DomainId, model.AnyFileRouteName, "download", "", nil)
@@ -126,7 +125,7 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	//defer app.jobCallback.Remove(fileId)
 
 	if transcript, e := stt.Transcript(ctx, fileId, app.publicUri(fileUri), p.GetLocale(options.Locale)); e != nil {
-		return nil, engine.NewInternalError("app.stt.transcript.err", e.Error())
+		return nil, model.NewInternalError("app.stt.transcript.err", e.Error())
 	} else {
 		transcript.File = model.Lookup{
 			Id: int(fileId),
@@ -139,11 +138,11 @@ func (app *App) TranscriptFile(fileId int64, options model.TranscriptOptions) (*
 	}
 }
 
-func (app *App) CreateTranscriptFilesJob(domainId int64, options *model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError) {
+func (app *App) CreateTranscriptFilesJob(domainId int64, options *model.TranscriptOptions) ([]*model.FileTranscriptJob, model.AppError) {
 	return app.Store.TranscriptFile().CreateJobs(domainId, *options)
 }
 
-func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, bool, engine.AppError) {
+func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, bool, model.AppError) {
 	phrases, err := app.Store.TranscriptFile().GetPhrases(domainId, id, search)
 	if err != nil {
 		return nil, false, err
@@ -153,11 +152,11 @@ func (app *App) TranscriptFilePhrases(domainId, id int64, search *model.ListRequ
 	return phrases, search.EndOfList(), nil
 }
 
-func (app *App) RemoveTranscript(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
+func (app *App) RemoveTranscript(domainId int64, ids []int64, uuid []string) ([]int64, model.AppError) {
 	return app.Store.TranscriptFile().Delete(domainId, ids, uuid)
 }
 
-func (app *App) PutTranscript(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, engine.AppError) {
+func (app *App) PutTranscript(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, model.AppError) {
 	return app.Store.TranscriptFile().Put(ctx, domainId, uuid, tr)
 }
 

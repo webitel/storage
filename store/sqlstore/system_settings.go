@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
 
@@ -17,8 +17,8 @@ func NewSqlSysSettingsStore(sqlStore SqlStore) store.SystemSettingsStore {
 	return us
 }
 
-func (s *SqlSysSettingsStore) ValueByName(ctx context.Context, domainId int64, name string) (engine.SysValue, engine.AppError) {
-	var outValue engine.SysValue
+func (s *SqlSysSettingsStore) ValueByName(ctx context.Context, domainId int64, name string) (model.SysValue, model.AppError) {
+	var outValue model.SysValue
 	err := s.GetReplica().WithContext(ctx).SelectOne(&outValue, `select s.value
 from call_center.system_settings s
 where domain_id = :DomainId::int8 and name = :Name::varchar`, map[string]interface{}{
@@ -27,7 +27,7 @@ where domain_id = :DomainId::int8 and name = :Name::varchar`, map[string]interfa
 	})
 
 	if err != nil && err != sql.ErrNoRows {
-		return nil, engine.NewCustomCodeError("store.sql_sys_settings.value.app_error", fmt.Sprintf("Name=%v, %s", name, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_sys_settings.value.app_error", fmt.Sprintf("Name=%v, %s", name, err.Error()), extractCodeFromErr(err))
 	}
 
 	return outValue, nil

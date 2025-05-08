@@ -6,7 +6,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/webitel/storage/store"
-	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
 	"net"
 	"net/http"
@@ -79,7 +78,7 @@ func (a *App) StartServer() error {
 	addr := a.Config().ServiceSettings.ListenAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		errors.Wrapf(err, utils.T("api.server.start_server.starting.critical"), err)
+		errors.Wrapf(err, "Error starting server, err:%v", err)
 		return err
 	}
 
@@ -114,7 +113,7 @@ func (a *App) StartInternalServer() error {
 	addr := a.Config().ServiceSettings.ListenInternalAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		errors.Wrapf(err, utils.T("api.server.start_server.starting.critical"), err)
+		errors.Wrapf(err, "Error starting server, err:%v", err)
 		return err
 	}
 

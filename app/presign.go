@@ -5,7 +5,6 @@ import (
 	"net/url"
 	"strconv"
 
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
@@ -13,16 +12,16 @@ func (a *App) ValidateSignature(plain, signature string) bool {
 	return a.preSigned.Valid(plain, signature)
 }
 
-func (a *App) GenerateSignature(msg []byte) (string, engine.AppError) {
+func (a *App) GenerateSignature(msg []byte) (string, model.AppError) {
 	signature, err := a.preSigned.Generate(msg)
 	if err != nil {
-		return "", engine.NewInternalError("app.signature.generate.app_err", err.Error())
+		return "", model.NewInternalError("app.signature.generate.app_err", err.Error())
 	}
 
 	return signature, nil
 }
 
-func (a *App) GeneratePreSignedResourceSignature(resource, action string, id int64, domainId int64) (string, engine.AppError) {
+func (a *App) GeneratePreSignedResourceSignature(resource, action string, id int64, domainId int64) (string, model.AppError) {
 	key := fmt.Sprintf("%s/%d/%s?domain_id=%d&expires=%d", resource, id, action, domainId,
 		model.GetMillis()+a.Config().PreSignedTimeout)
 
@@ -35,7 +34,7 @@ func (a *App) GeneratePreSignedResourceSignature(resource, action string, id int
 
 }
 
-func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resource, action, source string, queryParams map[string]string) (string, engine.AppError) {
+func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resource, action, source string, queryParams map[string]string) (string, model.AppError) {
 	var (
 		expire int64
 		base   string
@@ -43,7 +42,7 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 	if v, ok := queryParams["expires"]; ok {
 		val, err := strconv.ParseInt(v, 10, 64)
 		if err != nil {
-			return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse_expire.error", err.Error())
+			return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse_expire.error", err.Error())
 		}
 		expire = model.GetMillis() + val
 		delete(queryParams, "expires")
@@ -52,18 +51,18 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 	}
 
 	if _, ok := queryParams["domain_id"]; ok {
-		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_domain.error", "arguments conflict")
+		return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_domain.error", "arguments conflict")
 	}
 	if _, ok := queryParams["expires"]; ok {
-		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_expires.error", "arguments conflict")
+		return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_expires.error", "arguments conflict")
 	}
 	if _, ok := queryParams["resource"]; ok {
-		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_resource.error", "arguments conflict")
+		return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_resource.error", "arguments conflict")
 	}
 
 	if source != "" {
 		if _, ok := queryParams["source"]; ok {
-			return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_source.error", "arguments conflict")
+			return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.repeated_source.error", "arguments conflict")
 		}
 		if id == 0 {
 			base = fmt.Sprintf("%s/%s?source=%s&domain_id=%d&expires=%d", resource, action, source, domainId,
@@ -79,7 +78,7 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 	}
 	uri, err := url.Parse(base)
 	if err != nil {
-		return "", engine.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse.error", err.Error())
+		return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse.error", err.Error())
 	}
 	existingParams := uri.Query()
 	for key, val := range queryParams {

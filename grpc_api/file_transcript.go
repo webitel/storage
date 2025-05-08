@@ -1,16 +1,14 @@
 package grpc_api
 
 import (
-	protoengine "buf.build/gen/go/webitel/engine/protocolbuffers/go"
 	"context"
 	"fmt"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"golang.org/x/sync/singleflight"
 	"time"
 
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
+	"github.com/webitel/storage/gen/engine"
+	"github.com/webitel/storage/gen/storage"
 
 	"github.com/webitel/storage/controller"
 )
@@ -18,7 +16,7 @@ import (
 type fileTranscript struct {
 	ctrl            *controller.Controller
 	getProfileGroup singleflight.Group
-	gogrpc.UnsafeFileTranscriptServiceServer
+	storage.UnsafeFileTranscriptServiceServer
 }
 
 func NewFileTranscriptApi(c *controller.Controller) *fileTranscript {
@@ -137,7 +135,7 @@ func (api *fileTranscript) FileTranscriptSafe(ctx context.Context, in *storage.F
 
 	profile := value.(*model.CognitiveProfile)
 	if !profile.Enabled {
-		return nil, engine.NewBadRequestError("grpc_api.file_transcript.create_file_transcript_safe.profile_disabled.error", fmt.Sprintf("profile id=%d is disabled", ops.ProfileId))
+		return nil, model.NewBadRequestError("grpc_api.file_transcript.create_file_transcript_safe.profile_disabled.error", fmt.Sprintf("profile id=%d is disabled", ops.ProfileId))
 	}
 	syncTime := profile.UpdatedAt.Unix()
 	ops.ProfileSyncTime = &syncTime
@@ -148,7 +146,7 @@ func (api *fileTranscript) FileTranscriptSafe(ctx context.Context, in *storage.F
 
 	res := &storage.FileTranscriptSafeResponse{
 		Id: t.Id,
-		File: &protoengine.Lookup{
+		File: &engine.Lookup{
 			Id:   int64(t.File.Id),
 			Name: t.File.Name,
 		},
@@ -158,7 +156,7 @@ func (api *fileTranscript) FileTranscriptSafe(ctx context.Context, in *storage.F
 	}
 
 	if t.Profile != nil {
-		res.Profile = &protoengine.Lookup{
+		res.Profile = &engine.Lookup{
 			Id:   int64(t.Profile.Id),
 			Name: t.Profile.Name,
 		}
@@ -174,11 +172,11 @@ func (api *fileTranscript) PutFileTranscript(ctx context.Context, in *storage.Pu
 	}
 
 	if in.GetUuid() == "" {
-		return nil, engine.NewBadRequestError("storage.stt.transcript.valid.uuid", "UUID is required")
+		return nil, model.NewBadRequestError("storage.stt.transcript.valid.uuid", "UUID is required")
 	}
 
 	if in.GetFileId() == 0 {
-		return nil, engine.NewBadRequestError("storage.stt.transcript.valid.file_id", "file_id is required")
+		return nil, model.NewBadRequestError("storage.stt.transcript.valid.file_id", "file_id is required")
 	}
 
 	req := model.FileTranscript{

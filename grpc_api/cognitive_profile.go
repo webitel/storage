@@ -11,15 +11,14 @@ import (
 	"github.com/webitel/storage/model"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
+	"github.com/webitel/storage/gen/storage"
 
 	"github.com/webitel/storage/controller"
 )
 
 type cognitiveProfile struct {
 	ctrl *controller.Controller
-	gogrpc.UnsafeCognitiveProfileServiceServer
+	storage.UnsafeCognitiveProfileServiceServer
 }
 
 func (api *cognitiveProfile) SearchCognitiveProfileVoices(ctx context.Context, request *storage.SearchCognitiveProfileVoicesRequest) (*storage.ListCognitiveProfileVoices, error) {

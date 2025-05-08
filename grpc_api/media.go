@@ -4,16 +4,15 @@ import (
 	"context"
 	"github.com/webitel/storage/app"
 
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	"github.com/webitel/storage/controller"
+	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 )
 
 type media struct {
 	ctrl *controller.Controller
 	app  *app.App
-	gogrpc.UnsafeMediaFileServiceServer
+	storage.UnsafeMediaFileServiceServer
 }
 
 func NewMediaApi(c *controller.Controller, a *app.App) *media {

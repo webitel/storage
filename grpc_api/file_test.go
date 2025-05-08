@@ -1,10 +1,9 @@
 package grpc_api
 
 import (
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	"context"
 	"fmt"
+	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 	"google.golang.org/grpc"
 	"log"
@@ -47,7 +46,7 @@ func downloadFile() {
 		cancel()
 	}()
 
-	api := gogrpc.NewFileServiceClient(c)
+	api := storage.NewFileServiceClient(c)
 
 	fetchThumbnail := true
 
@@ -131,7 +130,7 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 		cancel()
 	}()
 
-	api := gogrpc.NewFileServiceClient(c)
+	api := storage.NewFileServiceClient(c)
 	s, err := api.SafeUploadFile(ctx)
 	check(err)
 

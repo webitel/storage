@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
@@ -93,7 +92,7 @@ func (s *SafeUpload) Write(src []byte) error {
 
 func (s *SafeUpload) run() {
 	wlog.Debug(fmt.Sprintf("start safe upload id=%s, name=%s", s.id, s.request.Name))
-	var err engine.AppError
+	var err model.AppError
 	if s.profileId != nil {
 		err = s.app.SyncUploadToProfile(s.reader, *s.profileId, s.request)
 	} else {
@@ -182,7 +181,7 @@ func (app *App) NewSafeUpload(profileId *int, req *model.JobUploadFile) (*SafeUp
 }
 
 func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
-	var err engine.AppError
+	var err model.AppError
 	r, w := io.Pipe()
 	if profileId != nil {
 		req.Name = fmt.Sprintf("%s_%s", model.NewId()[0:7], req.Name)

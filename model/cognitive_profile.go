@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	engine "github.com/webitel/engine/model"
 )
 
 const CognitiveProfileKeyField = "key"
@@ -65,7 +63,7 @@ func (CognitiveProfile) EntityName() string {
 	return "cognitive_profile_services_view"
 }
 
-func (c *CognitiveProfile) IsValid() engine.AppError {
+func (c *CognitiveProfile) IsValid() AppError {
 	// on create action key from properties can't be empty
 	// on update action key can be empty (task: WTEL-4344)
 	return nil

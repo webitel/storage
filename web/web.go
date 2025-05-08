@@ -3,13 +3,12 @@ package web
 import (
 	"net/http"
 
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
 )
 
 func Handle404(a *app.App, w http.ResponseWriter, r *http.Request) {
-	err := engine.NewNotFoundError("api.context.404.app_error", "")
+	err := model.NewNotFoundError("api.context.404.app_error", "")
 
 	w.WriteHeader(err.GetStatusCode())
 	err.SetDetailedError("There doesn't appear to be an api call for the url='" + r.URL.Path + "'.  Typo? are you missing a team_id or user_id as part of the url?")

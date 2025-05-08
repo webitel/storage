@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	"github.com/webitel/storage/controller"
+	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 )
 
 type backendProfiles struct {
 	ctrl *controller.Controller
-	gogrpc.UnsafeBackendProfileServiceServer
+	storage.UnsafeBackendProfileServiceServer
 }
 
 func NewBackendProfileApi(c *controller.Controller) *backendProfiles {

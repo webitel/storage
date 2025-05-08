@@ -3,8 +3,6 @@ package model
 import (
 	"encoding/json"
 	"io"
-
-	engine "github.com/webitel/engine/model"
 )
 
 const (
@@ -142,11 +140,11 @@ func (f *FileBackendProfile) PreSave() {
 	f.UpdatedAt = f.CreatedAt
 }
 
-func (f *FileBackendProfile) IsValid() engine.AppError {
+func (f *FileBackendProfile) IsValid() AppError {
 	// on create action access_key from properties can't be empty
 	// on update action access_key can be empty (task: WTEL-4344)
 	if len(f.Name) == 0 {
-		return engine.NewBadRequestError("model.file_backend_profile.name.app_error", "")
+		return NewBadRequestError("model.file_backend_profile.name.app_error", "")
 	}
 
 	//FIXME

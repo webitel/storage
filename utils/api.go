@@ -1,11 +1,9 @@
 package utils
 
 import (
+	"github.com/webitel/storage/model"
 	"net/http"
 	"strings"
-
-	engine "github.com/webitel/engine/model"
-	"github.com/webitel/storage/model"
 )
 
 func CheckOrigin(r *http.Request, allowedOrigins string) bool {
@@ -27,7 +25,7 @@ func OriginChecker(allowedOrigins string) func(*http.Request) bool {
 	}
 }
 
-func RenderWebAppError(config *model.Config, w http.ResponseWriter, r *http.Request, err engine.AppError) {
+func RenderWebAppError(config *model.Config, w http.ResponseWriter, r *http.Request, err model.AppError) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(err.GetStatusCode())
 	w.Write([]byte(err.ToJson()))
