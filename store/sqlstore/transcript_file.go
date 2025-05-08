@@ -3,7 +3,6 @@ package sqlstore
 import (
 	"context"
 	"github.com/lib/pq"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -17,7 +16,7 @@ func NewSqlTranscriptFileStore(sqlStore SqlStore) store.TranscriptFileStore {
 	return us
 }
 
-func (s *SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, engine.AppError) {
+func (s *SqlTranscriptFileStore) Store(t *model.FileTranscript) (*model.FileTranscript, model.AppError) {
 	err := s.GetMaster().SelectOne(&t, `with t as (
     insert into storage.file_transcript (file_id, transcript, log, profile_id, locale, phrases, channels, uuid, domain_id)
     select :FileId, :Transcript, :Log, :ProfileId, :Locale, :Phrases, :Channels, f.uuid, f.domain_id
@@ -46,13 +45,13 @@ from t
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_stt_file.store.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_stt_file.store.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return t, nil
 }
 
-func (s *SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, engine.AppError) {
+func (s *SqlTranscriptFileStore) CreateJobs(domainId int64, params model.TranscriptOptions) ([]*model.FileTranscriptJob, model.AppError) {
 	var jobs []*model.FileTranscriptJob
 	_, err := s.GetMaster().Select(&jobs, `with trfiles as (
 		select 0 as state,
@@ -104,17 +103,17 @@ func (s *SqlTranscriptFileStore) CreateJobs(domainId int64, params model.Transcr
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_stt_file.create.jobs.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_stt_file.create.jobs.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	if len(jobs) == 0 {
-		return nil, engine.NewNotFoundError("store.sql_stt_file.create.jobs.not_found", "Not found profile")
+		return nil, model.NewNotFoundError("store.sql_stt_file.create.jobs.not_found", "Not found profile")
 	}
 
 	return jobs, nil
 }
 
-func (s *SqlTranscriptFileStore) GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, engine.AppError) {
+func (s *SqlTranscriptFileStore) GetPhrases(domainId, id int64, search *model.ListRequest) ([]*model.TranscriptPhrase, model.AppError) {
 	var phrases []*model.TranscriptPhrase
 	_, err := s.GetReplica().Select(&phrases, `select p->'start_sec' as start_sec,
        p->'end_sec' as end_sec,
@@ -138,13 +137,13 @@ where id = :Id
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_stt_file.transcript.phrases.error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_stt_file.transcript.phrases.error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return phrases, nil
 }
 
-func (s *SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, engine.AppError) {
+func (s *SqlTranscriptFileStore) Delete(domainId int64, ids []int64, uuid []string) ([]int64, model.AppError) {
 	var res []int64
 	_, err := s.GetMaster().Select(&res, `delete
 from storage.file_transcript t
@@ -157,13 +156,13 @@ returning t.id`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_stt_file.transcript.delete.error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_stt_file.transcript.delete.error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return res, nil
 }
 
-func (s *SqlTranscriptFileStore) Put(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, engine.AppError) {
+func (s *SqlTranscriptFileStore) Put(ctx context.Context, domainId int64, uuid string, tr model.FileTranscript) (int64, model.AppError) {
 	res, err := s.GetMaster().WithContext(ctx).SelectInt(`insert into storage.file_transcript(file_id, transcript, created_at, locale, phrases, uuid, domain_id)
 values (:FileId, :Transcript, :CreatedAt, :Locale, :Phrases, :Uuid, :DomainId)
 on conflict (file_id, coalesce(profile_id, 0), locale)
@@ -182,7 +181,7 @@ returning id`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return 0, engine.NewCustomCodeError("store.sql_stt_file.put.app_error", err.Error(), extractCodeFromErr(err))
+		return 0, model.NewCustomCodeError("store.sql_stt_file.put.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return res, nil

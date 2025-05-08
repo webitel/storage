@@ -3,8 +3,7 @@ package app
 import (
 	"fmt"
 
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
@@ -15,15 +14,15 @@ var (
 	backendStoreGroup singleflight.Group
 )
 
-func (app *App) FileBackendProfileCheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
+func (app *App) FileBackendProfileCheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, model.AppError) {
 	return app.Store.FileBackendProfile().CheckAccess(domainId, id, groups, access)
 }
 
-func (app *App) CreateFileBackendProfile(profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) CreateFileBackendProfile(profile *model.FileBackendProfile) (*model.FileBackendProfile, model.AppError) {
 	return app.Store.FileBackendProfile().Create(profile)
 }
 
-func (app *App) SearchFileBackendProfiles(domainId int64, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, engine.AppError) {
+func (app *App) SearchFileBackendProfiles(domainId int64, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, model.AppError) {
 	res, err := app.Store.FileBackendProfile().GetAllPage(domainId, search)
 	if err != nil {
 		return nil, false, err
@@ -32,7 +31,7 @@ func (app *App) SearchFileBackendProfiles(domainId int64, search *model.SearchFi
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) GetFileBackendProfilePageByGroups(domainId int64, groups []int, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, engine.AppError) {
+func (app *App) GetFileBackendProfilePageByGroups(domainId int64, groups []int, search *model.SearchFileBackendProfile) ([]*model.FileBackendProfile, bool, model.AppError) {
 	res, err := app.Store.FileBackendProfile().GetAllPageByGroups(domainId, groups, search)
 	if err != nil {
 		return nil, false, err
@@ -41,11 +40,11 @@ func (app *App) GetFileBackendProfilePageByGroups(domainId int64, groups []int, 
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) GetFileBackendProfile(id, domain int64) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) GetFileBackendProfile(id, domain int64) (*model.FileBackendProfile, model.AppError) {
 	return app.Store.FileBackendProfile().Get(id, domain)
 }
 
-func (app *App) UpdateFileBackendProfile(profile *model.FileBackendProfile) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) UpdateFileBackendProfile(profile *model.FileBackendProfile) (*model.FileBackendProfile, model.AppError) {
 	oldProfile, err := app.GetFileBackendProfile(profile.Id, profile.DomainId)
 	if err != nil {
 		return nil, err
@@ -70,7 +69,7 @@ func (app *App) UpdateFileBackendProfile(profile *model.FileBackendProfile) (*mo
 
 }
 
-func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBackendProfilePath) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBackendProfilePath) (*model.FileBackendProfile, model.AppError) {
 	oldProfile, err := app.GetFileBackendProfile(id, domainId)
 	if err != nil {
 		return nil, err
@@ -85,7 +84,7 @@ func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBac
 	return app.Store.FileBackendProfile().Update(oldProfile)
 }
 
-func (app *App) DeleteFileBackendProfiles(domainId, id int64) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) DeleteFileBackendProfiles(domainId, id int64) (*model.FileBackendProfile, model.AppError) {
 	profile, err := app.GetFileBackendProfile(id, domainId)
 	if err != nil {
 		return nil, err
@@ -98,11 +97,11 @@ func (app *App) DeleteFileBackendProfiles(domainId, id int64) (*model.FileBacken
 	return profile, nil
 }
 
-func (app *App) GetFileBackendProfileById(id int) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) GetFileBackendProfileById(id int) (*model.FileBackendProfile, model.AppError) {
 	return app.Store.FileBackendProfile().GetById(id)
 }
 
-func (app *App) PathFileBackendProfile(profile *model.FileBackendProfile, path *model.FileBackendProfilePath) (*model.FileBackendProfile, engine.AppError) {
+func (app *App) PathFileBackendProfile(profile *model.FileBackendProfile, path *model.FileBackendProfilePath) (*model.FileBackendProfile, model.AppError) {
 	profile.Patch(path)
 	profile, err := app.UpdateFileBackendProfile(profile)
 	if err != nil {
@@ -111,20 +110,20 @@ func (app *App) PathFileBackendProfile(profile *model.FileBackendProfile, path *
 	return profile, nil
 }
 
-func (app *App) GetFileBackendStoreById(domainId int64, id int) (store utils.FileBackend, appError engine.AppError) {
+func (app *App) GetFileBackendStoreById(domainId int64, id int) (store utils.FileBackend, appError model.AppError) {
 	sync, err := app.Store.FileBackendProfile().GetSyncTime(domainId, id)
 	if err != nil {
 		return nil, err
 	}
 
 	if sync.Disabled {
-		return nil, engine.NewBadRequestError("app.backend_profile.valid.disabled", "profile is disabled")
+		return nil, model.NewBadRequestError("app.backend_profile.valid.disabled", "profile is disabled")
 	}
 
 	return app.GetFileBackendStore(&id, &sync.UpdatedAt)
 }
 
-func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileBackend, appError engine.AppError) {
+func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileBackend, appError model.AppError) {
 	var ok bool
 	var cache interface{}
 	var shared bool
@@ -135,7 +134,7 @@ func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileB
 	}
 
 	if id == nil || syncTime == nil {
-		return nil, engine.NewInternalError("app.backend_profile.get_backend", "id or syncTime isnull")
+		return nil, model.NewInternalError("app.backend_profile.get_backend", "id or syncTime isnull")
 	}
 
 	cache, ok = app.fileBackendCache.Get(*id)
@@ -156,10 +155,10 @@ func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileB
 
 	if err != nil {
 		switch err.(type) {
-		case engine.AppError:
-			return nil, err.(engine.AppError)
+		case model.AppError:
+			return nil, err.(model.AppError)
 		default:
-			return nil, engine.NewInternalError("app.backend_profile.get_backend", err.Error())
+			return nil, model.NewInternalError("app.backend_profile.get_backend", err.Error())
 		}
 	}
 
@@ -173,13 +172,13 @@ func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileB
 	return store, nil
 }
 
-func (app *App) SetRemoveFileJobs() engine.AppError {
+func (app *App) SetRemoveFileJobs() model.AppError {
 	return app.Store.SyncFile().SetRemoveJobs(app.DefaultFileStore.ExpireDay())
 }
 
-func (app *App) FetchFileJobs(limit int) ([]*model.SyncJob, engine.AppError) {
+func (app *App) FetchFileJobs(limit int) ([]*model.SyncJob, model.AppError) {
 	return app.Store.SyncFile().FetchJobs(limit)
 }
-func (app *App) RemoveFileJobErrors() engine.AppError {
+func (app *App) RemoveFileJobErrors() model.AppError {
 	return app.Store.SyncFile().RemoveErrors()
 }

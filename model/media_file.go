@@ -2,8 +2,6 @@ package model
 
 import (
 	"encoding/json"
-
-	engine "github.com/webitel/engine/model"
 )
 
 type MediaFile struct {
@@ -33,23 +31,23 @@ func (a MediaFile) EntityName() string {
 	return "media_files_view"
 }
 
-func (self *MediaFile) PreSave() engine.AppError {
+func (self *MediaFile) PreSave() AppError {
 	self.CreatedAt = GetMillis()
 	self.UpdatedAt = self.CreatedAt
 	return nil
 }
 
-func (f *MediaFile) IsValid() engine.AppError {
+func (f *MediaFile) IsValid() AppError {
 	if len(f.Name) < 3 {
-		return engine.NewBadRequestError("model.media.is_valid.name.app_error", "name="+f.Name)
+		return NewBadRequestError("model.media.is_valid.name.app_error", "name="+f.Name)
 	}
 
 	if len(f.MimeType) < 3 {
-		return engine.NewBadRequestError("model.media.is_valid.mime_type.app_error", "name="+f.Name)
+		return NewBadRequestError("model.media.is_valid.mime_type.app_error", "name="+f.Name)
 	}
 
 	if f.DomainId == 0 {
-		return engine.NewBadRequestError("model.media.is_valid.domain_id.app_error", "name="+f.Name)
+		return NewBadRequestError("model.media.is_valid.domain_id.app_error", "name="+f.Name)
 	}
 
 	if f.Size == 0 {

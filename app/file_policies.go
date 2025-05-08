@@ -2,15 +2,14 @@ package app
 
 import (
 	"context"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) CreateFilePolicy(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+func (app *App) CreateFilePolicy(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, model.AppError) {
 	return app.Store.FilePolicies().Create(ctx, domainId, policy)
 }
 
-func (app *App) SearchFilePolicies(ctx context.Context, domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, engine.AppError) {
+func (app *App) SearchFilePolicies(ctx context.Context, domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, bool, model.AppError) {
 	res, err := app.Store.FilePolicies().GetAllPage(ctx, domainId, search)
 	if err != nil {
 		return nil, false, err
@@ -19,15 +18,15 @@ func (app *App) SearchFilePolicies(ctx context.Context, domainId int64, search *
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) GetFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
+func (app *App) GetFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, model.AppError) {
 	return app.Store.FilePolicies().Get(ctx, domainId, id)
 }
 
-func (app *App) ChangePositionFilePolicy(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError {
+func (app *App) ChangePositionFilePolicy(ctx context.Context, domainId int64, fromId, toId int32) model.AppError {
 	return app.Store.FilePolicies().ChangePosition(ctx, domainId, fromId, toId)
 }
 
-func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, policy *model.FilePolicy) (*model.FilePolicy, model.AppError) {
 	oldPolicy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return nil, err
@@ -50,7 +49,7 @@ func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, 
 
 }
 
-func (app *App) PatchFilePolicy(ctx context.Context, domainId int64, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, engine.AppError) {
+func (app *App) PatchFilePolicy(ctx context.Context, domainId int64, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, model.AppError) {
 	oldPolicy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return nil, err
@@ -65,7 +64,7 @@ func (app *App) PatchFilePolicy(ctx context.Context, domainId int64, id int32, p
 	return app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
 }
 
-func (app *App) DeleteFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
+func (app *App) DeleteFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, model.AppError) {
 	policy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return nil, err
@@ -78,14 +77,14 @@ func (app *App) DeleteFilePolicy(ctx context.Context, domainId int64, id int32) 
 	return policy, nil
 }
 
-func (app *App) ApplyFilePolicy(ctx context.Context, domainId int64, id int32) (int64, engine.AppError) {
+func (app *App) ApplyFilePolicy(ctx context.Context, domainId int64, id int32) (int64, model.AppError) {
 	policy, err := app.GetFilePolicy(ctx, domainId, id)
 	if err != nil {
 		return 0, err
 	}
 
 	if policy.RetentionDays <= 0 {
-		return 0, engine.NewBadRequestError("file_policy.apply.valid.retention_days", "retention_days ")
+		return 0, model.NewBadRequestError("file_policy.apply.valid.retention_days", "retention_days ")
 	}
 
 	return app.Store.FilePolicies().SetRetentionDay(ctx, domainId, policy)

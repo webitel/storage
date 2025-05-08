@@ -3,12 +3,12 @@ package tts
 import (
 	"bytes"
 	"fmt"
+	"github.com/webitel/storage/model"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/wlog"
 )
 
@@ -59,7 +59,7 @@ func Microsoft(req TTSParams) (io.ReadCloser, *string, *int, error) {
 		if e != nil {
 			wlog.Error("[tts] microsoft error: " + string(e))
 
-			return nil, nil, nil, engine.NewCustomCodeError("tts.microsoft", string(e), result.StatusCode)
+			return nil, nil, nil, model.NewCustomCodeError("tts.microsoft", string(e), result.StatusCode)
 		}
 	}
 

@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 )
 
@@ -38,12 +37,12 @@ func ParseAuthTokenFromRequest(r *http.Request) (string, TokenLocation) {
 	return "", TokenLocationNotFound
 }
 
-func (a *App) MakePermissionError(session *auth_manager.Session, permission auth_manager.SessionPermission, access auth_manager.PermissionAccess) engine.AppError {
+func (a *App) MakePermissionError(session *auth_manager.Session, permission auth_manager.SessionPermission, access auth_manager.PermissionAccess) model.AppError {
 
-	return engine.NewForbiddenError("api.context.permissions.app_error", fmt.Sprintf("userId=%d, permission=%s access=%s", session.UserId, permission.Name, access.Name()))
+	return model.NewForbiddenError("api.context.permissions.app_error", fmt.Sprintf("userId=%d, permission=%s access=%s", session.UserId, permission.Name, access.Name()))
 }
 
-func (a *App) MakeResourcePermissionError(session *auth_manager.Session, id int64, permission auth_manager.SessionPermission, access auth_manager.PermissionAccess) engine.AppError {
+func (a *App) MakeResourcePermissionError(session *auth_manager.Session, id int64, permission auth_manager.SessionPermission, access auth_manager.PermissionAccess) model.AppError {
 
-	return engine.NewForbiddenError("api.context.permissions.app_error", fmt.Sprintf("userId=%d, id=%d permission=%s access=%s", session.UserId, id, permission.Name, access.Name()))
+	return model.NewForbiddenError("api.context.permissions.app_error", fmt.Sprintf("userId=%d, id=%d permission=%s access=%s", session.UserId, id, permission.Name, access.Name()))
 }

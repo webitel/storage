@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/webitel/storage/model"
 	"io"
 	"path"
 	"strconv"
@@ -13,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/wlog"
 )
 
@@ -59,7 +59,7 @@ func isS3ForcePathStyle(name string) bool {
 	return name == GoogleStorage || strings.HasSuffix(name, SelCDN)
 }
 
-func (self *S3FileBackend) TestConnection() engine.AppError {
+func (self *S3FileBackend) TestConnection() model.AppError {
 	config := &aws.Config{
 		Region:      aws.String(strings.ToLower(self.region)),
 		Endpoint:    self.getEndpoint(),
@@ -72,7 +72,7 @@ func (self *S3FileBackend) TestConnection() engine.AppError {
 
 	sess, err := session.NewSession(config)
 	if err != nil {
-		return engine.NewInternalError("utils.file.s3.test_connection.app_error", err.Error())
+		return model.NewInternalError("utils.file.s3.test_connection.app_error", err.Error())
 	}
 
 	self.sess = sess
@@ -82,11 +82,11 @@ func (self *S3FileBackend) TestConnection() engine.AppError {
 	return nil
 }
 
-func (self *S3FileBackend) Write(src io.Reader, file File) (int64, engine.AppError) {
+func (self *S3FileBackend) Write(src io.Reader, file File) (int64, model.AppError) {
 	return self.write(src, file)
 }
 
-func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppError) {
+func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppError) {
 	directory := self.GetStoreDirectory(file)
 	location := path.Join(directory, file.GetStoreName())
 
@@ -103,13 +103,13 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 			err = err.(awserr.Error).OrigErr()
 		}
 		switch e := err.(type) {
-		case engine.AppError:
+		case model.AppError:
 			return 0, e
 		default:
 			if err != nil {
-				return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
+				return 0, model.NewInternalError("utils.file.s3.writing.app_error", err.Error())
 			} else {
-				return 0, engine.NewInternalError("utils.file.s3.writing.app_error", "unknown S3 upload error")
+				return 0, model.NewInternalError("utils.file.s3.writing.app_error", "unknown S3 upload error")
 			}
 		}
 	}
@@ -130,7 +130,7 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 	return s, nil
 }
 
-func (self *S3FileBackend) Remove(file File) engine.AppError {
+func (self *S3FileBackend) Remove(file File) model.AppError {
 	directory := self.GetStoreDirectory(file)
 	location := path.Join(directory, file.GetStoreName())
 
@@ -140,13 +140,13 @@ func (self *S3FileBackend) Remove(file File) engine.AppError {
 	})
 
 	if err != nil {
-		return engine.NewInternalError("utils.file.s3.remove.app_error", err.Error())
+		return model.NewInternalError("utils.file.s3.remove.app_error", err.Error())
 	}
 
 	return nil
 }
 
-func (self *S3FileBackend) RemoveFile(directory, name string) engine.AppError {
+func (self *S3FileBackend) RemoveFile(directory, name string) model.AppError {
 	location := path.Join(directory, name)
 
 	_, err := self.svc.DeleteObject(&s3.DeleteObjectInput{
@@ -155,12 +155,12 @@ func (self *S3FileBackend) RemoveFile(directory, name string) engine.AppError {
 	})
 
 	if err != nil {
-		return engine.NewInternalError("utils.file.s3.remove.app_error", err.Error())
+		return model.NewInternalError("utils.file.s3.remove.app_error", err.Error())
 	}
 	return nil
 }
 
-func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, engine.AppError) {
+func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, model.AppError) {
 	var rng *string = nil
 	if offset > 0 {
 		rng = aws.String("bytes=" + strconv.FormatInt(offset, 10) + "-")
@@ -174,7 +174,7 @@ func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, engin
 
 	out, err := self.svc.GetObject(params)
 	if err != nil {
-		return nil, engine.NewInternalError("utils.file.s3.reader.app_error", err.Error())
+		return nil, model.NewInternalError("utils.file.s3.reader.app_error", err.Error())
 	}
 
 	return out.Body, nil

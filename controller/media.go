@@ -3,13 +3,12 @@ package controller
 import (
 	"io"
 
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, engine.AppError) {
-	//var err engine.AppError
+func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, model.AppError) {
+	//var err model.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanCreate() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_CREATE)
@@ -34,7 +33,7 @@ func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.ReadC
 	return c.app.SaveMediaFile(src, mediaFile)
 }
 
-func (c *Controller) SearchMediaFile(session *auth_manager.Session, domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, engine.AppError) {
+func (c *Controller) SearchMediaFile(session *auth_manager.Session, domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, model.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanRead() {
 		return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -44,7 +43,7 @@ func (c *Controller) SearchMediaFile(session *auth_manager.Session, domainId int
 	return list, next, err
 }
 
-func (c *Controller) GetMediaFile(session *auth_manager.Session, domainId int64, id int) (*model.MediaFile, engine.AppError) {
+func (c *Controller) GetMediaFile(session *auth_manager.Session, domainId int64, id int) (*model.MediaFile, model.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -53,7 +52,7 @@ func (c *Controller) GetMediaFile(session *auth_manager.Session, domainId int64,
 	return c.app.GetMediaFile(session.Domain(domainId), id)
 }
 
-func (c *Controller) DeleteMediaFile(session *auth_manager.Session, domainId int64, id int) (*model.MediaFile, engine.AppError) {
+func (c *Controller) DeleteMediaFile(session *auth_manager.Session, domainId int64, id int) (*model.MediaFile, model.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)

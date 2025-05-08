@@ -1,7 +1,6 @@
 package sqlstore
 
 import (
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -15,7 +14,7 @@ func NewSqlSyncFileStore(sqlStore SqlStore) store.SyncFileStore {
 	return us
 }
 
-func (s SqlSyncFileStore) FetchJobs(limit int) ([]*model.SyncJob, engine.AppError) {
+func (s SqlSyncFileStore) FetchJobs(limit int) ([]*model.SyncJob, model.AppError) {
 	var res []*model.SyncJob
 	_, err := s.GetMaster().Select(&res, `update storage.file_jobs u
 set state = 1
@@ -36,13 +35,13 @@ returning j.*`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, engine.NewInternalError("store.sql_sync_file_job.save.app_error", err.Error())
+		return nil, model.NewInternalError("store.sql_sync_file_job.save.app_error", err.Error())
 	}
 
 	return res, nil
 }
 
-func (s SqlSyncFileStore) SetRemoveJobs(localExpDay int) engine.AppError {
+func (s SqlSyncFileStore) SetRemoveJobs(localExpDay int) model.AppError {
 	_, err := s.GetMaster().Exec(`insert into storage.file_jobs (file_id, action)
 select f.id, :Action
 from (
@@ -67,13 +66,13 @@ from (
 	})
 
 	if err != nil {
-		return engine.NewInternalError("store.sql_sync_file_job.set_removed.app_error", err.Error())
+		return model.NewInternalError("store.sql_sync_file_job.set_removed.app_error", err.Error())
 	}
 
 	return nil
 }
 
-func (s SqlSyncFileStore) Clean(jobId int64) engine.AppError {
+func (s SqlSyncFileStore) Clean(jobId int64) model.AppError {
 	_, err := s.GetMaster().Exec(`with del as (
     delete
     from storage.file_jobs rj
@@ -87,13 +86,13 @@ where f.id = (select del.file_id from del )`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return engine.NewInternalError("store.sql_sync_file_job.clean.app_error", err.Error())
+		return model.NewInternalError("store.sql_sync_file_job.clean.app_error", err.Error())
 	}
 
 	return nil
 }
 
-func (s SqlSyncFileStore) Remove(jobId int64) engine.AppError {
+func (s SqlSyncFileStore) Remove(jobId int64) model.AppError {
 	_, err := s.GetMaster().Exec(`    delete
     from storage.file_jobs rj
     where rj.id = :Id`, map[string]interface{}{
@@ -101,24 +100,24 @@ func (s SqlSyncFileStore) Remove(jobId int64) engine.AppError {
 	})
 
 	if err != nil {
-		return engine.NewCustomCodeError("store.sql_sync_file_job.remove.app_error", err.Error(), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_sync_file_job.remove.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return nil
 }
 
-func (s SqlSyncFileStore) RemoveErrors() engine.AppError {
+func (s SqlSyncFileStore) RemoveErrors() model.AppError {
 	_, err := s.GetMaster().Exec(`delete
 from storage.file_jobs j
 where j.updated_at < now() - interval '1h' and j.state = 3`)
 	if err != nil {
-		return engine.NewCustomCodeError("store.sql_sync_file_job.remove_err.app_error", err.Error(), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_sync_file_job.remove_err.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return nil
 }
 
-func (s SqlSyncFileStore) SetError(jobId int64, e error) engine.AppError {
+func (s SqlSyncFileStore) SetError(jobId int64, e error) model.AppError {
 	_, err := s.GetMaster().Exec(`update storage.file_jobs
 	set error = :Error ,
 		state = 3,
@@ -129,7 +128,7 @@ func (s SqlSyncFileStore) SetError(jobId int64, e error) engine.AppError {
 	})
 
 	if err != nil {
-		return engine.NewCustomCodeError("store.sql_sync_file_job.set_err.app_error", err.Error(), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_sync_file_job.set_err.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return nil

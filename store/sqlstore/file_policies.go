@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/lib/pq"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -19,7 +18,7 @@ func NewSqlFilePoliciesStore(sqlStore SqlStore) store.FilePoliciesStore {
 	return us
 }
 
-func (s *SqlFilePoliciesStore) Create(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) Create(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, model.AppError) {
 	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `with p as (
     insert into storage.file_policies (domain_id, created_at, created_by, updated_at, updated_by, name, enabled, mime_types,
                                        speed_download, speed_upload, description, channels, retention_days, max_upload_size)
@@ -61,13 +60,13 @@ FROM p
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file_policy.create.app_error", fmt.Sprintf("name=%v, %v", policy.Name, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file_policy.create.app_error", fmt.Sprintf("name=%v, %v", policy.Name, err.Error()), extractCodeFromErr(err))
 	}
 
 	return policy, nil
 }
 
-func (s *SqlFilePoliciesStore) GetAllPage(ctx context.Context, domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) GetAllPage(ctx context.Context, domainId int64, search *model.SearchFilePolicy) ([]*model.FilePolicy, model.AppError) {
 	var list []*model.FilePolicy
 
 	f := map[string]interface{}{
@@ -83,13 +82,13 @@ func (s *SqlFilePoliciesStore) GetAllPage(ctx context.Context, domainId int64, s
 		model.FilePolicy{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file_policy.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file_policy.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return list, nil
 }
 
-func (s *SqlFilePoliciesStore) Get(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) Get(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, model.AppError) {
 	var policy *model.FilePolicy
 	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `SELECT p.id,
        p.created_at,
@@ -115,13 +114,13 @@ where p.domain_id = :DomainId
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file_policy.get.app_error", fmt.Sprintf("id=%d, domain=%d, %s", id, domainId, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file_policy.get.app_error", fmt.Sprintf("id=%d, domain=%d, %s", id, domainId, err.Error()), extractCodeFromErr(err))
 	}
 
 	return policy, nil
 }
 
-func (s *SqlFilePoliciesStore) Update(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) Update(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, model.AppError) {
 	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `with p as (
     update storage.file_policies
         set updated_at = :UpdatedAt,
@@ -173,21 +172,21 @@ FROM p
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file_policy.update.app_error", fmt.Sprintf("id=%d, %s", policy.Id, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file_policy.update.app_error", fmt.Sprintf("id=%d, %s", policy.Id, err.Error()), extractCodeFromErr(err))
 	}
 
 	return policy, nil
 }
 
-func (s *SqlFilePoliciesStore) Delete(ctx context.Context, domainId int64, id int32) engine.AppError {
+func (s *SqlFilePoliciesStore) Delete(ctx context.Context, domainId int64, id int32) model.AppError {
 	if _, err := s.GetMaster().WithContext(ctx).Exec(`delete from storage.file_policies p where id = :Id and domain_id = :DomainId`,
 		map[string]interface{}{"Id": id, "DomainId": domainId}); err != nil {
-		return engine.NewCustomCodeError("store.sql_file_policy.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_file_policy.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return nil
 }
 
-func (s *SqlFilePoliciesStore) ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) engine.AppError {
+func (s *SqlFilePoliciesStore) ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) model.AppError {
 	i, err := s.GetMaster().WithContext(ctx).SelectInt(`with t as (
 		select p.id,
            case when p.position > lead(p.position) over () then lead(p.position) over () else lag(p.position) over (order by p.position desc) end as new_pos,
@@ -211,17 +210,17 @@ func (s *SqlFilePoliciesStore) ChangePosition(ctx context.Context, domainId int6
 	})
 
 	if err != nil {
-		return engine.NewCustomCodeError("store.sql_file_policy.change_position.app_error", fmt.Sprintf("FromId=%v, ToId=%v %s", fromId, toId, err.Error()), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_file_policy.change_position.app_error", fmt.Sprintf("FromId=%v, ToId=%v %s", fromId, toId, err.Error()), extractCodeFromErr(err))
 	}
 
 	if i == 0 {
-		return engine.NewNotFoundError("store.sql_file_policy.change_position.not_found", fmt.Sprintf("FromId=%v, ToId=%v", fromId, toId))
+		return model.NewNotFoundError("store.sql_file_policy.change_position.not_found", fmt.Sprintf("FromId=%v, ToId=%v", fromId, toId))
 	}
 
 	return nil
 }
 
-func (s *SqlFilePoliciesStore) AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, engine.AppError) {
+func (s *SqlFilePoliciesStore) AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, model.AppError) {
 	var list []model.FilePolicy
 	_, err := s.GetReplica().WithContext(ctx).Select(&list, `select id, channels, mime_types, p.name, p.speed_download,
        p.speed_upload, p.retention_days, p.max_upload_size, max(updated_at) over (), name
@@ -233,13 +232,13 @@ order by position desc;`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_file_policy.all_by_domain.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_file_policy.all_by_domain.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return list, nil
 }
 
-func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy) (int64, engine.AppError) {
+func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy) (int64, model.AppError) {
 	m := make([]string, 0, len(policy.MimeTypes))
 	for _, v := range policy.MimeTypes {
 		m = append(m, policyMaskToLike(v))
@@ -257,12 +256,12 @@ where domain_id = :DomainId
 	})
 
 	if err != nil {
-		return 0, engine.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
+		return 0, model.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	u, err := res.RowsAffected()
 	if err != nil {
-		return 0, engine.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
+		return 0, model.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return u, nil

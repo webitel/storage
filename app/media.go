@@ -3,13 +3,12 @@ package app
 import (
 	"io"
 
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, engine.AppError) {
+func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, model.AppError) {
 	var size int64
-	var err engine.AppError
+	var err model.AppError
 
 	mediaFile.Channel = model.NewString(model.UploadFileChannelMedia)
 
@@ -39,7 +38,7 @@ func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*m
 	}
 }
 
-func (app *App) GetMediaFilePage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, engine.AppError) {
+func (app *App) GetMediaFilePage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, model.AppError) {
 	files, err := app.Store.MediaFile().GetAllPage(domainId, search)
 	if err != nil {
 		return nil, false, err
@@ -49,7 +48,7 @@ func (app *App) GetMediaFilePage(domainId int64, search *model.SearchMediaFile) 
 	return files, search.EndOfList(), nil
 }
 
-func (app *App) GetMediaFile(domainId int64, id int) (mf *model.MediaFile, err engine.AppError) {
+func (app *App) GetMediaFile(domainId int64, id int) (mf *model.MediaFile, err model.AppError) {
 	mf, err = app.Store.MediaFile().Get(domainId, id)
 	if mf != nil {
 		mf.Channel = model.NewString(model.UploadFileChannelMedia)
@@ -57,7 +56,7 @@ func (app *App) GetMediaFile(domainId int64, id int) (mf *model.MediaFile, err e
 	return
 }
 
-func (app *App) DeleteMediaFile(domainId int64, id int) (*model.MediaFile, engine.AppError) {
+func (app *App) DeleteMediaFile(domainId int64, id int) (*model.MediaFile, model.AppError) {
 	file, err := app.Store.MediaFile().Get(domainId, id)
 	if err != nil {
 		return nil, err
@@ -74,7 +73,7 @@ func (app *App) DeleteMediaFile(domainId int64, id int) (*model.MediaFile, engin
 	return file, nil
 }
 
-func (app *App) GetMediaFileByName(name, domain string) (*model.MediaFile, engine.AppError) {
+func (app *App) GetMediaFileByName(name, domain string) (*model.MediaFile, model.AppError) {
 	if result := <-app.Store.MediaFile().GetByName(name, domain); result.Err != nil {
 		return nil, result.Err
 	} else {
@@ -82,7 +81,7 @@ func (app *App) GetMediaFileByName(name, domain string) (*model.MediaFile, engin
 	}
 }
 
-func (app *App) RemoveMediaFileByName(name, domain string) (file *model.MediaFile, err engine.AppError) {
+func (app *App) RemoveMediaFileByName(name, domain string) (file *model.MediaFile, err model.AppError) {
 
 	file, err = app.GetMediaFileByName(name, domain)
 	if err != nil {

@@ -5,8 +5,7 @@ import (
 
 	"google.golang.org/protobuf/types/known/structpb"
 
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
+	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 
 	"github.com/webitel/storage/controller"
@@ -14,7 +13,7 @@ import (
 
 type importTemplate struct {
 	ctrl *controller.Controller
-	gogrpc.UnsafeImportTemplateServiceServer
+	storage.UnsafeImportTemplateServiceServer
 }
 
 func NewImportTemplateApi(c *controller.Controller) *importTemplate {

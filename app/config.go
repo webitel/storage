@@ -3,13 +3,12 @@ package app
 import (
 	"encoding/json"
 	"github.com/BoRuDar/configuration/v4"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/tts"
 	"github.com/webitel/storage/utils"
 )
 
-func loadConfig(fileName string) (*model.Config, engine.AppError) {
+func loadConfig(fileName string) (*model.Config, model.AppError) {
 	var config model.Config
 	configurator := configuration.New(
 		&config,
@@ -59,7 +58,7 @@ func (a *App) Config() *model.Config {
 	return &model.Config{}
 }
 
-func (a *App) LoadConfig(configFile string) engine.AppError {
+func (a *App) LoadConfig(configFile string) model.AppError {
 	cfg, err := loadConfig(configFile)
 	if err != nil {
 		return err

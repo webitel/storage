@@ -1,7 +1,6 @@
 package sqlstore
 
 import (
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -28,7 +27,7 @@ func (self SqlScheduleStore) GetAllEnablePage(limit, offset int) store.StoreChan
 			LIMIT :Limit OFFSET :Offset`
 
 		if _, err := self.GetReplica().Select(&data, query, map[string]interface{}{"Offset": offset, "Limit": limit}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_schedule.get_all.finding.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_schedule.get_all.finding.app_error", err.Error())
 		} else {
 			result.Data = data
 		}
@@ -43,7 +42,7 @@ func (self SqlScheduleStore) GetAllPageByType(typeName string) store.StoreChanne
 			WHERE enabled is TRUE AND type = :Type`
 
 		if _, err := self.GetReplica().Select(&data, query, map[string]interface{}{"Type": typeName}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_schedule.get_all_by_type.finding.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_schedule.get_all_by_type.finding.app_error", err.Error())
 		} else {
 			result.Data = data
 		}
@@ -60,7 +59,7 @@ func (self SqlScheduleStore) GetAllWithNoJobs(limit, offset int) store.StoreChan
 			LIMIT :Limit OFFSET :Offset`
 
 		if _, err := self.GetReplica().Select(&data, query, map[string]interface{}{"Offset": offset, "Limit": limit, "JobStatus": model.JOB_STATUS_PENDING}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_schedule.get_all.finding.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_schedule.get_all.finding.app_error", err.Error())
 		} else {
 			result.Data = data
 		}

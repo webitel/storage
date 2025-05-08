@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -25,7 +24,7 @@ func (self SqlMediaFileStore) CreateIndexesIfNotExists() {
 
 }
 
-func (s *SqlMediaFileStore) Create(file *model.MediaFile) (*model.MediaFile, engine.AppError) {
+func (s *SqlMediaFileStore) Create(file *model.MediaFile) (*model.MediaFile, model.AppError) {
 	err := s.GetMaster().SelectOne(&file, `with f as (
     insert into storage.media_files (name,
                                      size,
@@ -57,16 +56,16 @@ from f
 
 	if err != nil {
 		if strings.Index(err.Error(), "duplicate") > -1 {
-			return nil, engine.NewInternalError("store.sql_media_file.save.saving.duplicate", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
+			return nil, model.NewInternalError("store.sql_media_file.save.saving.duplicate", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
 		} else {
-			return nil, engine.NewInternalError("store.sql_media_file.save.saving.app_error", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
+			return nil, model.NewInternalError("store.sql_media_file.save.saving.app_error", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
 		}
 	}
 
 	return file, nil
 }
 
-func (s *SqlMediaFileStore) GetAllPage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, engine.AppError) {
+func (s *SqlMediaFileStore) GetAllPage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, model.AppError) {
 	var files []*model.MediaFile
 
 	f := map[string]interface{}{
@@ -82,13 +81,13 @@ func (s *SqlMediaFileStore) GetAllPage(domainId int64, search *model.SearchMedia
 		model.MediaFile{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_media_file.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_media_file.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return files, nil
 }
 
-func (s *SqlMediaFileStore) Get(domainId int64, id int) (*model.MediaFile, engine.AppError) {
+func (s *SqlMediaFileStore) Get(domainId int64, id int) (*model.MediaFile, model.AppError) {
 	var file *model.MediaFile
 
 	err := s.GetMaster().SelectOne(&file, `select f.id, f.name, f.created_at, call_center.cc_get_lookup(c.id, c.name) created_by,
@@ -102,16 +101,16 @@ func (s *SqlMediaFileStore) Get(domainId int64, id int) (*model.MediaFile, engin
 		"Id":       id,
 	})
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_media_file.get.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_media_file.get.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return file, nil
 }
 
-func (s SqlMediaFileStore) Delete(domainId, id int64) engine.AppError {
+func (s SqlMediaFileStore) Delete(domainId, id int64) model.AppError {
 	if _, err := s.GetMaster().Exec(`delete from storage.media_files p where id = :Id and domain_id = :DomainId`,
 		map[string]interface{}{"Id": id, "DomainId": domainId}); err != nil {
-		return engine.NewCustomCodeError("store.sql_media_file.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_media_file.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return nil
 }
@@ -122,9 +121,9 @@ func (self *SqlMediaFileStore) Save(file *model.MediaFile) store.StoreChannel {
 		if err := self.GetMaster().Insert(file); err != nil {
 			//TODO
 			if strings.Index(err.Error(), "duplicate") > -1 {
-				result.Err = engine.NewInternalError("store.sql_media_file.save.saving.duplicate", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
+				result.Err = model.NewInternalError("store.sql_media_file.save.saving.duplicate", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
 			} else {
-				result.Err = engine.NewInternalError("store.sql_media_file.save.saving.app_error", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
+				result.Err = model.NewInternalError("store.sql_media_file.save.saving.app_error", fmt.Sprintf("name=%s, %s", file.Name, err.Error()))
 			}
 		} else {
 			result.Data = file
@@ -141,7 +140,7 @@ func (self *SqlMediaFileStore) GetAllByDomain(domain string, offset, limit int) 
 			LIMIT :Limit OFFSET :Offset`
 
 		if _, err := self.GetReplica().Select(&files, query, map[string]interface{}{"Domain": domain, "Offset": offset, "Limit": limit}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_media_file.get_all.finding.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_media_file.get_all.finding.app_error", err.Error())
 		} else {
 			result.Data = files
 		}
@@ -154,7 +153,7 @@ func (self *SqlMediaFileStore) GetCountByDomain(domain string) store.StoreChanne
 			WHERE domain = :Domain`
 
 		if count, err := self.GetReplica().SelectInt(query, map[string]interface{}{"Domain": domain}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_media_file.get_all.finding.app_error", err.Error())
+			result.Err = model.NewInternalError("store.sql_media_file.get_all.finding.app_error", err.Error())
 		} else {
 			result.Data = count
 		}
@@ -168,7 +167,7 @@ func (self *SqlMediaFileStore) Get1(id int64, domain string) store.StoreChannel 
 		file := &model.MediaFile{}
 
 		if err := self.GetReplica().SelectOne(file, query, map[string]interface{}{"Id": id, "Domain": domain}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_media_file.get.finding.app_error", fmt.Sprintf("id=%d, domain=%s, %s", id, domain, err.Error()))
+			result.Err = model.NewInternalError("store.sql_media_file.get.finding.app_error", fmt.Sprintf("id=%d, domain=%s, %s", id, domain, err.Error()))
 
 			if err == sql.ErrNoRows {
 				result.Err.SetStatusCode(http.StatusNotFound)
@@ -186,7 +185,7 @@ func (self *SqlMediaFileStore) GetByName(name, domain string) store.StoreChannel
 		file := &model.MediaFile{}
 
 		if err := self.GetReplica().SelectOne(file, query, map[string]interface{}{"Name": name, "Domain": domain}); err != nil {
-			result.Err = engine.NewInternalError("store.sql_media_file.get_by_name.finding.app_error", fmt.Sprintf("name=%s, domain=%s, %s", name, domain, err.Error()))
+			result.Err = model.NewInternalError("store.sql_media_file.get_by_name.finding.app_error", fmt.Sprintf("name=%s, domain=%s, %s", name, domain, err.Error()))
 
 			if err == sql.ErrNoRows {
 				result.Err.SetStatusCode(http.StatusNotFound)
@@ -201,12 +200,12 @@ func (self *SqlMediaFileStore) DeleteByName(name, domain string) store.StoreChan
 	return store.Do(func(result *store.StoreResult) {
 		res, err := self.GetMaster().Exec("DELETE FROM storage.media_files WHERE name = :Name AND domain = :Domain", map[string]interface{}{"Name": name, "Domain": domain})
 		if err != nil {
-			result.Err = engine.NewInternalError("store.sql_media_file.delete.app_error", fmt.Sprintf("name=%s, err: %s", name, err.Error()))
+			result.Err = model.NewInternalError("store.sql_media_file.delete.app_error", fmt.Sprintf("name=%s, err: %s", name, err.Error()))
 			return
 		}
 		count, _ := res.RowsAffected()
 		if count == 0 {
-			result.Err = engine.NewNotFoundError("store.sql_media_file.delete.not_found.app_error", "").SetTranslationParams(map[string]interface{}{"Name": name})
+			result.Err = model.NewNotFoundError("store.sql_media_file.delete.not_found.app_error", "").SetTranslationParams(map[string]interface{}{"Name": name})
 		}
 	})
 }
@@ -215,17 +214,17 @@ func (self *SqlMediaFileStore) DeleteById(id int64) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		res, err := self.GetMaster().Exec("DELETE FROM storage.media_files WHERE id = :Id", map[string]interface{}{"Id": id})
 		if err != nil {
-			result.Err = engine.NewInternalError("store.sql_media_file.delete.app_error", fmt.Sprintf("id=%d, err: %s", id, err.Error()))
+			result.Err = model.NewInternalError("store.sql_media_file.delete.app_error", fmt.Sprintf("id=%d, err: %s", id, err.Error()))
 			return
 		}
 		count, _ := res.RowsAffected()
 		if count == 0 {
-			result.Err = engine.NewNotFoundError("store.sql_media_file.delete.not_found.app_error", "").SetTranslationParams(map[string]interface{}{"Id": id})
+			result.Err = model.NewNotFoundError("store.sql_media_file.delete.not_found.app_error", "").SetTranslationParams(map[string]interface{}{"Id": id})
 		}
 	})
 }
 
-func (s SqlMediaFileStore) Metadata(domainId int64, id int64) (model.BaseFile, engine.AppError) {
+func (s SqlMediaFileStore) Metadata(domainId int64, id int64) (model.BaseFile, model.AppError) {
 	var m model.BaseFile
 	err := s.GetReplica().SelectOne(&m, `select mime_type, name, size
 from storage.media_files
@@ -235,7 +234,7 @@ where domain_id = :DomainId and id = :Id`, map[string]any{
 	})
 
 	if err != nil {
-		return model.BaseFile{}, engine.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
+		return model.BaseFile{}, model.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return m, nil

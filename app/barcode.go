@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"github.com/webitel/storage/model"
 	"image"
 	"image/color"
 	"image/draw"
@@ -9,7 +10,6 @@ import (
 
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/oned"
-	"github.com/webitel/engine/model"
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/inconsolata"

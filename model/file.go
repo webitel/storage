@@ -2,7 +2,6 @@ package model
 
 import (
 	"encoding/json"
-	engine "github.com/webitel/engine/model"
 	"time"
 )
 
@@ -143,9 +142,9 @@ func (f File) EntityName() string {
 	return "files_list"
 }
 
-func (s *SearchFile) IsValid() engine.AppError {
+func (s *SearchFile) IsValid() AppError {
 	if s.UploadedAt == nil && len(s.Ids) == 0 && len(s.ReferenceIds) == 0 {
-		return engine.NewBadRequestError("model.file.search", "updated_at or ids or reference_id must be set")
+		return NewBadRequestError("model.file.search", "updated_at or ids or reference_id must be set")
 	}
 
 	return nil

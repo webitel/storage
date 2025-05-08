@@ -8,14 +8,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/storage/web"
 )
 
-var errNoPermissionRecordFile = engine.NewForbiddenError("call.recordings.access.forbidden", "Not allow")
+const (
+	SysNamePeriodToPlaybackRecord = "period_to_playback_records"
+)
+
+var errNoPermissionRecordFile = model.NewForbiddenError("call.recordings.access.forbidden", "Not allow")
 
 func (api *API) InitCallRecordingsFiles() {
 	api.PublicRoutes.CallRecordingsFiles.Handle("/{id}/stream", api.ApiSessionRequired(streamRecordFile)).Methods("GET")
@@ -208,7 +211,7 @@ func allowTimeLimited(ctx context.Context, c *Context, createdAt int64) bool {
 	}
 
 	if c.Session.HasAction(auth_manager.PermissionTimeLimitedRecordFile) {
-		if showFilePeriodDay, _ := c.App.GetCachedSystemSetting(ctx, c.Session.Domain(0), engine.SysNamePeriodToPlaybackRecord); showFilePeriodDay.Int() != nil {
+		if showFilePeriodDay, _ := c.App.GetCachedSystemSetting(ctx, c.Session.Domain(0), SysNamePeriodToPlaybackRecord); showFilePeriodDay.Int() != nil {
 			t := time.Now().Add(-(time.Hour * 24 * time.Duration(*showFilePeriodDay.Int())))
 			return time.Unix(0, createdAt*int64(time.Millisecond)).After(t)
 		}
@@ -217,7 +220,7 @@ func allowTimeLimited(ctx context.Context, c *Context, createdAt int64) bool {
 	return false
 }
 
-func checkCallRecordPermission(c *Context, r *http.Request) (bool, engine.AppError) {
+func checkCallRecordPermission(c *Context, r *http.Request) (bool, model.AppError) {
 	if !c.Session.HasAction(auth_manager.PermissionRecordFile) {
 		session := c.Session
 		permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)

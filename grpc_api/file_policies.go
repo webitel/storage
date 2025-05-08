@@ -1,17 +1,16 @@
 package grpc_api
 
 import (
-	gogrpc "buf.build/gen/go/webitel/storage/grpc/go/_gogrpc"
-	storage "buf.build/gen/go/webitel/storage/protocolbuffers/go"
 	"context"
 	"github.com/webitel/storage/controller"
+	storage "github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 	"unicode"
 )
 
 type filePolicies struct {
 	ctrl *controller.Controller
-	gogrpc.UnsafeFilePoliciesServiceServer
+	storage.UnsafeFilePoliciesServiceServer
 }
 
 var uploadFileChannelName = map[storage.UploadFileChannel]string{

@@ -3,12 +3,10 @@ package web
 import (
 	"net/http"
 
-	goi18n "github.com/nicksnyder/go-i18n/i18n"
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
-	"github.com/webitel/storage/utils"
+	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 )
 
@@ -16,8 +14,7 @@ type Context struct {
 	App           *app.App
 	Log           *wlog.Logger
 	Session       auth_manager.Session
-	Err           engine.AppError
-	T             goi18n.TranslateFunc
+	Err           model.AppError
 	Params        *Params
 	Ctrl          *controller.Controller
 	RequestId     string
@@ -26,35 +23,35 @@ type Context struct {
 	siteURLHeader string
 }
 
-func (c *Context) LogError(err engine.AppError) {
+func (c *Context) LogError(err model.AppError) {
 	// Filter out 404s, endless reconnects and browser compatibility errors
 	if err.GetStatusCode() == http.StatusNotFound {
 		c.LogDebug(err)
 	} else {
 		c.Log.Error(
-			err.SystemMessage(utils.TDefault),
+			err.Error(),
 			wlog.Int("http_code", err.GetStatusCode()),
 			wlog.String("err_details", err.GetDetailedError()),
 		)
 	}
 }
 
-func (c *Context) LogInfo(err engine.AppError) {
+func (c *Context) LogInfo(err model.AppError) {
 	// Filter out 401s
 	if err.GetStatusCode() == http.StatusUnauthorized {
 		c.LogDebug(err)
 	} else {
 		c.Log.Info(
-			err.SystemMessage(utils.TDefault),
+			err.Error(),
 			wlog.Int("http_code", err.GetStatusCode()),
 			wlog.String("err_details", err.GetDetailedError()),
 		)
 	}
 }
 
-func (c *Context) LogDebug(err engine.AppError) {
+func (c *Context) LogDebug(err model.AppError) {
 	c.Log.Debug(
-		err.SystemMessage(utils.TDefault),
+		err.Error(),
 		wlog.Int("http_code", err.GetStatusCode()),
 		wlog.String("err_details", err.GetDetailedError()),
 	)
@@ -62,7 +59,7 @@ func (c *Context) LogDebug(err engine.AppError) {
 
 func (c *Context) SessionRequired() {
 	if c.Session.UserId == 0 {
-		c.Err = engine.NewInternalError("api.context.session_expired.app_error", "UserRequired")
+		c.Err = model.NewInternalError("api.context.session_expired.app_error", "UserRequired")
 		return
 	}
 }
@@ -75,13 +72,13 @@ func (c *Context) SetInvalidUrlParam(parameter string) {
 	c.Err = NewInvalidUrlParamError(parameter)
 }
 
-func NewInvalidParamError(parameter string) engine.AppError {
-	err := engine.NewBadRequestError("api.context.invalid_body_param.app_error", "").SetTranslationParams(map[string]interface{}{"Name": parameter})
+func NewInvalidParamError(parameter string) model.AppError {
+	err := model.NewBadRequestError("api.context.invalid_body_param.app_error", "").SetTranslationParams(map[string]interface{}{"Name": parameter})
 	return err
 }
 
-func NewInvalidUrlParamError(parameter string) engine.AppError {
-	err := engine.NewBadRequestError("api.context.invalid_url_param.app_error", "").SetTranslationParams(map[string]interface{}{"Name": parameter})
+func NewInvalidUrlParamError(parameter string) model.AppError {
+	err := model.NewBadRequestError("api.context.invalid_url_param.app_error", "").SetTranslationParams(map[string]interface{}{"Name": parameter})
 	return err
 }
 
@@ -120,11 +117,11 @@ func (c *Context) RequireExpire() *Context {
 }
 
 func (c *Context) SetSessionExpire() {
-	c.Err = engine.NewInternalError("api.context.session_expired.app_error", "")
+	c.Err = model.NewInternalError("api.context.session_expired.app_error", "")
 }
 
 func (c *Context) SetSessionErrSignature() {
-	c.Err = engine.NewInternalError("api.context.session_signature.app_error", "")
+	c.Err = model.NewInternalError("api.context.session_signature.app_error", "")
 }
 
 func (c *Context) RequireSignature() *Context {

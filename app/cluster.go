@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/webitel/engine/discovery"
+	"github.com/webitel/engine/pkg/discovery"
 	"github.com/webitel/storage/model"
 )
 

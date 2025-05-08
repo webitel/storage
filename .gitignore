@@ -1,4 +1,8 @@
-.idea/
-src/
-build/
-test_data
+.idea
+/bin/
+/client/node_modules/
+/client/.idea/
+!/client/src/*.ts
+go.sum
+.vscode/
+gen

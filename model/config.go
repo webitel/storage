@@ -1,7 +1,6 @@
 package model
 
 import (
-	engine "github.com/webitel/engine/model"
 	"time"
 )
 
@@ -112,10 +111,10 @@ type DefaultFileStore struct {
 	Props       StringInterface `json:"props"`
 }
 
-func (c *Config) IsValid() engine.AppError {
+func (c *Config) IsValid() AppError {
 
 	if c.MediaFileStoreSettings.Directory == "" {
-		return engine.NewInternalError("model.config.is_valid.media_store_directory.app_error", "")
+		return NewInternalError("model.config.is_valid.media_store_directory.app_error", "")
 	}
 	return nil
 }

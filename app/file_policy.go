@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/h2non/filetype"
 	"github.com/juju/ratelimit"
-	engine "github.com/webitel/engine/model"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
@@ -58,7 +57,7 @@ type DomainFilePolicy struct {
 	policies utils.ObjectCache
 }
 
-func (app *App) FilePolicyForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, engine.AppError) {
+func (app *App) FilePolicyForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
 	//TODO for old files
 	if file.Channel == nil {
 		return src, nil
@@ -66,11 +65,11 @@ func (app *App) FilePolicyForDownload(domainId int64, file *model.BaseFile, src 
 	return app.filePolicies.policyReaderForDownload(domainId, file, src)
 }
 
-func (app *App) FilePolicyForUpload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, engine.AppError) {
+func (app *App) FilePolicyForUpload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
 	return app.filePolicies.policyReaderForUpload(domainId, file, src)
 }
 
-func (app *App) policiesHub(domainId int64) (*PoliciesHub, engine.AppError) {
+func (app *App) policiesHub(domainId int64) (*PoliciesHub, model.AppError) {
 	policies, err := app.Store.FilePolicies().AllByDomainId(context.Background(), domainId)
 	if err != nil {
 		return nil, err
@@ -109,7 +108,7 @@ func (app *App) newPoliciesHub(domainId int64, policies []model.FilePolicy) *Pol
 	return &h
 }
 
-func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, engine.AppError) {
+func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, model.AppError) {
 	var err error
 	var shared bool
 	h, ok := app.filePolicies.policies.Get(domainId)
@@ -128,10 +127,10 @@ func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, engine.AppError) 
 
 	if err != nil {
 		switch err.(type) {
-		case engine.AppError:
-			return nil, err.(engine.AppError)
+		case model.AppError:
+			return nil, err.(model.AppError)
 		default:
-			return nil, engine.NewInternalError("app.file_policies.cached", err.Error())
+			return nil, model.NewInternalError("app.file_policies.cached", err.Error())
 		}
 	}
 
@@ -142,7 +141,7 @@ func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, engine.AppError) 
 	return h.(*PoliciesHub), nil
 }
 
-func (ph *DomainFilePolicy) policyReaderForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, engine.AppError) {
+func (ph *DomainFilePolicy) policyReaderForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
 	var policy *FilePolicy
 	v, err := ph.app.cachedPolicyHub(domainId)
 	if err != nil {
@@ -171,7 +170,7 @@ func (ph *DomainFilePolicy) policyReaderForDownload(domainId int64, file *model.
 	return r, nil
 }
 
-func (ph *DomainFilePolicy) policyReaderForUpload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, engine.AppError) {
+func (ph *DomainFilePolicy) policyReaderForUpload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
 	var policy *FilePolicy
 	v, err := ph.app.cachedPolicyHub(domainId)
 	if err != nil {
@@ -220,7 +219,7 @@ func (ph *PoliciesHub) appendPolicy(channels []string, policy *FilePolicy) {
 	}
 }
 
-func (ph *PoliciesHub) Policy(channel *string, mime string) (*FilePolicy, engine.AppError) {
+func (ph *PoliciesHub) Policy(channel *string, mime string) (*FilePolicy, model.AppError) {
 	if channel == nil {
 		// TODO
 		return nil, model.PolicyErrorChannel

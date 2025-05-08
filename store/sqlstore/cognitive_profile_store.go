@@ -4,8 +4,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -19,7 +18,7 @@ func NewSqlCognitiveProfileStore(sqlStore SqlStore) store.CognitiveProfileStore 
 	return us
 }
 
-func (s SqlCognitiveProfileStore) CheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, engine.AppError) {
+func (s SqlCognitiveProfileStore) CheckAccess(domainId, id int64, groups []int, access auth_manager.PermissionAccess) (bool, model.AppError) {
 
 	res, err := s.GetReplica().SelectNullInt(`select 1
 		where exists(
@@ -38,7 +37,7 @@ func (s SqlCognitiveProfileStore) CheckAccess(domainId, id int64, groups []int, 
 	return res.Valid && res.Int64 == 1, nil
 }
 
-func (s SqlCognitiveProfileStore) Create(profile *model.CognitiveProfile) (*model.CognitiveProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) Create(profile *model.CognitiveProfile) (*model.CognitiveProfile, model.AppError) {
 	err := s.GetMaster().SelectOne(&profile, `with p as (
     insert into storage.cognitive_profile_services (domain_id, provider, properties, created_at, updated_at, created_by,
                                                     updated_by, enabled, name, description, service, "default")
@@ -78,13 +77,13 @@ FROM p
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.create.app_error", fmt.Sprintf("name=%v, %v", profile.Name, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.create.app_error", fmt.Sprintf("name=%v, %v", profile.Name, err.Error()), extractCodeFromErr(err))
 	}
 
 	return profile, nil
 }
 
-func (s SqlCognitiveProfileStore) GetAllPage(domainId int64, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) GetAllPage(domainId int64, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, model.AppError) {
 	var profiles []*model.CognitiveProfile
 
 	f := map[string]interface{}{
@@ -104,13 +103,13 @@ func (s SqlCognitiveProfileStore) GetAllPage(domainId int64, search *model.Searc
 		model.CognitiveProfile{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return profiles, nil
 }
 
-func (s SqlCognitiveProfileStore) GetAllPageByGroups(domainId int64, groups []int, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) GetAllPageByGroups(domainId int64, groups []int, search *model.SearchCognitiveProfile) ([]*model.CognitiveProfile, model.AppError) {
 	var profiles []*model.CognitiveProfile
 
 	f := map[string]interface{}{
@@ -135,13 +134,13 @@ func (s SqlCognitiveProfileStore) GetAllPageByGroups(domainId int64, groups []in
 		model.CognitiveProfile{}, f)
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return profiles, nil
 }
 
-func (s SqlCognitiveProfileStore) Get(id, domainId int64) (*model.CognitiveProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) Get(id, domainId int64) (*model.CognitiveProfile, model.AppError) {
 	var profile *model.CognitiveProfile
 	err := s.GetMaster().SelectOne(&profile, `SELECT p.id,
        p.domain_id,
@@ -165,13 +164,13 @@ where p.id = :Id and p.domain_id = :DomainId`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.get.app_error", fmt.Sprintf("id=%d, domain=%d, %s", id, domainId, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.get.app_error", fmt.Sprintf("id=%d, domain=%d, %s", id, domainId, err.Error()), extractCodeFromErr(err))
 	}
 
 	return profile, nil
 }
 
-func (s SqlCognitiveProfileStore) Update(profile *model.CognitiveProfile) (*model.CognitiveProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) Update(profile *model.CognitiveProfile) (*model.CognitiveProfile, model.AppError) {
 	err := s.GetMaster().SelectOne(&profile, `with p as (
     update storage.cognitive_profile_services
         set provider = :Provider,
@@ -218,21 +217,21 @@ FROM p
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.update.app_error", fmt.Sprintf("id=%d, domain=%d, %s", profile.Id, profile.DomainId, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.update.app_error", fmt.Sprintf("id=%d, domain=%d, %s", profile.Id, profile.DomainId, err.Error()), extractCodeFromErr(err))
 	}
 
 	return profile, nil
 }
 
-func (s SqlCognitiveProfileStore) Delete(domainId, id int64) engine.AppError {
+func (s SqlCognitiveProfileStore) Delete(domainId, id int64) model.AppError {
 	if _, err := s.GetMaster().Exec(`delete from storage.cognitive_profile_services p where id = :Id and domain_id = :DomainId`,
 		map[string]interface{}{"Id": id, "DomainId": domainId}); err != nil {
-		return engine.NewCustomCodeError("store.sql_cognitive_profile_store.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
+		return model.NewCustomCodeError("store.sql_cognitive_profile_store.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return nil
 }
 
-func (s SqlCognitiveProfileStore) GetById(id int64) (*model.CognitiveProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) GetById(id int64) (*model.CognitiveProfile, model.AppError) {
 	var profile *model.CognitiveProfile
 	err := s.GetMaster().SelectOne(&profile, `SELECT p.id,
        p.domain_id,
@@ -255,13 +254,13 @@ where p.id = :Id`, map[string]interface{}{
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.get_by_id.app_error", fmt.Sprintf("id=%d, %s", id, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.get_by_id.app_error", fmt.Sprintf("id=%d, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 
 	return profile, nil
 }
 
-func (s SqlCognitiveProfileStore) SearchTtsProfile(domainId int64, profileId int) (*model.TtsProfile, engine.AppError) {
+func (s SqlCognitiveProfileStore) SearchTtsProfile(domainId int64, profileId int) (*model.TtsProfile, model.AppError) {
 	var profile *model.TtsProfile
 	err := s.GetMaster().SelectOne(&profile, `select p.enabled, p.provider, p.properties
 from storage.cognitive_profile_services p
@@ -273,7 +272,7 @@ where p.domain_id = :DomainId::int8
 	})
 
 	if err != nil {
-		return nil, engine.NewCustomCodeError("store.sql_cognitive_profile_store.get_tts.app_error", fmt.Sprintf("profileId=%d, %s", profileId, err.Error()), extractCodeFromErr(err))
+		return nil, model.NewCustomCodeError("store.sql_cognitive_profile_store.get_tts.app_error", fmt.Sprintf("profileId=%d, %s", profileId, err.Error()), extractCodeFromErr(err))
 	}
 
 	return profile, nil

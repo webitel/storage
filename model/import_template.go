@@ -2,8 +2,6 @@ package model
 
 import (
 	"time"
-
-	engine "github.com/webitel/engine/model"
 )
 
 type ImportTemplate struct {
@@ -54,7 +52,7 @@ func (ImportTemplate) EntityName() string {
 	return "import_template_view"
 }
 
-func (i *ImportTemplate) IsValid() engine.AppError {
+func (i *ImportTemplate) IsValid() AppError {
 	return nil
 }
 

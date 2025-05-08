@@ -2,12 +2,11 @@ package controller
 
 import (
 	"context"
-	"github.com/webitel/engine/auth_manager"
-	engine "github.com/webitel/engine/model"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) DeleteFiles(session *auth_manager.Session, ids []int64) engine.AppError {
+func (c *Controller) DeleteFiles(session *auth_manager.Session, ids []int64) model.AppError {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
 	if !permission.CanRead() {
 		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -21,7 +20,7 @@ func (c *Controller) DeleteFiles(session *auth_manager.Session, ids []int64) eng
 }
 
 // SearchFile TODO PERMISSION (OBAC or RBAC)
-func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Session, search *model.SearchFile) ([]*model.File, bool, engine.AppError) {
+func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Session, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFiles)
 	//if !permission.CanRead() {
 	return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
