@@ -20,7 +20,7 @@ plugins:
     opt: paths=source_relative
 
 inputs:
-  - directory: "../protos/storage"
-#  - git_repo: "https://github.com/webitel/protos"
-#    branch: "main"
-#    subdir: storage
+#  - directory: "../protos/storage"
+  - git_repo: "https://github.com/webitel/protos"
+    branch: "main"
+    subdir: storage
