@@ -1,0 +1,26 @@
+[Unit]
+Description=Storage Startup process
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+LimitNOFILE=65536
+TimeoutStartSec=0
+Environment="GOOGLE_APPLICATION_CREDENTIALS=/opt/webitel/application_default_credentials.json"
+ExecStart=/usr/local/bin/storage \
+    -translations_directory /usr/share/webitel/storage/i18n \
+    -consul 127.0.0.1:8500 \
+    -grpc_addr 127.0.0.1 \
+    -internal_address 127.0.0.1:10021 \
+    -public_address 127.0.0.1:10023 \
+    -presigned_cert /opt/storage/key.pem \
+    -media_directory /opt/storage/data \
+    -public_host https://example.org \
+    -file_store_type local \
+    -file_store_expire_day 0 \
+    -file_store_props "{\"directory\": \"/opt/storage/recordings\", \"path_pattern\": \"$DOMAIN/$Y/$M/$D/$H\"}" \
+    -data_source "postgres://opensips:webitel@127.0.0.1:5432/webitel?application_name=storage&sslmode=disable"
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,32 @@
+name: Development
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  prepare:
+    name: Prepare
+    uses: webitel/reusable-workflows/.github/workflows/go-prepare.yml@b8f28cd674873379b1c03de8f3144a592a21cc9e
+    with:
+      development-branch: main
+      triggered-branch: ${{ github.ref_name }}
+      build-number: ${{ github.run_number }}
+
+  compile:
+    name: Build
+    needs: [ prepare ]
+    uses: webitel/reusable-workflows/.github/workflows/go-build.yml@b8f28cd674873379b1c03de8f3144a592a21cc9e
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+      source: ${{ vars.PACKAGE_PATTERN }}
+
+  deploy:
+    name: Deploy
+    needs: [ prepare, compile ]
+    uses: webitel/reusable-workflows/.github/workflows/_deploy.yml@b8f28cd674873379b1c03de8f3144a592a21cc9e
+    secrets: inherit
+    with:
+      component: ${{ needs.prepare.outputs.component }}
+      repository-environment: acceptance
