@@ -15,7 +15,7 @@ import (
 const (
 	BlockSize          = 256 * 1024 // 1 MB
 	NonceSize          = chacha20poly1305.NonceSize
-	TagSize            = 16
+	TagSize            = chacha20poly1305.Overhead
 	EncryptedBlockSize = NonceSize + BlockSize + TagSize
 )
 
@@ -37,15 +37,15 @@ func NewChipher(keyFile string) (Chipher, error) {
 }
 
 func NewDecryptingReader(src io.ReadCloser, aead Chipher, innerOffset int64) io.ReadCloser {
-	return &DecryptingReader{
-		src:       src,
-		aead:      aead,
-		originOff: innerOffset,
+	return &decryptingReader{
+		src:         src,
+		aead:        aead,
+		innerOffset: innerOffset,
 	}
 }
 
 func NewEncryptingReader(src io.Reader, aead Chipher) io.Reader {
-	return &EncryptingReader{
+	return &encryptingReader{
 		src:  src,
 		aead: aead,
 	}
@@ -74,7 +74,7 @@ func EstimateFirstBlockOffset(file File, offset int64) int64 {
 	return offset
 }
 
-type EncryptingReader struct {
+type encryptingReader struct {
 	src    io.Reader
 	aead   cipher.AEAD
 	nonce  []byte
@@ -82,10 +82,23 @@ type EncryptingReader struct {
 	offset int
 	err    error
 }
+type decryptingReader struct {
+	src         io.ReadCloser
+	aead        cipher.AEAD
+	buf         []byte
+	offset      int
+	err         error
+	innerOffset int64
+}
 
-func (er *EncryptingReader) Read(p []byte) (int, error) {
+func (er *decryptingReader) Close() error {
+	return er.src.Close()
+}
+
+func (er *encryptingReader) Read(p []byte) (int, error) {
 	if er.offset >= len(er.buf) && er.err == nil {
 		plain := make([]byte, BlockSize)
+
 		n, err := io.ReadFull(er.src, plain)
 		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
 			er.err = err
@@ -94,21 +107,17 @@ func (er *EncryptingReader) Read(p []byte) (int, error) {
 
 		plain = plain[:n]
 
-		if er.nonce == nil {
-			er.nonce = make([]byte, NonceSize)
-			if _, err := rand.Read(er.nonce); err != nil {
-				return 0, err
-			}
-		} else {
-			incrementNonce(er.nonce)
+		er.nonce = make([]byte, NonceSize)
+		if _, err = rand.Read(er.nonce); err != nil {
+			return 0, err
 		}
 
-		ciphertext := er.aead.Seal(nil, er.nonce, plain, nil)
+		cipherBody := er.aead.Seal(nil, er.nonce, plain, nil)
 
-		er.buf = append(er.nonce[:], ciphertext...)
+		er.buf = append(er.nonce[:], cipherBody...)
 		er.offset = 0
 
-		if err == io.ErrUnexpectedEOF || n == 0 {
+		if errors.Is(err, io.ErrUnexpectedEOF) || n == 0 {
 			er.err = io.EOF
 		}
 	}
@@ -122,62 +131,42 @@ func (er *EncryptingReader) Read(p []byte) (int, error) {
 	return n, nil
 }
 
-type DecryptingReader struct {
-	src       io.ReadCloser
-	aead      cipher.AEAD
-	buf       []byte
-	offset    int
-	err       error
-	originOff int64
-}
-
-func (er *DecryptingReader) Close() error {
-	return er.src.Close()
-}
-
-func incrementNonce(nonce []byte) {
-	for i := len(nonce) - 1; i >= 0; i-- {
-		nonce[i]++
-		if nonce[i] != 0 {
-			break
-		}
-	}
-}
-
-func (dr *DecryptingReader) Read(p []byte) (int, error) {
+func (dr *decryptingReader) Read(p []byte) (int, error) {
 	if dr.offset >= len(dr.buf) && dr.err == nil {
 		header := make([]byte, NonceSize)
-		_, err := io.ReadFull(dr.src, header)
+		var plainBody []byte
+
+		n, err := io.ReadFull(dr.src, header)
 		if err != nil {
 			dr.err = err
 			return 0, err
 		}
 
-		ciphertext := make([]byte, BlockSize+TagSize)
-		n, err := io.ReadFull(dr.src, ciphertext)
+		cipherBody := make([]byte, BlockSize+TagSize)
+		n, err = io.ReadFull(dr.src, cipherBody)
 		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
 			dr.err = err
 			return 0, err
 		}
 
-		ciphertext = ciphertext[:n]
+		cipherBody = cipherBody[:n]
 
-		plaintext, err := dr.aead.Open(nil, header, ciphertext, nil)
+		plainBody, err = dr.aead.Open(nil, header, cipherBody, nil)
 		if err != nil {
 			dr.err = err
 			return 0, err
 		}
 
-		if dr.originOff != 0 {
-			plaintext = plaintext[(dr.originOff % BlockSize):]
+		if dr.innerOffset != 0 {
+			plainBody = plainBody[(dr.innerOffset % BlockSize):]
 			//
-			dr.originOff = 0
+			dr.innerOffset = 0
 		}
 
-		dr.buf = plaintext
+		dr.buf = plainBody
 		dr.offset = 0
 
-		if err == io.ErrUnexpectedEOF {
+		if errors.Is(err, io.ErrUnexpectedEOF) {
 			dr.err = io.EOF
 		}
 	}
