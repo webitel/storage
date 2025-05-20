@@ -3,5 +3,4 @@
 /client/node_modules/
 /client/.idea/
 !/client/src/*.ts
-go.sum
 .vscode/
