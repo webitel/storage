@@ -40,6 +40,7 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 	directory := self.GetStoreDirectory(file)
 	root := path.Join(self.directory, directory)
 	allPath := path.Join(root, file.GetStoreName())
+	isEncrypted := file.IsEncrypted()
 
 	fi, _ := os.Stat(allPath)
 	if fi != nil && fi.Size() > 0 {
@@ -57,7 +58,15 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 	}
 
 	defer fw.Close()
-	written, err := io.Copy(fw, src)
+
+	var written int64
+
+	if isEncrypted {
+		written, err = io.Copy(fw, NewEncryptingReader(src, self.chipher))
+	} else {
+		written, err = io.Copy(fw, src)
+	}
+
 	if err != nil {
 		os.Remove(allPath)
 		switch err.(type) {
@@ -69,6 +78,10 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 	}
 
 	self.setWriteSize(written)
+
+	if isEncrypted {
+		written, _ = EstimateOriginalSize(written)
+	}
 	file.SetPropertyString("directory", directory)
 	wlog.Debug(fmt.Sprintf("create new file %s", allPath))
 
@@ -98,8 +111,13 @@ func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, mo
 	if f, err := os.Open(filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
 		return nil, model.NewInternalError("api.file.reader.reading_local.app_error", "Encountered an error opening a reader from local server file storage")
 	} else {
+
 		if offset > 0 {
-			f.Seek(offset, 0)
+			f.Seek(EstimateFirstBlockOffset(file, offset), io.SeekStart)
+		}
+
+		if file.IsEncrypted() {
+			return NewDecryptingReader(f, self.chipher, offset), nil
 		}
 		return f, nil
 	}

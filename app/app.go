@@ -68,6 +68,8 @@ type App struct {
 
 	ctx              context.Context
 	otelShutdownFunc otelsdk.ShutdownFunc
+
+	fileChipher utils.Chipher
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -150,6 +152,15 @@ func New(options ...string) (outApp *App, outErr error) {
 		app.preSigned = preSign
 	}
 
+	cryptoFileKey := app.Config().PreSignedCertificateLocation
+	if len(config.CryptoKey) != 0 {
+		cryptoFileKey = config.CryptoKey
+	}
+	app.fileChipher, outErr = utils.NewChipher(cryptoFileKey)
+	if outErr != nil {
+		return nil, outErr
+	}
+
 	if err := app.initLocalFileStores(); err != nil {
 		return nil, err
 	}
@@ -196,7 +207,7 @@ func (app *App) initLocalFileStores() model.AppError {
 		Name:       "Internal file cache",
 		Type:       model.FileDriverLocal,
 		Properties: model.StringInterface{"directory": model.CacheDir, "path_pattern": ""},
-	}); appErr != nil {
+	}, nil); appErr != nil {
 		return appErr
 	}
 
@@ -204,7 +215,7 @@ func (app *App) initLocalFileStores() model.AppError {
 		Name:       "Media store",
 		Type:       model.FileDriverLocal,
 		Properties: model.StringInterface{"directory": mediaSettings.Directory, "path_pattern": mediaSettings.PathPattern},
-	}); appErr != nil {
+	}, nil); appErr != nil {
 		return appErr
 	}
 
@@ -214,7 +225,7 @@ func (app *App) initLocalFileStores() model.AppError {
 			Type:       model.StorageBackendTypeFromString(fileSettings.Type),
 			ExpireDay:  fileSettings.ExpireDay,
 			Properties: fileSettings.Props,
-		}); appErr != nil {
+		}, app.fileChipher); appErr != nil {
 			return appErr
 		}
 	}

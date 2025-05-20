@@ -71,7 +71,7 @@ func (u *UploadTask) Execute() {
 		return
 	}
 
-	u.log.Debug(fmt.Sprintf("store %s to %s %d bytes", u.job.GetStoreName(), store.Name(), u.job.Size))
+	u.log.Debug(fmt.Sprintf("store %s to %s %d bytes [encrypted=%v]", u.job.GetStoreName(), store.Name(), u.job.Size, f.IsEncrypted()))
 
 	result := <-u.app.Store.File().MoveFromJob(u.job.Id, u.job.ProfileId, f.Properties, f.RetentionUntil)
 	if result.Err != nil {

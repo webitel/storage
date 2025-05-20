@@ -36,6 +36,7 @@ type FilePolicy struct {
 	RetentionDays int32       `json:"retention_days" db:"retention_days"`
 	Position      int32       `json:"position" db:"position"`
 	Max           *time.Time  `json:"max" db:"max"`
+	Encrypt       bool        `json:"encrypt" db:"encrypt"`
 }
 
 type FilePolicyPath struct {
@@ -51,6 +52,7 @@ type FilePolicyPath struct {
 	SpeedUpload   *int64      `json:"speed_upload" db:"speed_upload"`
 	RetentionDays *int32      `json:"retention_days" db:"retention_days"`
 	MaxUploadSize *int64      `json:"max_upload_size" db:"max_upload_size"`
+	Encrypt       *bool       `json:"encrypt" db:"encrypt"`
 }
 
 func (p *FilePolicy) Patch(path *FilePolicyPath) {
@@ -81,6 +83,9 @@ func (p *FilePolicy) Patch(path *FilePolicyPath) {
 	if path.RetentionDays != nil {
 		p.RetentionDays = *path.RetentionDays
 	}
+	if path.Encrypt != nil {
+		p.Encrypt = *path.Encrypt
+	}
 }
 
 type SearchFilePolicy struct {
@@ -94,12 +99,12 @@ func (FilePolicy) DefaultOrder() string {
 
 func (FilePolicy) AllowFields() []string {
 	return []string{"id", "created_at", "created_by", "updated_at", "updated_by", "position", "max_upload_size",
-		"name", "description", "enabled", "mime_types", "channels", "speed_download", "speed_upload", "retention_days",
+		"name", "description", "enabled", "mime_types", "channels", "speed_download", "speed_upload", "retention_days", "encrypt",
 	}
 }
 
 func (FilePolicy) DefaultFields() []string {
-	return []string{"id", "position", "name", "description", "enabled", "channels", "mime_types"}
+	return []string{"id", "position", "name", "description", "enabled", "channels", "mime_types", "encrypt"}
 }
 
 func (FilePolicy) EntityName() string {

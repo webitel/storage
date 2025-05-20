@@ -5,4 +5,3 @@
 !/client/src/*.ts
 go.sum
 .vscode/
-gen
