@@ -21,6 +21,7 @@ type BaseFileBackend struct {
 	writeSize   float64
 	expireDay   int
 	maxFileSize float64
+	chipher     Chipher
 }
 
 func (b *BaseFileBackend) GetSyncTime() int64 {
@@ -55,6 +56,8 @@ type File interface {
 	GetPropertyString(name string) string
 	SetPropertyString(name, value string)
 	GetChannel() *string
+	IsEncrypted() bool
+	SetEncrypted(encrypted bool)
 }
 
 type FileBackend interface {
@@ -68,7 +71,7 @@ type FileBackend interface {
 	Name() string
 }
 
-func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, model.AppError) {
+func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBackend, model.AppError) {
 	switch profile.Type {
 	case model.FileDriverLocal:
 		return &LocalFileBackend{
@@ -76,6 +79,7 @@ func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, model.AppE
 				syncTime:  profile.UpdatedAt,
 				writeSize: 0,
 				expireDay: profile.ExpireDay,
+				chipher:   chipher,
 			},
 			name:        profile.Name,
 			directory:   profile.Properties.GetString("directory"),
@@ -87,6 +91,7 @@ func NewBackendStore(profile *model.FileBackendProfile) (FileBackend, model.AppE
 				syncTime:  profile.UpdatedAt,
 				writeSize: 0,
 				expireDay: profile.ExpireDay,
+				chipher:   chipher,
 			},
 			name:           profile.Name,
 			pathPattern:    profile.Properties.GetString("path_pattern"),

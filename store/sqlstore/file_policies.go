@@ -21,9 +21,9 @@ func NewSqlFilePoliciesStore(sqlStore SqlStore) store.FilePoliciesStore {
 func (s *SqlFilePoliciesStore) Create(ctx context.Context, domainId int64, policy *model.FilePolicy) (*model.FilePolicy, model.AppError) {
 	err := s.GetMaster().WithContext(ctx).SelectOne(&policy, `with p as (
     insert into storage.file_policies (domain_id, created_at, created_by, updated_at, updated_by, name, enabled, mime_types,
-                                       speed_download, speed_upload, description, channels, retention_days, max_upload_size)
+                                       speed_download, speed_upload, description, channels, retention_days, max_upload_size, encrypt)
     values (:DomainId, :CreatedAt, :CreatedBy, :UpdatedAt, :UpdatedBy, :Name, :Enabled, :MimeTypes,
-            :SpeedDownload, :SpeedUpload, :Description, :Channels, :RetentionDays, :MaxUploadSize)
+            :SpeedDownload, :SpeedUpload, :Description, :Channels, :RetentionDays, :MaxUploadSize, :Encrypt)
    returning *
 )
 SELECT p.id,
@@ -39,7 +39,8 @@ SELECT p.id,
        p.speed_download,
        p.speed_upload,
        p.retention_days,
-       p.max_upload_size
+       p.max_upload_size,
+	   p.encrypt
 FROM p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by;`, map[string]interface{}{
@@ -57,6 +58,7 @@ FROM p
 		"Channels":      pq.Array(policy.Channels),
 		"RetentionDays": policy.RetentionDays,
 		"MaxUploadSize": policy.MaxUploadSize,
+		"Encrypt":       policy.Encrypt,
 	})
 
 	if err != nil {
@@ -103,7 +105,8 @@ func (s *SqlFilePoliciesStore) Get(ctx context.Context, domainId int64, id int32
        p.speed_download,
        p.speed_upload,
        p.retention_days,
-       p.max_upload_size
+       p.max_upload_size,
+       p.encrypt
 FROM storage.file_policies p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by
@@ -133,7 +136,8 @@ func (s *SqlFilePoliciesStore) Update(ctx context.Context, domainId int64, polic
             mime_types = :MimeTypes,
             channels = :Channels,
 			retention_days = :RetentionDays,
-			max_upload_size = :MaxUploadSize
+			max_upload_size = :MaxUploadSize,
+			encrypt = :Encrypt
         where domain_id = :DomainId and id = :Id
 		returning *
 )
@@ -150,7 +154,8 @@ SELECT p.id,
        p.speed_download,
        p.speed_upload,
 	   p.retention_days,
-       p.max_upload_size
+       p.max_upload_size,
+	   p.encrypt
 FROM p
          LEFT JOIN directory.wbt_user c ON c.id = p.created_by
          LEFT JOIN directory.wbt_user u ON u.id = p.updated_by`, map[string]interface{}{
@@ -166,6 +171,7 @@ FROM p
 		"Channels":      pq.Array(policy.Channels),
 		"RetentionDays": policy.RetentionDays,
 		"MaxUploadSize": policy.MaxUploadSize,
+		"Encrypt":       policy.Encrypt,
 
 		"DomainId": domainId,
 		"Id":       policy.Id,
@@ -223,7 +229,7 @@ func (s *SqlFilePoliciesStore) ChangePosition(ctx context.Context, domainId int6
 func (s *SqlFilePoliciesStore) AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, model.AppError) {
 	var list []model.FilePolicy
 	_, err := s.GetReplica().WithContext(ctx).Select(&list, `select id, channels, mime_types, p.name, p.speed_download,
-       p.speed_upload, p.retention_days, p.max_upload_size, max(updated_at) over (), name
+       p.speed_upload, p.retention_days, p.max_upload_size, p.encrypt, max(updated_at) over (), name
 from storage.file_policies p
 where p.domain_id = :DomainId
     and p.enabled

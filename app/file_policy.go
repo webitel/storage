@@ -36,6 +36,7 @@ type FilePolicy struct {
 	speedUpload   int64
 	maxUploadSize int64
 	retentionDays int
+	crypto        bool
 }
 
 type PoliciesHub struct {
@@ -99,6 +100,7 @@ func (app *App) newPoliciesHub(domainId int64, policies []model.FilePolicy) *Pol
 			maxUploadSize: v.MaxUploadSize,        // bytes
 			mime:          v.MimeTypes,
 			retentionDays: int(v.RetentionDays),
+			crypto:        v.Encrypt,
 		}
 
 		h.appendPolicy(v.Channels, &p)
@@ -195,6 +197,11 @@ func (ph *DomainFilePolicy) policyReaderForUpload(domainId int64, file *model.Ba
 	if file.Channel == nil || *file.Channel != model.UploadFileChannelMedia {
 		// TODO check all channel ?
 		r.mimeTyme = file.MimeType
+	}
+
+	// TODO
+	if policy.crypto && (file.Channel == nil || *file.Channel != model.UploadFileChannelMedia) {
+		file.SetEncrypted(true)
 	}
 
 	if policy.retentionDays > 0 {

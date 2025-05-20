@@ -44,6 +44,7 @@ func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, 
 	oldPolicy.SpeedDownload = policy.SpeedDownload
 	oldPolicy.RetentionDays = policy.RetentionDays
 	oldPolicy.MaxUploadSize = policy.MaxUploadSize
+	oldPolicy.Encrypt = policy.Encrypt
 
 	return app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
 

@@ -138,7 +138,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			Name:           file.Name,
 			ViewName:       file.ViewName,
 			MimeType:       file.MimeType,
-			Properties:     model.StringInterface{},
+			Properties:     file.Properties,
 			Instance:       app.GetInstanceId(),
 			Channel:        file.Channel,
 			RetentionUntil: file.RetentionUntil,
@@ -170,6 +170,6 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 		return 0, res.Err
 	}
 
-	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.SHA256Sum))
+	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [encrypted=%v, SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil))
 	return res.Data.(int64), nil
 }

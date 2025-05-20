@@ -76,6 +76,24 @@ func (f *BaseFile) GetViewName() string {
 	return f.Name
 }
 
+func (f *BaseFile) IsEncrypted() bool {
+	if f.Properties != nil {
+		if v, ok := f.Properties["encrypted"]; ok {
+			ok, _ = v.(bool)
+			return ok
+		}
+	}
+
+	return false
+}
+
+func (f *BaseFile) SetEncrypted(encrypted bool) {
+	if f.Properties == nil {
+		f.Properties = StringInterface{}
+	}
+	f.Properties["encrypted"] = encrypted
+}
+
 func (f *BaseFile) GetChannel() *string {
 
 	return f.Channel
@@ -117,6 +135,9 @@ func (f *BaseFile) GetPropertyString(name string) string {
 }
 
 func (f *BaseFile) SetPropertyString(name, value string) {
+	if f.Properties == nil {
+		f.Properties = StringInterface{}
+	}
 	f.Properties[name] = value
 }
 

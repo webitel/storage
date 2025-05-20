@@ -3,7 +3,7 @@ package grpc_api
 import (
 	"context"
 	"github.com/webitel/storage/controller"
-	storage "github.com/webitel/storage/gen/storage"
+	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 	"unicode"
 )
@@ -44,6 +44,7 @@ func (api *filePolicies) CreateFilePolicy(ctx context.Context, in *storage.Creat
 		Channels:      fileChannelsFromProto(in.Channels),
 		RetentionDays: in.RetentionDays,
 		MaxUploadSize: in.MaxUploadSize,
+		Encrypt:       in.Encrypt,
 	}
 
 	policy, err = api.ctrl.CreateFilePolicy(ctx, session, policy)
@@ -123,6 +124,7 @@ func (api *filePolicies) UpdateFilePolicy(ctx context.Context, in *storage.Updat
 		Channels:      fileChannelsFromProto(in.Channels),
 		RetentionDays: in.RetentionDays,
 		MaxUploadSize: in.MaxUploadSize,
+		Encrypt:       in.Encrypt,
 	}
 
 	policy, err = api.ctrl.UpdateFilePolicy(ctx, session, in.Id, policy)
@@ -163,6 +165,8 @@ func (api *filePolicies) PatchFilePolicy(ctx context.Context, in *storage.PatchF
 			patch.RetentionDays = &in.RetentionDays
 		case "max_upload_size":
 			patch.MaxUploadSize = &in.MaxUploadSize
+		case "encrypt":
+			patch.Encrypt = &in.Encrypt
 		}
 	}
 
@@ -238,6 +242,7 @@ func toGrpcFilePolicy(src *model.FilePolicy) *storage.FilePolicy {
 		RetentionDays: src.RetentionDays,
 		MaxUploadSize: src.MaxUploadSize,
 		Position:      src.Position, //
+		Encrypt:       src.Encrypt,
 	}
 
 }

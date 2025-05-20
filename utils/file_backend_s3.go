@@ -89,11 +89,17 @@ func (self *S3FileBackend) Write(src io.Reader, file File) (int64, model.AppErro
 func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppError) {
 	directory := self.GetStoreDirectory(file)
 	location := path.Join(directory, file.GetStoreName())
+	isEncrypted := file.IsEncrypted()
 
 	params := &s3manager.UploadInput{
 		Bucket: &self.bucket,
 		Key:    aws.String(location),
-		Body:   src,
+	}
+
+	if isEncrypted {
+		params.Body = NewEncryptingReader(src, self.chipher)
+	} else {
+		params.Body = src
 	}
 
 	res, err := self.uploader.Upload(params)
@@ -121,10 +127,13 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppErro
 		Key:    params.Key,
 	})
 
-	// TODO fixme
 	s := file.GetSize()
 	if h != nil && h.ContentLength != nil {
 		s = *h.ContentLength
+	}
+
+	if isEncrypted {
+		s, _ = EstimateOriginalSize(s)
 	}
 
 	return s, nil
@@ -163,7 +172,7 @@ func (self *S3FileBackend) RemoveFile(directory, name string) model.AppError {
 func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, model.AppError) {
 	var rng *string = nil
 	if offset > 0 {
-		rng = aws.String("bytes=" + strconv.FormatInt(offset, 10) + "-")
+		rng = aws.String("bytes=" + strconv.FormatInt(EstimateFirstBlockOffset(file, offset), 10) + "-")
 	}
 
 	params := &s3.GetObjectInput{
@@ -175,6 +184,10 @@ func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, model
 	out, err := self.svc.GetObject(params)
 	if err != nil {
 		return nil, model.NewInternalError("utils.file.s3.reader.app_error", err.Error())
+	}
+
+	if file.IsEncrypted() {
+		return NewDecryptingReader(out.Body, self.chipher, offset), nil
 	}
 
 	return out.Body, nil

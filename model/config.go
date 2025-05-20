@@ -64,6 +64,7 @@ type Config struct {
 	ServiceSettings              ServiceSettings        `json:"service_settings"`
 	SqlSettings                  SqlSettings            `json:"sql_settings"`
 	MediaFileStoreSettings       MediaFileStoreSettings `json:"media_file_store_settings"`
+	CryptoKey                    string                 `json:"crypto_key" flag:"crypto_key||Crypto key file" env:"CRYPTO_KEY"`
 
 	DefaultFileStore   *DefaultFileStore `json:"default_file_store"`
 	ServerSettings     ServerSettings    `json:"server_settings"`

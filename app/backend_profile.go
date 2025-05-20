@@ -150,7 +150,7 @@ func (app *App) GetFileBackendStore(id *int, syncTime *int64) (store utils.FileB
 		if err != nil {
 			return nil, err
 		}
-		return utils.NewBackendStore(profile)
+		return utils.NewBackendStore(profile, app.fileChipher)
 	})
 
 	if err != nil {
