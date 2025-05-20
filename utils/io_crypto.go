@@ -41,13 +41,16 @@ func NewDecryptingReader(src io.ReadCloser, aead Chipher, innerOffset int64) io.
 		src:         src,
 		aead:        aead,
 		innerOffset: innerOffset,
+		nonce:       make([]byte, NonceSize),
+		body:        make([]byte, BlockSize+TagSize),
 	}
 }
 
 func NewEncryptingReader(src io.Reader, aead Chipher) io.Reader {
 	return &encryptingReader{
-		src:  src,
-		aead: aead,
+		src:   src,
+		aead:  aead,
+		nonce: make([]byte, NonceSize),
 	}
 }
 
@@ -88,6 +91,8 @@ type decryptingReader struct {
 	buf         []byte
 	offset      int
 	err         error
+	nonce       []byte
+	body        []byte
 	innerOffset int64
 }
 
@@ -107,7 +112,6 @@ func (er *encryptingReader) Read(p []byte) (int, error) {
 
 		plain = plain[:n]
 
-		er.nonce = make([]byte, NonceSize)
 		if _, err = rand.Read(er.nonce); err != nil {
 			return 0, err
 		}
@@ -133,25 +137,21 @@ func (er *encryptingReader) Read(p []byte) (int, error) {
 
 func (dr *decryptingReader) Read(p []byte) (int, error) {
 	if dr.offset >= len(dr.buf) && dr.err == nil {
-		header := make([]byte, NonceSize)
 		var plainBody []byte
 
-		n, err := io.ReadFull(dr.src, header)
+		n, err := io.ReadFull(dr.src, dr.nonce)
 		if err != nil {
 			dr.err = err
 			return 0, err
 		}
 
-		cipherBody := make([]byte, BlockSize+TagSize)
-		n, err = io.ReadFull(dr.src, cipherBody)
+		n, err = io.ReadFull(dr.src, dr.body)
 		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
 			dr.err = err
 			return 0, err
 		}
 
-		cipherBody = cipherBody[:n]
-
-		plainBody, err = dr.aead.Open(nil, header, cipherBody, nil)
+		plainBody, err = dr.aead.Open(nil, dr.nonce, dr.body[:n], nil)
 		if err != nil {
 			dr.err = err
 			return 0, err
