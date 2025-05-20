@@ -13,6 +13,7 @@ jobs:
       development-branch: main
       triggered-branch: ${{ github.ref_name }}
       build-number: ${{ github.run_number }}
+      generated-code-path: ${{ vars.GENERATED_CODE_PATH }}
 
   compile:
     name: Build
@@ -21,6 +22,7 @@ jobs:
     with:
       version: ${{ needs.prepare.outputs.version }}
       source: ${{ vars.PACKAGE_PATTERN }}
+      generated-code: ${{ vars.GENERATED_CODE_PATH != '' }}
 
   deploy:
     name: Deploy
