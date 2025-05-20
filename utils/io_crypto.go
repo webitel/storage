@@ -51,6 +51,7 @@ func NewEncryptingReader(src io.Reader, aead Chipher) io.Reader {
 		src:   src,
 		aead:  aead,
 		nonce: make([]byte, NonceSize),
+		body:  make([]byte, BlockSize),
 	}
 }
 
@@ -82,6 +83,7 @@ type encryptingReader struct {
 	aead   cipher.AEAD
 	nonce  []byte
 	buf    []byte
+	body   []byte
 	offset int
 	err    error
 }
@@ -102,21 +104,17 @@ func (er *decryptingReader) Close() error {
 
 func (er *encryptingReader) Read(p []byte) (int, error) {
 	if er.offset >= len(er.buf) && er.err == nil {
-		plain := make([]byte, BlockSize)
-
-		n, err := io.ReadFull(er.src, plain)
+		n, err := io.ReadFull(er.src, er.body)
 		if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
 			er.err = err
 			return 0, err
 		}
 
-		plain = plain[:n]
-
 		if _, err = rand.Read(er.nonce); err != nil {
 			return 0, err
 		}
 
-		cipherBody := er.aead.Seal(nil, er.nonce, plain, nil)
+		cipherBody := er.aead.Seal(nil, er.nonce, er.body[:n], nil)
 
 		er.buf = append(er.nonce[:], cipherBody...)
 		er.offset = 0
