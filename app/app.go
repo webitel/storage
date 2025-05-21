@@ -18,6 +18,8 @@ import (
 	"github.com/webitel/storage/store"
 	"github.com/webitel/storage/store/sqlstore"
 	"github.com/webitel/storage/utils"
+	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
+	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
 	"github.com/webitel/wlog"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
@@ -70,6 +72,9 @@ type App struct {
 	otelShutdownFunc otelsdk.ShutdownFunc
 
 	fileChipher utils.Chipher
+
+	//----- rabbitmq client using webitel-go-kit -------
+	rabbitClient *rabbitmq.Connection
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -195,7 +200,34 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	app.initUploader()
 	app.initSynchronizer()
+
+	// ------ rabbitmq client using webitel-go-kit init -------
+	if err := app.initRabbitMQ(); err != nil {
+		return nil, err
+	}
+
 	return app, outErr
+}
+
+func (app *App) initRabbitMQ() error {
+	cfg, err := rabbitmq.NewConfig(
+		app.Config().MessageBroker.URL,
+		rabbitmq.WithConnectTimeout(10*time.Second),
+	)
+	if err != nil {
+		return fmt.Errorf("rabbitmq config error: %w", err)
+	}
+
+	client, err := rabbitmq.NewConnection(
+		cfg,
+		wlogadapter.NewWlogLogger(app.Log),
+	)
+	if err != nil {
+		return fmt.Errorf("rabbitmq client error: %w", err)
+	}
+
+	app.rabbitClient = client
+	return nil
 }
 
 func (app *App) initLocalFileStores() model.AppError {

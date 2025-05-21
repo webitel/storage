@@ -354,6 +354,7 @@ github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8 h1:3++Aq
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8/go.mod h1:xLS6bkOYzvYv0dYXUkd5yvYOtujUrXf9lS0gd4qAGO4=
 github.com/webitel/webitel-go-kit v0.0.13-0.20240908192731-3abe573c0e41 h1:vj6qE8RtTyz8B4syfUDCkZqULLJ/4I+LS0Rw5W7mao0=
 github.com/webitel/webitel-go-kit v0.0.13-0.20240908192731-3abe573c0e41/go.mod h1:MT93dkScj2kDwVudSdXr0MJdGZ+JvvHbYEsSSb2n+Aw=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250521132805-6d8a915527f8/go.mod h1:m35vEcY7xr2y99I1TeZFR1mknEYLpddEWwq0cvbA/5E=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7 h1:Qi/ustGBfh13I6aZ/ljul679SPJmHbZzFn9h43eloLg=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7/go.mod h1:mXyM8hL9tEBLM4K+Uw8QLuGLo6/eX+5Lvv1ks2Y4us8=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
