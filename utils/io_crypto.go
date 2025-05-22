@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	BlockSize          = 256 * 1024 // 1 MB
+	BlockSize          = 256 * 1024 // 256 KB
 	NonceSize          = chacha20poly1305.NonceSize
 	TagSize            = chacha20poly1305.Overhead
 	EncryptedBlockSize = NonceSize + BlockSize + TagSize
@@ -43,15 +43,18 @@ func NewDecryptingReader(src io.ReadCloser, aead Chipher, innerOffset int64) io.
 		innerOffset: innerOffset,
 		nonce:       make([]byte, NonceSize),
 		body:        make([]byte, BlockSize+TagSize),
+		dstBuf:      make([]byte, 0, BlockSize),
 	}
 }
 
 func NewEncryptingReader(src io.Reader, aead Chipher) io.Reader {
 	return &encryptingReader{
-		src:   src,
-		aead:  aead,
-		nonce: make([]byte, NonceSize),
-		body:  make([]byte, BlockSize),
+		src:       src,
+		aead:      aead,
+		nonce:     make([]byte, NonceSize),
+		body:      make([]byte, BlockSize),
+		cipherBuf: make([]byte, 0, BlockSize+TagSize),
+		buf:       make([]byte, 0, NonceSize+BlockSize+TagSize),
 	}
 }
 
@@ -79,13 +82,14 @@ func EstimateFirstBlockOffset(file File, offset int64) int64 {
 }
 
 type encryptingReader struct {
-	src    io.Reader
-	aead   cipher.AEAD
-	nonce  []byte
-	buf    []byte
-	body   []byte
-	offset int
-	err    error
+	src       io.Reader
+	aead      cipher.AEAD
+	nonce     []byte
+	buf       []byte
+	body      []byte
+	cipherBuf []byte
+	offset    int
+	err       error
 }
 type decryptingReader struct {
 	src         io.ReadCloser
@@ -95,6 +99,7 @@ type decryptingReader struct {
 	err         error
 	nonce       []byte
 	body        []byte
+	dstBuf      []byte
 	innerOffset int64
 }
 
@@ -114,9 +119,11 @@ func (er *encryptingReader) Read(p []byte) (int, error) {
 			return 0, err
 		}
 
-		cipherBody := er.aead.Seal(nil, er.nonce, er.body[:n], nil)
+		cipherBody := er.aead.Seal(er.cipherBuf[:0], er.nonce, er.body[:n], nil)
+		er.buf = er.buf[:0]
+		er.buf = append(er.buf, er.nonce...)
+		er.buf = append(er.buf, cipherBody...)
 
-		er.buf = append(er.nonce[:], cipherBody...)
 		er.offset = 0
 
 		if errors.Is(err, io.ErrUnexpectedEOF) || n == 0 {
@@ -149,11 +156,13 @@ func (dr *decryptingReader) Read(p []byte) (int, error) {
 			return 0, err
 		}
 
-		plainBody, err = dr.aead.Open(nil, dr.nonce, dr.body[:n], nil)
+		plainBody, err = dr.aead.Open(dr.dstBuf[:0], dr.nonce, dr.body[:n], nil)
 		if err != nil {
 			dr.err = err
 			return 0, err
 		}
+
+		dr.dstBuf = plainBody
 
 		if dr.innerOffset != 0 {
 			plainBody = plainBody[(dr.innerOffset % BlockSize):]
