@@ -27,7 +27,7 @@ require (
 	github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30
 	github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30
 	github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8
-	github.com/webitel/webitel-go-kit v0.0.21-0.20250521132805-6d8a915527f8
+	github.com/webitel/webitel-go-kit v0.0.21-0.20250522080245-2726d2da0caf
 	github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7
 	go.opentelemetry.io/otel v1.35.0
 	go.opentelemetry.io/otel/sdk v1.35.0
