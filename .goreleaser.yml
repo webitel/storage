@@ -8,7 +8,8 @@ snapshot:
 report_sizes: true
 
 builds:
-  - env: [ CGO_ENABLED=0 ]
+  - binary: storage
+    env: [ CGO_ENABLED=0 ]
     goos: [ linux ]
     goarch: [ amd64 ]
     mod_timestamp: '{{ .CommitTimestamp }}'
@@ -16,9 +17,6 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/webitel/storage/model.BuildNumber={{ .Env.BUILD_NUMBER }}
-
-universal_binaries:
-  - replace: false
 
 checksum:
   name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'
@@ -91,6 +89,3 @@ nfpms:
       - src: deploy/systemd/{{ .ProjectName }}.service
         dst: /etc/systemd/system/{{ .ProjectName }}.service
         type: "config|noreplace"
-
-milestones:
-  - close: true
