@@ -309,6 +309,8 @@ github.com/prometheus/procfs v0.0.0-20190507164030-5867b95ac084/go.mod h1:TjEm7z
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
 github.com/prometheus/procfs v0.0.8/go.mod h1:7Qr8sr6344vo1JqZ6HhLceV9o3AJ1Ff+GxbHq6oeK9A=
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
+github.com/rabbitmq/amqp091-go v1.10.0 h1:STpn5XsHlHGcecLmMFCtg7mqq0RnD+zFr4uzukfVhBw=
+github.com/rabbitmq/amqp091-go v1.10.0/go.mod h1:Hy4jKW5kQART1u+JkDTF9YYOQUHXqMuhrgxOEeS7G4o=
 github.com/robfig/cron v1.2.0 h1:ZjScXvvxeQ63Dbyxy76Fj3AT3Ut0aKsyd2/tl3DTMuQ=
 github.com/robfig/cron v1.2.0/go.mod h1:JGuDeoQd7Z6yL4zQhZ3OPEVHB7fL6Ka6skscFHfmt2k=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
@@ -352,8 +354,8 @@ github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30 h1:9FHpHBoh
 github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30/go.mod h1:X0IamnomNaWvRaJihNIZSTiz3rcFuRm19qZq6uO8Tig=
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8 h1:3++AqBWhwSUuhOSNcrSOpW8UdFaUn/CsXm++zzichCI=
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8/go.mod h1:xLS6bkOYzvYv0dYXUkd5yvYOtujUrXf9lS0gd4qAGO4=
-github.com/webitel/webitel-go-kit v0.0.13-0.20240908192731-3abe573c0e41 h1:vj6qE8RtTyz8B4syfUDCkZqULLJ/4I+LS0Rw5W7mao0=
-github.com/webitel/webitel-go-kit v0.0.13-0.20240908192731-3abe573c0e41/go.mod h1:MT93dkScj2kDwVudSdXr0MJdGZ+JvvHbYEsSSb2n+Aw=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250521132805-6d8a915527f8 h1:mL04PuGhTbiRKvdL5S+sD4sBjvdnDAg23IBeKpv9pAE=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250521132805-6d8a915527f8/go.mod h1:m35vEcY7xr2y99I1TeZFR1mknEYLpddEWwq0cvbA/5E=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7 h1:Qi/ustGBfh13I6aZ/ljul679SPJmHbZzFn9h43eloLg=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7/go.mod h1:mXyM8hL9tEBLM4K+Uw8QLuGLo6/eX+5Lvv1ks2Y4us8=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
