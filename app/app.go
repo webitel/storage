@@ -283,6 +283,10 @@ func (app *App) Shutdown() {
 		app.cluster.Stop()
 	}
 
+	if app.rabbitClient != nil {
+		_ = app.rabbitClient.Close()
+	}
+
 	if app.otelShutdownFunc != nil {
 		app.otelShutdownFunc(app.ctx)
 	}
