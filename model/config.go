@@ -69,7 +69,7 @@ type Config struct {
 	DefaultFileStore   *DefaultFileStore     `json:"default_file_store"`
 	ServerSettings     ServerSettings        `json:"server_settings"`
 	ProxyUploadUrl     string                `json:"proxy_upload" flag:"proxy_upload||Proxy upload url" env:"PROXY_UPLOAD"`
-	MaxSafeUploadSleep time.Duration         `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60sec|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
+	MaxSafeUploadSleep time.Duration         `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60s|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
 	Thumbnail          ThumbnailSettings     `json:"thumbnail"`
 	Log                LogSettings           `json:"log"`
 	TtsEndpoint        string                `json:"tts_endpoint" flag:"wbt_tts_endpoint||Offline TTS endpoint" env:"WBT_TTS_ENDPOINT"`
