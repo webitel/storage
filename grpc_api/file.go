@@ -367,7 +367,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 	case *storage.SafeUploadFileRequest_Metadata_:
 		var fileRequest model.JobUploadFile
 		fileRequest.DomainId = r.Metadata.DomainId
-		fileRequest.Name = r.Metadata.Name
+		fileRequest.Name = model.NewId()[0:6] + "_" + r.Metadata.Name
 
 		fileRequest.MimeType = r.Metadata.MimeType
 		fileRequest.Uuid = r.Metadata.Uuid
