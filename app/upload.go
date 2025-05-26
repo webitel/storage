@@ -2,9 +2,11 @@ package app
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
+	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
 	"io"
 )
@@ -171,5 +173,36 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 	}
 
 	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [encrypted=%v, SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil))
+
+	//TODO
+	if file.Channel != nil && *file.Channel == model.UploadFileChannelCases {
+		if notifyErr := app.watcherManager.Notify(
+			model.PermissionScopeFiles,
+			watcherkit.EventTypeCreate,
+			NewFileWatcherData(file),
+		); notifyErr != nil {
+			wlog.Error(fmt.Sprintf("could not notify file store: %s, ", notifyErr.Error()))
+		}
+	}
 	return res.Data.(int64), nil
+}
+
+type FileWatcherData struct {
+	file *model.File
+	Args map[string]any
+}
+
+func NewFileWatcherData(file *model.File) *FileWatcherData {
+	return &FileWatcherData{
+		file: file,
+		Args: map[string]any{"obj": file},
+	}
+}
+
+func (wd *FileWatcherData) Marshal() ([]byte, error) {
+	return json.Marshal(wd.file)
+}
+
+func (wd *FileWatcherData) GetArgs() map[string]any {
+	return wd.Args
 }

@@ -66,14 +66,17 @@ type Config struct {
 	MediaFileStoreSettings       MediaFileStoreSettings `json:"media_file_store_settings"`
 	CryptoKey                    string                 `json:"crypto_key" flag:"crypto_key||Crypto key file" env:"CRYPTO_KEY"`
 
-	DefaultFileStore   *DefaultFileStore     `json:"default_file_store"`
-	ServerSettings     ServerSettings        `json:"server_settings"`
-	ProxyUploadUrl     string                `json:"proxy_upload" flag:"proxy_upload||Proxy upload url" env:"PROXY_UPLOAD"`
-	MaxSafeUploadSleep time.Duration         `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60s|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
-	Thumbnail          ThumbnailSettings     `json:"thumbnail"`
-	Log                LogSettings           `json:"log"`
-	TtsEndpoint        string                `json:"tts_endpoint" flag:"wbt_tts_endpoint||Offline TTS endpoint" env:"WBT_TTS_ENDPOINT"`
-	MessageBroker      MessageBrokerSettings `json:"message_broker"`
+	DefaultFileStore   *DefaultFileStore      `json:"default_file_store"`
+	ServerSettings     ServerSettings         `json:"server_settings"`
+	ProxyUploadUrl     string                 `json:"proxy_upload" flag:"proxy_upload||Proxy upload url" env:"PROXY_UPLOAD"`
+	MaxSafeUploadSleep time.Duration          `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60sec|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
+	Thumbnail          ThumbnailSettings      `json:"thumbnail"`
+	Log                LogSettings            `json:"log"`
+	TtsEndpoint        string                 `json:"tts_endpoint" flag:"wbt_tts_endpoint||Offline TTS endpoint" env:"WBT_TTS_ENDPOINT"`
+	MessageBroker      MessageBrokerSettings  `json:"message_broker"`
+	TriggerWatcher     TriggerWatcherSettings `json:"trigger_watcher"`
+	LoggerWatcher      LoggerWatcherSettings  `json:"logger_watcher"`
+	WatchersEnabled    bool                   `json:"watchers_enabled,omitempty"`
 }
 
 type MessageBrokerSettings struct {
@@ -82,6 +85,17 @@ type MessageBrokerSettings struct {
 	ConsumerTag    string `json:"consumer_tag" flag:"message_broker_consumer_tag||Consumer tag" env:"MESSAGE_BROKER_CONSUMER_TAG"`
 	PrefetchCount  int    `json:"prefetch_count" flag:"message_broker_prefetch_count|1|Prefetch count" env:"MESSAGE_BROKER_PREFETCH_COUNT"`
 	ReconnectDelay int    `json:"reconnect_delay" flag:"message_broker_reconnect_delay|5|Reconnect delay (in seconds)" env:"MESSAGE_BROKER_RECONNECT_DELAY"`
+}
+
+type TriggerWatcherSettings struct {
+	ExchangeName            string `json:"exchange"`
+	TopicName               string `json:"topic"`
+	Enabled                 bool   `json:"enabled"`
+	ResolutionCheckInterval int64  `json:"resolution_check_interval_sec"`
+}
+
+type LoggerWatcherSettings struct {
+	Enabled bool `json:"enabled"`
 }
 
 type LogSettings struct {
