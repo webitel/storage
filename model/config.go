@@ -76,7 +76,7 @@ type Config struct {
 	MessageBroker      MessageBrokerSettings  `json:"message_broker"`
 	TriggerWatcher     TriggerWatcherSettings `json:"trigger_watcher"`
 	LoggerWatcher      LoggerWatcherSettings  `json:"logger_watcher"`
-	WatchersEnabled    bool                   `json:"watchers_enabled,omitempty"`
+	WatchersEnabled    bool                   `json:"watchers_enabled,omitempty" flag:"watchers_enabled|1|Enable watcher" env:"WATCHERS_ENABLED"`
 }
 
 type MessageBrokerSettings struct {
@@ -88,14 +88,13 @@ type MessageBrokerSettings struct {
 }
 
 type TriggerWatcherSettings struct {
-	ExchangeName            string `json:"exchange"`
-	TopicName               string `json:"topic"`
-	Enabled                 bool   `json:"enabled"`
-	ResolutionCheckInterval int64  `json:"resolution_check_interval_sec"`
+	ExchangeName string `json:"exchange" flag:"trigger_exchange|storage|Name trigger exchange" env:"TRIGGER_EXCHANGE"`
+	TopicName    string `json:"topic" flag:"trigger_topic|storage|Name trigger topic" env:"TRIGGER_TOPIC"`
+	Enabled      bool   `json:"enabled" flag:"trigger_enabled|1|Enable trigger" env:"TRIGGER_ENABLED"`
 }
 
 type LoggerWatcherSettings struct {
-	Enabled bool `json:"enabled"`
+	Enabled bool `json:"enabled" flag:"logger_enabled|1|Enable logger" env:"LOGGER_ENABLED"`
 }
 
 type LogSettings struct {

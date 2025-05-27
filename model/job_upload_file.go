@@ -12,7 +12,7 @@ const (
 	UploadFileChannelMedia         = "media"
 	UploadFileChannelLog           = "log"
 	UploadFileChannelKnowledgebase = "knowledgebase"
-	UploadFileChannelCases         = "cases"
+	UploadFileChannelCase          = "case"
 )
 
 type JobUploadFile struct {

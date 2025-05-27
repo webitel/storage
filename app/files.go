@@ -3,11 +3,10 @@ package app
 import (
 	"context"
 	"fmt"
-	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
-	"github.com/webitel/wlog"
-
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
+	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
+	"github.com/webitel/wlog"
 )
 
 func (app *App) SearchFiles(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
@@ -57,26 +56,30 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 }
 
 func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
-	files, _, err := app.SearchFiles(context.Background(), domainId, &model.SearchFile{Ids: ids})
+	files, err := app.Store.File().GetAllPage(context.Background(), domainId, &model.SearchFile{
+		Ids:      ids,
+		Channels: []string{model.UploadFileChannelCase},
+		ListRequest: model.ListRequest{
+			Fields: model.File{}.AllowFields(),
+		},
+	})
 	if err != nil {
 		return err
 	}
 
 	// Soft-delete files
-	if err := app.Store.File().MarkRemove(domainId, ids); err != nil {
+	if err = app.Store.File().MarkRemove(domainId, ids); err != nil {
 		return err
 	}
 
 	// Notify watchers for specific files
 	for _, file := range files {
-		if file.Channel != nil && *file.Channel == model.UploadFileChannelCases {
-			if notifyErr := app.watcherManager.Notify(
-				model.PermissionScopeFiles,
-				watcherkit.EventTypeDelete,
-				NewFileWatcherData(file),
-			); notifyErr != nil {
-				wlog.Error(fmt.Sprintf("could not notify file store: %s", notifyErr.Error()))
-			}
+		if notifyErr := app.watcherManager.Notify(
+			model.PermissionScopeFiles,
+			watcherkit.EventTypeDelete,
+			NewFileWatcherData(file),
+		); notifyErr != nil {
+			wlog.Error(fmt.Sprintf("could not notify file store: %s", notifyErr.Error()))
 		}
 	}
 

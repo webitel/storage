@@ -175,7 +175,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [encrypted=%v, SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil))
 
 	//TODO
-	if file.Channel != nil && *file.Channel == model.UploadFileChannelCases {
+	if file.Channel != nil && *file.Channel == model.UploadFileChannelCase {
 		if notifyErr := app.watcherManager.Notify(
 			model.PermissionScopeFiles,
 			watcherkit.EventTypeCreate,
