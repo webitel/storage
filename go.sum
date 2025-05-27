@@ -391,6 +391,10 @@ github.com/webitel/webitel-go-kit v0.0.21-0.20250522080245-2726d2da0caf h1:cCwFT
 github.com/webitel/webitel-go-kit v0.0.21-0.20250522080245-2726d2da0caf/go.mod h1:m35vEcY7xr2y99I1TeZFR1mknEYLpddEWwq0cvbA/5E=
 github.com/webitel/webitel-go-kit v0.0.21-0.20250522134942-6461799e3a09 h1:zA9g2vePdcSdyorVqG1G04B7DO1racEL15D22VyH/x8=
 github.com/webitel/webitel-go-kit v0.0.21-0.20250522134942-6461799e3a09/go.mod h1:m35vEcY7xr2y99I1TeZFR1mknEYLpddEWwq0cvbA/5E=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250527123954-502922cc7519 h1:ABzjHra/jW+n+H3J5r1NsjiSJAOt5kG8IIlm4IT6Aog=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250527123954-502922cc7519/go.mod h1:m35vEcY7xr2y99I1TeZFR1mknEYLpddEWwq0cvbA/5E=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250527124757-a379b4376a46 h1:DXShAhwP59nmuMwpPp7s5DqwWQtWDJsw46bkEpq4kfc=
+github.com/webitel/webitel-go-kit v0.0.21-0.20250527124757-a379b4376a46/go.mod h1:m35vEcY7xr2y99I1TeZFR1mknEYLpddEWwq0cvbA/5E=
 github.com/webitel/webitel-go-kit/logging/wlog v0.0.0-20240807083813-0853fbc06218 h1:5Jn9KhUMjqAUdVMi7EvFJrJlJGrwndhKFbz7FZ7woL0=
 github.com/webitel/webitel-go-kit/logging/wlog v0.0.0-20240807083813-0853fbc06218/go.mod h1:mdwPNCv2dd7RIJ8euwVJGYf8AaVH2H7CVh8D/zyCTqA=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7 h1:Qi/ustGBfh13I6aZ/ljul679SPJmHbZzFn9h43eloLg=
