@@ -43,7 +43,7 @@ jobs:
 
       version: ${{ needs.prepare.outputs.version }}
       version-build: ${{ github.run_number }}
-      package-name: webitel-storagee
+      package-name: webitel-storage
       package-description: |
         Webitel Storage package.
 
