@@ -28,7 +28,7 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) model
 			wlog.Error(fmt.Sprintf("Failed to remove cache file %v", err))
 		}
 	} else {
-		wlog.Debug(fmt.Sprintf("Created new file job %d, upload file: %s [%d %s]", file.Id, file.Name, file.Size, file.MimeType))
+		wlog.Debug(fmt.Sprintf("created new file job %d, upload file: %s [%d %s]", file.Id, file.Name, file.Size, file.MimeType))
 	}
 
 	return err
@@ -174,7 +174,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 
 	file.Id, _ = res.Data.(int64)
 
-	wlog.Debug(fmt.Sprintf("Stored %s in %s, %d bytes [encrypted=%v, SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil))
+	wlog.Debug(fmt.Sprintf("stored %s in %s, %d bytes [encrypted=%v, SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil))
 
 	//TODO
 	if file.Channel != nil && *file.Channel == model.UploadFileChannelCase {

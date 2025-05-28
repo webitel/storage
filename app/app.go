@@ -82,8 +82,7 @@ type App struct {
 	watcherManager watcherkit.Manager
 
 	//----- AMQP -------
-	rabbitConn      *rabbitmq.Connection
-	rabbitPublisher rabbitmq.Publisher
+	rabbitConn *rabbitmq.Connection
 
 	// ---- Logger ------
 	wtelLogger *wlogger.LoggerClient
@@ -255,7 +254,6 @@ func (app *App) initWatchers(config *model.Config) error {
 	if config.TriggerWatcher.Enabled {
 		mq, err := NewTriggerObserver(
 			app.rabbitConn,
-			app.rabbitPublisher,
 			&config.TriggerWatcher,
 			formFileTriggerModel,
 			app.Log,
@@ -299,30 +297,6 @@ func (app *App) initRabbitMQ() error {
 	}
 	app.rabbitConn = conn
 
-	exchangeCfg, err := rabbitmq.NewExchangeConfig("storage", rabbitmq.ExchangeTypeTopic)
-	if err != nil {
-		return fmt.Errorf("rabbitmq exchange config error: %w", err)
-	}
-	err = conn.DeclareExchange(context.Background(), exchangeCfg)
-	if err != nil {
-		return fmt.Errorf("rabbitmq declare exchange error: %w", err)
-	}
-
-	publisherCfg, err := rabbitmq.NewPublisherConfig()
-	if err != nil {
-		return fmt.Errorf("rabbitmq publisher config error: %w", err)
-	}
-	publisher, err := rabbitmq.NewPublisher(
-		conn,
-		exchangeCfg,
-		publisherCfg,
-		wlogadapter.NewWlogLogger(app.Log),
-	)
-	if err != nil {
-		return fmt.Errorf("rabbitmq publisher error: %w", err)
-	}
-
-	app.rabbitPublisher = publisher
 	return nil
 }
 

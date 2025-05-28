@@ -8,6 +8,7 @@ import (
 	wlogger "github.com/webitel/logger/pkg/client/v2"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
+	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
 	"github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
 	"time"
@@ -27,24 +28,36 @@ type TriggerObserver[T any, V any] struct {
 }
 
 func NewTriggerObserver[T any, V any](
-	amqpBroker rabbitmq.Broker,
-	amqpPublisher rabbitmq.Publisher,
+	amqpConnection *rabbitmq.Connection,
 	config *model.TriggerWatcherSettings,
 	conv func(T) (V, error),
 	log *wlog.Logger,
 ) (*TriggerObserver[T, V], error) {
-	opts := []rabbitmq.ExchangeOption{rabbitmq.WithDurable(true)}
-	cfg, err := rabbitmq.NewExchangeConfig(config.ExchangeName, rabbitmq.ExchangeTypeTopic, opts...)
+	exchangeCfg, err := rabbitmq.NewExchangeConfig(config.Exchange, rabbitmq.ExchangeTypeTopic)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("rabbitmq exchange config error: %w", err)
+	}
+	err = amqpConnection.DeclareExchange(context.Background(), exchangeCfg)
+	if err != nil {
+		return nil, fmt.Errorf("rabbitmq declare exchange error: %w", err)
 	}
 
-	if err := amqpBroker.DeclareExchange(context.Background(), cfg); err != nil {
-		return nil, fmt.Errorf("could not create topic exchange %s: %w", config.ExchangeName, err)
+	publisherCfg, err := rabbitmq.NewPublisherConfig()
+	if err != nil {
+		return nil, fmt.Errorf("rabbitmq publisher config error: %w", err)
+	}
+	publisher, err := rabbitmq.NewPublisher(
+		amqpConnection,
+		exchangeCfg,
+		publisherCfg,
+		wlogadapter.NewWlogLogger(log),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("rabbitmq publisher error: %w", err)
 	}
 
 	return &TriggerObserver[T, V]{
-		amqpPublisher: amqpPublisher,
+		amqpPublisher: publisher,
 		config:        config,
 		id:            "Trigger Watcher",
 		logger:        log,
@@ -83,7 +96,7 @@ func (cao *TriggerObserver[T, V]) Update(et watcher.EventType, args map[string]a
 	}
 
 	routingKey := cao.getRoutingKeyByEventType("cases", objStr, et, domainId)
-	cao.logger.Debug(fmt.Sprintf("Trying to publish message to %s", routingKey))
+	cao.logger.Debug(fmt.Sprintf("trying to publish message to %s", routingKey))
 
 	return cao.amqpPublisher.Publish(context.Background(), routingKey, data, amqp091.Table{})
 }
@@ -177,7 +190,7 @@ func classifyTriggerObject(obj any) (string, error) {
 	switch v := obj.(type) {
 	case *model.File:
 		if v.Channel != nil {
-			return fmt.Sprintf("%s_file", *v.Channel), nil
+			return fmt.Sprintf("%s_files", *v.Channel), nil
 		}
 		return model.PermissionScopeFiles, nil
 	default:

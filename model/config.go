@@ -80,17 +80,12 @@ type Config struct {
 }
 
 type MessageBrokerSettings struct {
-	URL            string `json:"url" flag:"message_broker_url||Message broker URL" env:"MESSAGE_BROKER_URL"`
-	Exchange       string `json:"exchange" flag:"message_broker_exchange||Broker exchange" env:"MESSAGE_BROKER_EXCHANGE"`
-	ConsumerTag    string `json:"consumer_tag" flag:"message_broker_consumer_tag||Consumer tag" env:"MESSAGE_BROKER_CONSUMER_TAG"`
-	PrefetchCount  int    `json:"prefetch_count" flag:"message_broker_prefetch_count|1|Prefetch count" env:"MESSAGE_BROKER_PREFETCH_COUNT"`
-	ReconnectDelay int    `json:"reconnect_delay" flag:"message_broker_reconnect_delay|5|Reconnect delay (in seconds)" env:"MESSAGE_BROKER_RECONNECT_DELAY"`
+	URL string `json:"url" flag:"message_broker_url|amqp://webitel:webitel@rabbit:5672?heartbeat=10|Message broker URL" env:"MESSAGE_BROKER_URL"`
 }
 
 type TriggerWatcherSettings struct {
-	ExchangeName string `json:"exchange" flag:"trigger_exchange|cases|Name trigger exchange" env:"TRIGGER_EXCHANGE"` // TODO
-	TopicName    string `json:"topic" flag:"trigger_topic|case_file|Name trigger topic" env:"TRIGGER_TOPIC"`         // TODO
-	Enabled      bool   `json:"enabled" flag:"trigger_enabled|1|Enable trigger" env:"TRIGGER_ENABLED"`
+	Enabled  bool   `json:"enabled" flag:"trigger_enabled|1|Enable trigger" env:"TRIGGER_ENABLED"`
+	Exchange string `json:"exchange" flag:"message_broker_exchange|cases|Broker exchange" env:"MESSAGE_BROKER_EXCHANGE"`
 }
 
 type LoggerWatcherSettings struct {
@@ -137,7 +132,11 @@ type DefaultFileStore struct {
 func (c *Config) IsValid() AppError {
 
 	if c.MediaFileStoreSettings.Directory == "" {
-		return NewInternalError("model.config.is_valid.media_store_directory.app_error", "")
+		return NewInternalError("model.config.is_valid.media_store_directory.app_error", "parameters media_directory is required")
+	}
+
+	if c.MessageBroker.URL == "" {
+		return NewInternalError("model.config.is_valid.amqp.app_error", "message broker url is required (message_broker_url)")
 	}
 	return nil
 }
