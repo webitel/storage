@@ -32,12 +32,14 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
 		"ReferenceIds": pq.Array(search.ReferenceIds),
+		"Channels":     pq.Array(search.Channels),
 	}
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
 		`domain_id = :DomainId
 				and (:Ids::int[] isnull or id = any(:Ids))
-				and (:ReferenceIds::varchar[] isnull or reference_id = any(:ReferenceIds))
+				and (:Channels::varchar[] isnull or channel = any(:Channels::varchar[]))
+				and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
 		`,
 		model.File{}, f)
 

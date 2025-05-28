@@ -10,7 +10,7 @@ type SearchFile struct {
 	Ids            []int64
 	UploadedAt     *FilterBetween
 	UploadedBy     []int64
-	ReferenceIds   []string
+	ReferenceIds   []string // todo uuid rename
 	Channels       []string
 	RetentionUntil *FilterBetween
 }
@@ -30,16 +30,18 @@ type BaseFile struct {
 
 type File struct {
 	BaseFile
-	Id         int64      `db:"id" json:"id"`
-	DomainId   int64      `db:"domain_id" json:"domain_id"`
-	Uuid       string     `db:"uuid" json:"uuid"`
-	ProfileId  *int       `db:"profile_id" json:"profile_id"`
-	CreatedAt  int64      `db:"created_at" json:"created_at"`
-	UploadedAt *time.Time `db:"uploaded_at" json:"uploaded_at"`
-	Removed    *bool      `db:"removed" json:"-"`
-	NotExists  *bool      `db:"not_exists" json:"-"`
-	Safe       bool       `db:"-" json:"-"`
-	Thumbnail  *Thumbnail `db:"thumbnail" json:"thumbnail"`
+	Id          int64      `db:"id" json:"id"`
+	DomainId    int64      `db:"domain_id" json:"domain_id"`
+	Uuid        string     `db:"uuid" json:"uuid"`
+	ProfileId   *int       `db:"profile_id" json:"profile_id"`
+	CreatedAt   int64      `db:"created_at" json:"created_at"`
+	UploadedAt  *time.Time `db:"uploaded_at" json:"uploaded_at"`
+	Removed     *bool      `db:"removed" json:"-"`
+	NotExists   *bool      `db:"not_exists" json:"-"`
+	Safe        bool       `db:"-" json:"-"`
+	Thumbnail   *Thumbnail `db:"thumbnail" json:"thumbnail"`
+	ReferenceId *string    `db:"reference_id" json:"reference_id"`
+	Profile     *Lookup    `db:"profile" json:"profile"`
 }
 
 type Thumbnail struct {
@@ -150,8 +152,8 @@ func (f File) DefaultOrder() string {
 }
 
 func (f File) AllowFields() []string {
-	return []string{"id", "name", "view_name", "size", "mime_type", "reference_id", "profile", "uploaded_at", "updated_by",
-		"sha256sum", "channel", "thumbnail", "retention_until",
+	return []string{"id", "name", "view_name", "size", "mime_type", "reference_id", "profile", "uploaded_at",
+		"sha256sum", "channel", "thumbnail", "retention_until", "domain_id", "uploaded_by",
 	}
 }
 

@@ -66,22 +66,30 @@ type Config struct {
 	MediaFileStoreSettings       MediaFileStoreSettings `json:"media_file_store_settings"`
 	CryptoKey                    string                 `json:"crypto_key" flag:"crypto_key||Crypto key file" env:"CRYPTO_KEY"`
 
-	DefaultFileStore   *DefaultFileStore     `json:"default_file_store"`
-	ServerSettings     ServerSettings        `json:"server_settings"`
-	ProxyUploadUrl     string                `json:"proxy_upload" flag:"proxy_upload||Proxy upload url" env:"PROXY_UPLOAD"`
-	MaxSafeUploadSleep time.Duration         `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60s|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
-	Thumbnail          ThumbnailSettings     `json:"thumbnail"`
-	Log                LogSettings           `json:"log"`
-	TtsEndpoint        string                `json:"tts_endpoint" flag:"wbt_tts_endpoint||Offline TTS endpoint" env:"WBT_TTS_ENDPOINT"`
-	MessageBroker      MessageBrokerSettings `json:"message_broker"`
+	DefaultFileStore   *DefaultFileStore      `json:"default_file_store"`
+	ServerSettings     ServerSettings         `json:"server_settings"`
+	ProxyUploadUrl     string                 `json:"proxy_upload" flag:"proxy_upload||Proxy upload url" env:"PROXY_UPLOAD"`
+	MaxSafeUploadSleep time.Duration          `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60sec|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
+	Thumbnail          ThumbnailSettings      `json:"thumbnail"`
+	Log                LogSettings            `json:"log"`
+	TtsEndpoint        string                 `json:"tts_endpoint" flag:"wbt_tts_endpoint||Offline TTS endpoint" env:"WBT_TTS_ENDPOINT"`
+	MessageBroker      MessageBrokerSettings  `json:"message_broker"`
+	TriggerWatcher     TriggerWatcherSettings `json:"trigger_watcher"`
+	LoggerWatcher      LoggerWatcherSettings  `json:"logger_watcher"`
+	WatchersEnabled    bool                   `json:"watchers_enabled,omitempty" flag:"watchers_enabled|1|Enable watcher" env:"WATCHERS_ENABLED"`
 }
 
 type MessageBrokerSettings struct {
-	URL            string `json:"url" flag:"message_broker_url||Message broker URL" env:"MESSAGE_BROKER_URL"`
-	Exchange       string `json:"exchange" flag:"message_broker_exchange||Broker exchange" env:"MESSAGE_BROKER_EXCHANGE"`
-	ConsumerTag    string `json:"consumer_tag" flag:"message_broker_consumer_tag||Consumer tag" env:"MESSAGE_BROKER_CONSUMER_TAG"`
-	PrefetchCount  int    `json:"prefetch_count" flag:"message_broker_prefetch_count|1|Prefetch count" env:"MESSAGE_BROKER_PREFETCH_COUNT"`
-	ReconnectDelay int    `json:"reconnect_delay" flag:"message_broker_reconnect_delay|5|Reconnect delay (in seconds)" env:"MESSAGE_BROKER_RECONNECT_DELAY"`
+	URL string `json:"url" flag:"message_broker_url|amqp://webitel:webitel@rabbit:5672?heartbeat=10|Message broker URL" env:"MESSAGE_BROKER_URL"`
+}
+
+type TriggerWatcherSettings struct {
+	Enabled  bool   `json:"enabled" flag:"trigger_enabled|1|Enable trigger" env:"TRIGGER_ENABLED"`
+	Exchange string `json:"exchange" flag:"message_broker_exchange|cases|Broker exchange" env:"MESSAGE_BROKER_EXCHANGE"`
+}
+
+type LoggerWatcherSettings struct {
+	Enabled bool `json:"enabled" flag:"logger_enabled|1|Enable logger" env:"LOGGER_ENABLED"`
 }
 
 type LogSettings struct {
@@ -124,7 +132,11 @@ type DefaultFileStore struct {
 func (c *Config) IsValid() AppError {
 
 	if c.MediaFileStoreSettings.Directory == "" {
-		return NewInternalError("model.config.is_valid.media_store_directory.app_error", "")
+		return NewInternalError("model.config.is_valid.media_store_directory.app_error", "parameters media_directory is required")
+	}
+
+	if c.MessageBroker.URL == "" {
+		return NewInternalError("model.config.is_valid.amqp.app_error", "message broker url is required (message_broker_url)")
 	}
 	return nil
 }

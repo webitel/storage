@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	wlogger "github.com/webitel/logger/pkg/client/v2"
 	otelsdk "github.com/webitel/webitel-go-kit/otel/sdk"
+	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"net/http"
 	"sync/atomic"
@@ -32,7 +34,10 @@ import (
 	_ "github.com/webitel/webitel-go-kit/otel/sdk/trace/stdout"
 )
 
-const filePolicyExpire = 5
+const (
+	defaultLogTimeout = 5 * time.Second
+	filePolicyExpire  = 5
+)
 
 type App struct {
 	id          *string
@@ -73,8 +78,14 @@ type App struct {
 
 	fileChipher utils.Chipher
 
-	//----- rabbitmq client using webitel-go-kit -------
-	rabbitClient *rabbitmq.Connection
+	//------Watcher Manager-------
+	watcherManager watcherkit.Manager
+
+	//----- AMQP -------
+	rabbitConn *rabbitmq.Connection
+
+	// ---- Logger ------
+	wtelLogger *wlogger.LoggerClient
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -201,12 +212,71 @@ func New(options ...string) (outApp *App, outErr error) {
 	app.initUploader()
 	app.initSynchronizer()
 
-	// ------ rabbitmq client using webitel-go-kit init -------
+	//-------- Logger init -----------
+	logger, err := wlogger.NewLoggerClient(
+		wlogger.WithAmqpConnectionString(config.MessageBroker.URL),
+		wlogger.WithGrpcConsulAddress(config.DiscoverySettings.Url),
+	)
+	if err != nil {
+		return nil, err
+	}
+	app.wtelLogger = logger
+
+	// ------ AMQP init -------
 	if err := app.initRabbitMQ(); err != nil {
 		return nil, err
 	}
 
+	// ------- Watchers init -------
+	if err := app.initWatchers(config); err != nil {
+		return nil, err
+	}
+
 	return app, outErr
+}
+
+func (app *App) initWatchers(config *model.Config) error {
+	watcherManager := watcherkit.NewDefaultWatcherManager(config.WatchersEnabled)
+	app.watcherManager = watcherManager
+
+	watcher := watcherkit.NewDefaultWatcher()
+
+	if config.LoggerWatcher.Enabled {
+		obs, err := NewLoggerObserver(app.wtelLogger, model.PermissionScopeFiles, defaultLogTimeout)
+		if err != nil {
+			return errors.Wrap(err, "app.upload.create_observer.app")
+		}
+		watcher.Attach(watcherkit.EventTypeCreate, obs)
+		watcher.Attach(watcherkit.EventTypeUpdate, obs)
+		watcher.Attach(watcherkit.EventTypeDelete, obs)
+	}
+
+	if config.TriggerWatcher.Enabled {
+		mq, err := NewTriggerObserver(
+			app.rabbitConn,
+			&config.TriggerWatcher,
+			formFileTriggerModel,
+			app.Log,
+		)
+		if err != nil {
+			return errors.Wrap(err, "app.upload.create_mq_observer.app")
+		}
+		watcher.Attach(watcherkit.EventTypeCreate, mq)
+		watcher.Attach(watcherkit.EventTypeUpdate, mq)
+		watcher.Attach(watcherkit.EventTypeDelete, mq)
+		watcher.Attach(watcherkit.EventTypeResolutionTime, mq)
+	}
+
+	app.watcherManager.AddWatcher(model.PermissionScopeFiles, watcher)
+	return nil
+}
+
+func formFileTriggerModel(item *model.File) (*model.FileAMQPMessage, error) {
+	m := &model.FileAMQPMessage{
+		File: item,
+	}
+
+	return m, nil
 }
 
 func (app *App) initRabbitMQ() error {
@@ -218,15 +288,15 @@ func (app *App) initRabbitMQ() error {
 		return fmt.Errorf("rabbitmq config error: %w", err)
 	}
 
-	client, err := rabbitmq.NewConnection(
+	conn, err := rabbitmq.NewConnection(
 		cfg,
 		wlogadapter.NewWlogLogger(app.Log),
 	)
 	if err != nil {
-		return fmt.Errorf("rabbitmq client error: %w", err)
+		return fmt.Errorf("rabbitmq conn error: %w", err)
 	}
+	app.rabbitConn = conn
 
-	app.rabbitClient = client
 	return nil
 }
 
@@ -283,8 +353,8 @@ func (app *App) Shutdown() {
 		app.cluster.Stop()
 	}
 
-	if app.rabbitClient != nil {
-		_ = app.rabbitClient.Close()
+	if app.rabbitConn != nil {
+		_ = app.rabbitConn.Close()
 	}
 
 	if app.otelShutdownFunc != nil {

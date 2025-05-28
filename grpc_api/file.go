@@ -495,7 +495,6 @@ func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest
 		Ids:            in.Id,
 		UploadedAt:     nil,
 		UploadedBy:     in.UploadedBy,
-		ReferenceIds:   in.ReferenceId,
 		Channels:       channelsType(in.Channel),
 		RetentionUntil: nil,
 	}
