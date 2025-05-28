@@ -153,7 +153,7 @@ func (f File) DefaultOrder() string {
 
 func (f File) AllowFields() []string {
 	return []string{"id", "name", "view_name", "size", "mime_type", "reference_id", "profile", "uploaded_at",
-		"sha256sum", "channel", "thumbnail", "retention_until",
+		"sha256sum", "channel", "thumbnail", "retention_until", "domain_id", "uploaded_by",
 	}
 }
 

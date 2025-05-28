@@ -10,7 +10,6 @@ import (
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 	"github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
-	"strings"
 	"time"
 )
 
@@ -78,7 +77,7 @@ func (cao *TriggerObserver[T, V]) Update(et watcher.EventType, args map[string]a
 		return fmt.Errorf("marshal message: %w", err)
 	}
 
-	objStr, err := classifyObject(obj)
+	objStr, err := classifyTriggerObject(obj)
 	if err != nil {
 		return fmt.Errorf("classify object: %w", err)
 	}
@@ -99,7 +98,7 @@ func (cao *TriggerObserver[T, V]) getRoutingKeyByEventType(
 		"%s.%s.%s.%d",
 		service,
 		object,
-		strings.Replace(cao.config.TopicName, "*", string(eventType), 1),
+		eventType,
 		domainId,
 	)
 }
@@ -174,9 +173,12 @@ func getDomainID(args map[string]any) (int64, error) {
 	return 0, fmt.Errorf("domain_id not found in obj")
 }
 
-func classifyObject(obj any) (string, error) {
-	switch obj.(type) {
+func classifyTriggerObject(obj any) (string, error) {
+	switch v := obj.(type) {
 	case *model.File:
+		if v.Channel != nil {
+			return fmt.Sprintf("%s_file", *v.Channel), nil
+		}
 		return model.PermissionScopeFiles, nil
 	default:
 		return "", fmt.Errorf("unsupported object type %T", obj)

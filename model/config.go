@@ -88,8 +88,8 @@ type MessageBrokerSettings struct {
 }
 
 type TriggerWatcherSettings struct {
-	ExchangeName string `json:"exchange" flag:"trigger_exchange|storage|Name trigger exchange" env:"TRIGGER_EXCHANGE"`
-	TopicName    string `json:"topic" flag:"trigger_topic|storage|Name trigger topic" env:"TRIGGER_TOPIC"`
+	ExchangeName string `json:"exchange" flag:"trigger_exchange|cases|Name trigger exchange" env:"TRIGGER_EXCHANGE"` // TODO
+	TopicName    string `json:"topic" flag:"trigger_topic|case_file|Name trigger topic" env:"TRIGGER_TOPIC"`         // TODO
 	Enabled      bool   `json:"enabled" flag:"trigger_enabled|1|Enable trigger" env:"TRIGGER_ENABLED"`
 }
 
