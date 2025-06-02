@@ -106,7 +106,11 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, engine.AppErr
 		case engine.AppError:
 			return 0, e
 		default:
-			return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
+			if err != nil {
+				return 0, engine.NewInternalError("utils.file.s3.writing.app_error", err.Error())
+			} else {
+				return 0, engine.NewInternalError("utils.file.s3.writing.app_error", "unknown S3 upload error")
+			}
 		}
 	}
 	file.SetPropertyString("location", location)
