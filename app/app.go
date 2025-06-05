@@ -240,6 +240,12 @@ func New(options ...string) (outApp *App, outErr error) {
 	return app, outErr
 }
 
+// in DB directory.wbt_class `files` object is called `record_file`
+// overwritten for logger
+const (
+	filesObj = "record_file"
+)
+
 func (app *App) initWatchers(config *model.Config) error {
 	watcherManager := watcherkit.NewDefaultWatcherManager(config.WatchersEnabled)
 	app.watcherManager = watcherManager
@@ -247,7 +253,7 @@ func (app *App) initWatchers(config *model.Config) error {
 	watcher := watcherkit.NewDefaultWatcher()
 
 	if config.LoggerWatcher.Enabled {
-		obs, err := NewLoggerObserver(app.wtelLogger, model.PermissionScopeFiles, defaultLogTimeout)
+		obs, err := NewLoggerObserver(app.wtelLogger, filesObj, defaultLogTimeout)
 		if err != nil {
 			return errors.Wrap(err, "app.upload.create_observer.app")
 		}
