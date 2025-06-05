@@ -36,7 +36,7 @@ require (
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0
 	golang.org/x/crypto v0.38.0
-	golang.org/x/image v0.12.0
+	golang.org/x/image v0.27.0
 	golang.org/x/sync v0.14.0
 	google.golang.org/api v0.233.0
 	google.golang.org/genproto v0.0.0-20250303144028-a0af3efb3deb
