@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/rabbitmq/amqp091-go"
-	wlogger "github.com/webitel/logger/pkg/client/v2"
 	"github.com/webitel/storage/model"
+	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
-	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
 	"github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
+	"strconv"
 	"time"
 )
 
@@ -28,34 +28,11 @@ type TriggerObserver[T any, V any] struct {
 }
 
 func NewTriggerObserver[T any, V any](
-	amqpConnection *rabbitmq.Connection,
+	publisher rabbitmq.Publisher,
 	config *model.TriggerWatcherSettings,
 	conv func(T) (V, error),
 	log *wlog.Logger,
 ) (*TriggerObserver[T, V], error) {
-	exchangeCfg, err := rabbitmq.NewExchangeConfig(config.Exchange, rabbitmq.ExchangeTypeTopic)
-	if err != nil {
-		return nil, fmt.Errorf("rabbitmq exchange config error: %w", err)
-	}
-	err = amqpConnection.DeclareExchange(context.Background(), exchangeCfg)
-	if err != nil {
-		return nil, fmt.Errorf("rabbitmq declare exchange error: %w", err)
-	}
-
-	publisherCfg, err := rabbitmq.NewPublisherConfig()
-	if err != nil {
-		return nil, fmt.Errorf("rabbitmq publisher config error: %w", err)
-	}
-	publisher, err := rabbitmq.NewPublisher(
-		amqpConnection,
-		exchangeCfg,
-		publisherCfg,
-		wlogadapter.NewWlogLogger(log),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("rabbitmq publisher error: %w", err)
-	}
-
 	return &TriggerObserver[T, V]{
 		amqpPublisher: publisher,
 		config:        config,
@@ -122,10 +99,15 @@ type LoggerObserver struct {
 	timeout time.Duration
 }
 
-func NewLoggerObserver(logger *wlogger.LoggerClient, objclass string, timeout time.Duration) (*LoggerObserver, error) {
+func NewLoggerObserver(logger *wlogger.Logger, objclass string, timeout time.Duration) (*LoggerObserver, error) {
+	objLogger, err := logger.GetObjectedLogger(objclass)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get objected logger for %s: %w", objclass, err)
+	}
+
 	return &LoggerObserver{
 		id:      fmt.Sprintf("%s logger", objclass),
-		logger:  logger.GetObjectedLogger(objclass),
+		logger:  objLogger,
 		timeout: timeout,
 	}, nil
 }
@@ -149,10 +131,6 @@ func (l *LoggerObserver) Update(et watcher.EventType, args map[string]any) error
 		return fmt.Errorf("missing uploader info in file.UploadedBy")
 	}
 
-	userId := file.UploadedBy.Id
-	domainId := file.DomainId
-	id := file.Id
-
 	actionType := map[watcher.EventType]wlogger.Action{
 		watcher.EventTypeCreate: wlogger.CreateAction,
 		watcher.EventTypeDelete: wlogger.DeleteAction,
@@ -163,8 +141,13 @@ func (l *LoggerObserver) Update(et watcher.EventType, args map[string]any) error
 		return watcher.ErrUnknownType
 	}
 
-	// IP is unknown — pass empty string
-	message, err := wlogger.NewMessage(int64(userId), "", actionType, id, file)
+	message, err := wlogger.NewMessage(
+		int64(file.UploadedBy.Id),
+		"unknown",
+		actionType,
+		strconv.Itoa(int(file.Id)),
+		file,
+	)
 	if err != nil {
 		return fmt.Errorf("create log message: %w", err)
 	}
@@ -172,7 +155,13 @@ func (l *LoggerObserver) Update(et watcher.EventType, args map[string]any) error
 	ctx, cancel := context.WithTimeout(context.Background(), l.timeout)
 	defer cancel()
 
-	return l.logger.SendContext(ctx, domainId, message)
+	_, err = l.logger.SendContext(ctx, file.DomainId, message)
+
+	if err != nil {
+		return fmt.Errorf("send log message: %w", err)
+	}
+
+	return nil
 }
 
 // Helpers
