@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
-	wlogger "github.com/webitel/logger/pkg/client/v2"
-	otelsdk "github.com/webitel/webitel-go-kit/otel/sdk"
+	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
+	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"net/http"
@@ -26,12 +26,12 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
 	// -------------------- plugin(s) -------------------- //
-	_ "github.com/webitel/webitel-go-kit/otel/sdk/log/otlp"
-	_ "github.com/webitel/webitel-go-kit/otel/sdk/log/stdout"
-	_ "github.com/webitel/webitel-go-kit/otel/sdk/metric/otlp"
-	_ "github.com/webitel/webitel-go-kit/otel/sdk/metric/stdout"
-	_ "github.com/webitel/webitel-go-kit/otel/sdk/trace/otlp"
-	_ "github.com/webitel/webitel-go-kit/otel/sdk/trace/stdout"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/otlp"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/stdout"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/otlp"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/stdout"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/trace/otlp"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/trace/stdout"
 )
 
 const (
@@ -78,14 +78,15 @@ type App struct {
 
 	fileChipher utils.Chipher
 
-	//------Watcher Manager-------
+	//------ Watcher Manager -------
 	watcherManager watcherkit.Manager
 
-	//----- AMQP -------
-	rabbitConn *rabbitmq.Connection
+	//--------- AMQP -----------
+	rabbitConn      *rabbitmq.Connection
+	rabbitPublisher rabbitmq.Publisher
 
 	// ---- Logger ------
-	wtelLogger *wlogger.LoggerClient
+	wtelLogger *wlogger.Logger
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -212,20 +213,19 @@ func New(options ...string) (outApp *App, outErr error) {
 	app.initUploader()
 	app.initSynchronizer()
 
+	// ------ AMQP init -------
+	if err := app.initRabbitMQ(); err != nil {
+		return nil, err
+	}
+
 	//-------- Logger init -----------
-	logger, err := wlogger.NewLoggerClient(
-		wlogger.WithAmqpConnectionString(config.MessageBroker.URL),
-		wlogger.WithGrpcConsulAddress(config.DiscoverySettings.Url),
+	logger, err := wlogger.New(
+		wlogger.WithPublisher(NewLoggerAdapter(app.rabbitPublisher)),
 	)
 	if err != nil {
 		return nil, err
 	}
 	app.wtelLogger = logger
-
-	// ------ AMQP init -------
-	if err := app.initRabbitMQ(); err != nil {
-		return nil, err
-	}
 
 	// ------- Watchers init -------
 	if err := app.initWatchers(config); err != nil {
@@ -253,7 +253,7 @@ func (app *App) initWatchers(config *model.Config) error {
 
 	if config.TriggerWatcher.Enabled {
 		mq, err := NewTriggerObserver(
-			app.rabbitConn,
+			app.rabbitPublisher,
 			&config.TriggerWatcher,
 			formFileTriggerModel,
 			app.Log,
@@ -297,6 +297,34 @@ func (app *App) initRabbitMQ() error {
 	}
 	app.rabbitConn = conn
 
+	exchangeCfg, err := rabbitmq.NewExchangeConfig(app.Config().TriggerWatcher.Exchange, rabbitmq.ExchangeTypeTopic)
+	if err != nil {
+		return fmt.Errorf("rabbitmq exchange config error: %w", err)
+	}
+
+	// Declare exchange
+	if err := conn.DeclareExchange(context.Background(), exchangeCfg); err != nil {
+		return fmt.Errorf("rabbitmq declare exchange error: %w", err)
+	}
+
+	// Publisher config
+	pubCfg, err := rabbitmq.NewPublisherConfig()
+	if err != nil {
+		return fmt.Errorf("rabbitmq publisher config error: %w", err)
+	}
+
+	// Create publisher
+	publisher, err := rabbitmq.NewPublisher(
+		conn,
+		exchangeCfg,
+		pubCfg,
+		wlogadapter.NewWlogLogger(app.Log),
+	)
+	if err != nil {
+		return fmt.Errorf("rabbitmq publisher error: %w", err)
+	}
+
+	app.rabbitPublisher = publisher
 	return nil
 }
 
