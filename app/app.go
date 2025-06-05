@@ -86,7 +86,8 @@ type App struct {
 	rabbitPublisher rabbitmq.Publisher
 
 	// ---- Logger ------
-	wtelLogger *wlogger.Logger
+	wtelLogger      *wlogger.Logger
+	loggerPublisher rabbitmq.Publisher
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -218,9 +219,13 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 
+	err := app.makeLoggerPublisher(app.rabbitConn)
+	if err != nil {
+		return nil, err
+	}
 	//-------- Logger init -----------
 	logger, err := wlogger.New(
-		wlogger.WithPublisher(NewLoggerAdapter(app.rabbitPublisher)),
+		wlogger.WithPublisher(NewLoggerAdapter(app.loggerPublisher)),
 	)
 	if err != nil {
 		return nil, err
@@ -277,6 +282,37 @@ func formFileTriggerModel(item *model.File) (*model.FileAMQPMessage, error) {
 	}
 
 	return m, nil
+}
+
+func (app *App) makeLoggerPublisher(conn *rabbitmq.Connection) error {
+	exchangeCfg, err := rabbitmq.NewExchangeConfig("logger", rabbitmq.ExchangeTypeTopic)
+	if err != nil {
+		return fmt.Errorf("logger exchange config error: %w", err)
+	}
+
+	// Declare exchange
+	if err := conn.DeclareExchange(context.Background(), exchangeCfg); err != nil {
+		return fmt.Errorf("declare logger exchange error: %w", err)
+	}
+
+	pubCfg, err := rabbitmq.NewPublisherConfig()
+	if err != nil {
+		return fmt.Errorf("logger publisher config error: %w", err)
+	}
+
+	publisher, err := rabbitmq.NewPublisher(
+		conn,
+		exchangeCfg,
+		pubCfg,
+		wlogadapter.NewWlogLogger(app.Log),
+	)
+	if err != nil {
+		return fmt.Errorf("create logger publisher error: %w", err)
+	}
+
+	app.loggerPublisher = publisher
+
+	return nil
 }
 
 func (app *App) initRabbitMQ() error {
