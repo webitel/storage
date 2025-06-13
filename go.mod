@@ -3,7 +3,7 @@ module github.com/webitel/storage
 go 1.24.1
 
 require (
-	cloud.google.com/go/speech v1.26.0
+	cloud.google.com/go/speech v1.27.1
 	cloud.google.com/go/storage v1.54.0
 	cloud.google.com/go/texttospeech v1.11.0
 	github.com/BoRuDar/configuration/v4 v4.2.2
