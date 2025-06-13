@@ -529,6 +529,48 @@ func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest
 	}, nil
 }
 
+func (api *file) UploadP2PVideo(ctx context.Context, in *storage.UploadP2PVideoRequest) (*storage.UploadP2PVideoResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	i := make([]app.ICEServer, 0, len(in.IceServers))
+	for _, server := range in.IceServers {
+		i = append(i, app.ICEServer{
+			URLs:           server.GetUrls(),
+			Username:       server.GetUsername(),
+			Credential:     server.GetCredential(),
+			CredentialType: 0, // TODO
+		})
+	}
+
+	name := in.Name
+	if name == "" {
+		name = model.NewId()
+	}
+
+	f := &model.JobUploadFile{}
+	f.Name = name + ".raw"
+	f.ViewName = &f.Name
+	f.DomainId = session.DomainId
+	f.Uuid = in.Uuid
+	f.UploadedBy = &model.Lookup{Id: int(session.UserId)}
+	f.Channel = model.NewString(model.UploadFileChannelScreenShare)
+
+	f.SetEncrypted(false)
+	f.GenerateThumbnail = false
+
+	s, e := api.ctrl.UploadP2PVideo(ctx, session, f, in.GetSdpOffer(), i)
+	if e != nil {
+		return nil, e
+	}
+
+	return &storage.UploadP2PVideoResponse{
+		SdpAnswer: s.SDP,
+	}, nil
+}
+
 func channelsType(channels []storage.UploadFileChannel) []string {
 	l := make([]string, 0, len(channels))
 	for _, v := range channels {

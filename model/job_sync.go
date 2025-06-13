@@ -3,6 +3,7 @@ package model
 const (
 	SyncJobRemove = "remove"
 	SyncJobSTT    = "STT"
+	Transcoding   = "transcoding"
 )
 
 type SyncJob struct {

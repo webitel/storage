@@ -1,6 +1,7 @@
 package sqlstore
 
 import (
+	"encoding/json"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -12,6 +13,29 @@ type SqlSyncFileStore struct {
 func NewSqlSyncFileStore(sqlStore SqlStore) store.SyncFileStore {
 	us := &SqlSyncFileStore{sqlStore}
 	return us
+}
+
+func (s SqlSyncFileStore) CreateJob(domainId, fileId int64, action string, config map[string]any) model.AppError {
+	c := []byte("null")
+
+	if config != nil {
+		c, _ = json.Marshal(config)
+	}
+	_, err := s.GetMaster().Exec(`insert into storage.file_jobs(file_id, action, config)
+select id, :Action, :Config::jsonb
+from storage.files
+where id = :Id and domain_id = :DomainId`, map[string]any{
+		"Action":   action,
+		"Config":   c,
+		"Id":       fileId,
+		"DomainId": domainId,
+	})
+
+	if err != nil {
+		return model.NewInternalError("store.sql_sync_file_job.create.app_error", err.Error())
+	}
+
+	return nil
 }
 
 func (s SqlSyncFileStore) FetchJobs(limit int) ([]*model.SyncJob, model.AppError) {

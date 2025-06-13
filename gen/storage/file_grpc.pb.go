@@ -27,6 +27,7 @@ const (
 	FileService_BulkGenerateFileLink_FullMethodName = "/storage.FileService/BulkGenerateFileLink"
 	FileService_DeleteFiles_FullMethodName          = "/storage.FileService/DeleteFiles"
 	FileService_SearchFiles_FullMethodName          = "/storage.FileService/SearchFiles"
+	FileService_UploadP2PVideo_FullMethodName       = "/storage.FileService/UploadP2PVideo"
 )
 
 // FileServiceClient is the client API for FileService service.
@@ -41,6 +42,7 @@ type FileServiceClient interface {
 	BulkGenerateFileLink(ctx context.Context, in *BulkGenerateFileLinkRequest, opts ...grpc.CallOption) (*BulkGenerateFileLinkResponse, error)
 	DeleteFiles(ctx context.Context, in *DeleteFilesRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	SearchFiles(ctx context.Context, in *SearchFilesRequest, opts ...grpc.CallOption) (*ListFile, error)
+	UploadP2PVideo(ctx context.Context, in *UploadP2PVideoRequest, opts ...grpc.CallOption) (*UploadP2PVideoResponse, error)
 }
 
 type fileServiceClient struct {
@@ -193,6 +195,15 @@ func (c *fileServiceClient) SearchFiles(ctx context.Context, in *SearchFilesRequ
 	return out, nil
 }
 
+func (c *fileServiceClient) UploadP2PVideo(ctx context.Context, in *UploadP2PVideoRequest, opts ...grpc.CallOption) (*UploadP2PVideoResponse, error) {
+	out := new(UploadP2PVideoResponse)
+	err := c.cc.Invoke(ctx, FileService_UploadP2PVideo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileServiceServer is the server API for FileService service.
 // All implementations must embed UnimplementedFileServiceServer
 // for forward compatibility
@@ -205,6 +216,7 @@ type FileServiceServer interface {
 	BulkGenerateFileLink(context.Context, *BulkGenerateFileLinkRequest) (*BulkGenerateFileLinkResponse, error)
 	DeleteFiles(context.Context, *DeleteFilesRequest) (*DeleteFilesResponse, error)
 	SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error)
+	UploadP2PVideo(context.Context, *UploadP2PVideoRequest) (*UploadP2PVideoResponse, error)
 	mustEmbedUnimplementedFileServiceServer()
 }
 
@@ -235,6 +247,9 @@ func (UnimplementedFileServiceServer) DeleteFiles(context.Context, *DeleteFilesR
 }
 func (UnimplementedFileServiceServer) SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchFiles not implemented")
+}
+func (UnimplementedFileServiceServer) UploadP2PVideo(context.Context, *UploadP2PVideoRequest) (*UploadP2PVideoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadP2PVideo not implemented")
 }
 func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
 
@@ -412,6 +427,24 @@ func _FileService_SearchFiles_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_UploadP2PVideo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadP2PVideoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).UploadP2PVideo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_UploadP2PVideo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).UploadP2PVideo(ctx, req.(*UploadP2PVideoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileService_ServiceDesc is the grpc.ServiceDesc for FileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -438,6 +471,10 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchFiles",
 			Handler:    _FileService_SearchFiles_Handler,
+		},
+		{
+			MethodName: "UploadP2PVideo",
+			Handler:    _FileService_UploadP2PVideo_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

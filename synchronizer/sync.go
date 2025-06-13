@@ -121,6 +121,12 @@ func (s *synchronizer) getTask(src *model.SyncJob) interfaces.TaskInterface {
 			file: *src,
 		}
 
+	case model.Transcoding:
+		return &transcoding{
+			app:  s.App,
+			file: *src,
+		}
+
 	default:
 		return nil
 	}

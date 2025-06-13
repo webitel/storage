@@ -20,6 +20,7 @@ type RoutesPublic struct {
 	Files               *mux.Router // for chat
 	Jobs                *mux.Router
 	Tts                 *mux.Router
+	WebRTC              *mux.Router
 }
 
 type API struct {
@@ -42,6 +43,7 @@ func Init(a *app.App, root *mux.Router) *API {
 	api.PublicRoutes.Files = api.PublicRoutes.ApiRoot.PathPrefix("/file").Subrouter()
 	api.PublicRoutes.Jobs = api.PublicRoutes.ApiRoot.PathPrefix("/jobs").Subrouter()
 	api.PublicRoutes.Tts = api.PublicRoutes.ApiRoot.PathPrefix("/tts").Subrouter()
+	api.PublicRoutes.WebRTC = api.PublicRoutes.ApiRoot.PathPrefix("/webrtc").Subrouter()
 
 	api.PublicRoutes.AnyFiles = api.PublicRoutes.ApiRoot.PathPrefix(model.AnyFileRouteName).Subrouter()
 
@@ -51,6 +53,7 @@ func Init(a *app.App, root *mux.Router) *API {
 	api.InitFile()
 	api.InitJobs()
 	api.InitTts()
+	api.InitWebRTC()
 
 	return api
 }
