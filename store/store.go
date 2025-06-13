@@ -70,6 +70,7 @@ type SyncFileStore interface {
 	SetRemoveJobs(localExpDay int) model.AppError
 	Clean(jobId int64) model.AppError
 	Remove(jobId int64) model.AppError
+	CreateJob(domainId, fileId int64, action string, config map[string]any) model.AppError
 
 	RemoveErrors() model.AppError
 	SetError(jobId int64, e error) model.AppError
