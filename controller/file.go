@@ -40,7 +40,5 @@ func (c *Controller) UploadP2PVideo(ctx context.Context, session *auth_manager.S
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_CREATE)
 	}
 
-	return c.App().UploadP2PVideo(app.SessionDescription{
-		SDP: offerSdp,
-	}, file, ice)
+	return c.App().UploadP2PVideo(offerSdp, file, ice)
 }

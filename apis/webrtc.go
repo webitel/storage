@@ -53,7 +53,7 @@ func webrtcUploadVideo(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	log := c.Log.With(wlog.String("name", file.Name))
 
-	answer, err = c.App.UploadP2PVideo(offer.SessionDescription, file, offer.ICEServers)
+	answer, err = c.App.UploadP2PVideo(offer.SessionDescription.SDP, file, offer.ICEServers)
 	if err != nil {
 		log.Error(err.Error())
 	}
