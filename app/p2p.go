@@ -18,8 +18,12 @@ var webrtcAPI *webrtc.API
 type SessionDescription = webrtc.SessionDescription
 type ICEServer = webrtc.ICEServer
 
-func (app *App) UploadP2PVideo(offer SessionDescription, file *model.JobUploadFile, ice []ICEServer) (*SessionDescription, error) {
+func (app *App) UploadP2PVideo(sdpOffer string, file *model.JobUploadFile, ice []ICEServer) (*SessionDescription, error) {
 	var answer SessionDescription
+	offer := webrtc.SessionDescription{
+		Type: webrtc.SDPTypeOffer,
+		SDP:  sdpOffer,
+	}
 	var peerConnection *webrtc.PeerConnection
 	var err error
 
