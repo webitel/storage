@@ -61,10 +61,10 @@ func (app *App) UploadP2PVideo(sdpOffer string, file *model.JobUploadFile, ice [
 			if appErr := app.SyncUpload(rd, file); appErr != nil {
 				log.Error(appErr.Error())
 			} else {
-				appErr = app.Store.SyncFile().CreateJob(file.DomainId, file.Id, model.Transcoding, nil)
-				if appErr != nil {
-					log.Error(appErr.Error())
-				}
+				//appErr = app.Store.SyncFile().CreateJob(file.DomainId, file.Id, model.Transcoding, nil)
+				//if appErr != nil {
+				//	log.Error(appErr.Error())
+				//}
 			}
 		}()
 
