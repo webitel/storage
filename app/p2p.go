@@ -10,6 +10,7 @@ import (
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 	"io"
+	"os"
 	"strings"
 )
 
@@ -17,6 +18,8 @@ var webrtcAPI *webrtc.API
 
 type SessionDescription = webrtc.SessionDescription
 type ICEServer = webrtc.ICEServer
+
+var debugRtp = os.Getenv("DEBUG_RTP") == "true"
 
 func (app *App) UploadP2PVideo(sdpOffer string, file *model.JobUploadFile, ice []ICEServer) (*SessionDescription, error) {
 	var answer SessionDescription
@@ -92,6 +95,11 @@ func (app *App) UploadP2PVideo(sdpOffer string, file *model.JobUploadFile, ice [
 					}
 					return
 				}
+
+				if debugRtp {
+					log.Debug(fmt.Sprintf("rtp ts=%d seq=%d", rtpPacket.Timestamp, rtpPacket.SequenceNumber))
+				}
+
 				if err = writer.WriteRTP(rtpPacket); err != nil {
 					log.Error(err.Error())
 					return
