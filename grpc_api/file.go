@@ -567,7 +567,38 @@ func (api *file) UploadP2PVideo(ctx context.Context, in *storage.UploadP2PVideoR
 	}
 
 	return &storage.UploadP2PVideoResponse{
-		SdpAnswer: s.SDP,
+		SdpAnswer: s.AnswerSDP(),
+		Id:        s.Id,
+	}, nil
+}
+
+func (api *file) StopP2PVideo(ctx context.Context, in *storage.StopP2PVideoRequest) (*storage.StopP2PVideoResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	e := api.ctrl.CloseP2P(ctx, session, in.Id)
+	if e != nil {
+		return nil, e
+	}
+
+	return &storage.StopP2PVideoResponse{}, nil
+}
+
+func (api *file) RenegotiateP2PVideo(ctx context.Context, in *storage.RenegotiateP2PVideoRequest) (*storage.RenegotiateP2PVideoResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	s, e := api.ctrl.RenegotiateP2P(ctx, session, in.Id, in.SdpOffer)
+	if e != nil {
+		return nil, e
+	}
+
+	return &storage.RenegotiateP2PVideoResponse{
+		SdpAnswer: s.AnswerSDP(),
 	}, nil
 }
 

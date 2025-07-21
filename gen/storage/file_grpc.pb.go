@@ -28,6 +28,8 @@ const (
 	FileService_DeleteFiles_FullMethodName          = "/storage.FileService/DeleteFiles"
 	FileService_SearchFiles_FullMethodName          = "/storage.FileService/SearchFiles"
 	FileService_UploadP2PVideo_FullMethodName       = "/storage.FileService/UploadP2PVideo"
+	FileService_StopP2PVideo_FullMethodName         = "/storage.FileService/StopP2PVideo"
+	FileService_RenegotiateP2PVideo_FullMethodName  = "/storage.FileService/RenegotiateP2PVideo"
 )
 
 // FileServiceClient is the client API for FileService service.
@@ -43,6 +45,8 @@ type FileServiceClient interface {
 	DeleteFiles(ctx context.Context, in *DeleteFilesRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	SearchFiles(ctx context.Context, in *SearchFilesRequest, opts ...grpc.CallOption) (*ListFile, error)
 	UploadP2PVideo(ctx context.Context, in *UploadP2PVideoRequest, opts ...grpc.CallOption) (*UploadP2PVideoResponse, error)
+	StopP2PVideo(ctx context.Context, in *StopP2PVideoRequest, opts ...grpc.CallOption) (*StopP2PVideoResponse, error)
+	RenegotiateP2PVideo(ctx context.Context, in *RenegotiateP2PVideoRequest, opts ...grpc.CallOption) (*RenegotiateP2PVideoResponse, error)
 }
 
 type fileServiceClient struct {
@@ -204,6 +208,24 @@ func (c *fileServiceClient) UploadP2PVideo(ctx context.Context, in *UploadP2PVid
 	return out, nil
 }
 
+func (c *fileServiceClient) StopP2PVideo(ctx context.Context, in *StopP2PVideoRequest, opts ...grpc.CallOption) (*StopP2PVideoResponse, error) {
+	out := new(StopP2PVideoResponse)
+	err := c.cc.Invoke(ctx, FileService_StopP2PVideo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *fileServiceClient) RenegotiateP2PVideo(ctx context.Context, in *RenegotiateP2PVideoRequest, opts ...grpc.CallOption) (*RenegotiateP2PVideoResponse, error) {
+	out := new(RenegotiateP2PVideoResponse)
+	err := c.cc.Invoke(ctx, FileService_RenegotiateP2PVideo_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileServiceServer is the server API for FileService service.
 // All implementations must embed UnimplementedFileServiceServer
 // for forward compatibility
@@ -217,6 +239,8 @@ type FileServiceServer interface {
 	DeleteFiles(context.Context, *DeleteFilesRequest) (*DeleteFilesResponse, error)
 	SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error)
 	UploadP2PVideo(context.Context, *UploadP2PVideoRequest) (*UploadP2PVideoResponse, error)
+	StopP2PVideo(context.Context, *StopP2PVideoRequest) (*StopP2PVideoResponse, error)
+	RenegotiateP2PVideo(context.Context, *RenegotiateP2PVideoRequest) (*RenegotiateP2PVideoResponse, error)
 	mustEmbedUnimplementedFileServiceServer()
 }
 
@@ -250,6 +274,12 @@ func (UnimplementedFileServiceServer) SearchFiles(context.Context, *SearchFilesR
 }
 func (UnimplementedFileServiceServer) UploadP2PVideo(context.Context, *UploadP2PVideoRequest) (*UploadP2PVideoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadP2PVideo not implemented")
+}
+func (UnimplementedFileServiceServer) StopP2PVideo(context.Context, *StopP2PVideoRequest) (*StopP2PVideoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StopP2PVideo not implemented")
+}
+func (UnimplementedFileServiceServer) RenegotiateP2PVideo(context.Context, *RenegotiateP2PVideoRequest) (*RenegotiateP2PVideoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenegotiateP2PVideo not implemented")
 }
 func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
 
@@ -445,6 +475,42 @@ func _FileService_UploadP2PVideo_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_StopP2PVideo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopP2PVideoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).StopP2PVideo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_StopP2PVideo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).StopP2PVideo(ctx, req.(*StopP2PVideoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FileService_RenegotiateP2PVideo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenegotiateP2PVideoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).RenegotiateP2PVideo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_RenegotiateP2PVideo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).RenegotiateP2PVideo(ctx, req.(*RenegotiateP2PVideoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileService_ServiceDesc is the grpc.ServiceDesc for FileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -475,6 +541,14 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UploadP2PVideo",
 			Handler:    _FileService_UploadP2PVideo_Handler,
+		},
+		{
+			MethodName: "StopP2PVideo",
+			Handler:    _FileService_StopP2PVideo_Handler,
+		},
+		{
+			MethodName: "RenegotiateP2PVideo",
+			Handler:    _FileService_RenegotiateP2PVideo_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
