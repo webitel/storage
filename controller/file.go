@@ -60,3 +60,16 @@ func (c *Controller) CloseP2P(ctx context.Context, session *auth_manager.Session
 
 	return c.app.CloseP2P(id)
 }
+
+var errNoActionSearchScreenRecordings = model.NewForbiddenError("controller.media_file.search_screen_recordings", "You don't have access to control_agent_screen action")
+
+const (
+	PermissionControlAgentScreen = "control_agent_screen"
+)
+
+func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_manager.Session, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
+	if !session.HasAction(PermissionControlAgentScreen) {
+		return nil, false, errNoActionSearchScreenRecordings
+	}
+	return c.app.SearchFiles(ctx, session.Domain(0), search)
+}
