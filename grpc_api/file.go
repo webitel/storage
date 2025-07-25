@@ -529,11 +529,6 @@ func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest
 	}, nil
 }
 
-const (
-	screenshotChannel    = "screenshot"
-	screensharingChannel = "screensharing"
-)
-
 func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchScreenRecordingsRequest) (*storage.ListFile, error) {
 	session, err := api.ctrl.GetSessionFromCtx(ctx)
 	if err != nil {
@@ -550,7 +545,7 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		},
 		Ids:        in.Id,
 		UploadedBy: []int64{in.GetUserId()},
-		Channels:   []string{screenshotChannel, screensharingChannel},
+		Channels:   []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
 	}
 
 	if in.UploadedAt != nil {
