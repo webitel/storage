@@ -529,6 +529,55 @@ func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest
 	}, nil
 }
 
+func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchScreenRecordingsRequest) (*storage.ListFile, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Q:       in.GetQ(),
+			Page:    int(in.GetPage()),
+			PerPage: int(in.GetSize()),
+			Fields:  in.Fields,
+			Sort:    in.Sort,
+		},
+		Ids:        in.Id,
+		UploadedBy: []int64{in.GetUserId()},
+		Channels:   []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
+	}
+
+	if in.UploadedAt != nil {
+		search.UploadedAt = &model.FilterBetween{
+			From: in.GetUploadedAt().GetFrom(),
+			To:   in.GetUploadedAt().GetTo(),
+		}
+	}
+
+	if in.RetentionUntil != nil {
+		search.RetentionUntil = &model.FilterBetween{
+			From: in.GetRetentionUntil().GetFrom(),
+			To:   in.GetRetentionUntil().GetTo(),
+		}
+	}
+
+	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*storage.File, 0, len(output))
+	for _, v := range output {
+		items = append(items, toGrpcFile(v))
+	}
+
+	return &storage.ListFile{
+		Next:  !next,
+		Items: items,
+	}, nil
+}
+
 func (api *file) UploadP2PVideo(ctx context.Context, in *storage.UploadP2PVideoRequest) (*storage.UploadP2PVideoResponse, error) {
 	session, err := api.ctrl.GetSessionFromCtx(ctx)
 	if err != nil {
@@ -632,8 +681,8 @@ func toGrpcFile(src *model.File) *storage.File {
 		f.Sha256Sum = *src.SHA256Sum
 	}
 
-	if src.Channel != nil {
-		f.Channel = channelTypeGrpc(*src.Channel)
+	if src.BaseFile.Channel != nil {
+		f.Channel = channelTypeGrpc(*src.BaseFile.Channel)
 	}
 
 	if src.Thumbnail != nil {
@@ -673,6 +722,10 @@ func channelTypeGrpc(channel string) storage.UploadFileChannel {
 		return storage.UploadFileChannel_MediaChannel
 	case model.UploadFileChannelLog:
 		return storage.UploadFileChannel_LogChannel
+	case model.UploadFileChannelScreenshot:
+		return storage.UploadFileChannel_ScreenshotChannel
+	case model.UploadFileChannelScreenShare:
+		return storage.UploadFileChannel_ScreenSharingChannel
 	default:
 		return storage.UploadFileChannel_UnknownChannel
 
