@@ -134,7 +134,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
-		CreatedAt: model.GetMillis(),
+		CreatedAt: file.CreatedAt,
 		BaseFile: model.BaseFile{
 			Size:           file.Size,
 			Name:           file.Name,
@@ -147,6 +147,10 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			UploadedBy:     file.UploadedBy,
 		},
 		ProfileId: profileId,
+	}
+
+	if file.CreatedAt == 0 {
+		file.CreatedAt = model.GetMillis()
 	}
 
 	h := sha256.New()

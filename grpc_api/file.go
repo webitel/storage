@@ -68,6 +68,12 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	fileRequest.ViewName = &metadata.Metadata.Name
 	fileRequest.Channel = model.NewString(channelType(metadata.Metadata.Channel))
 	fileRequest.GenerateThumbnail = metadata.Metadata.GetGenerateThumbnail()
+	if metadata.Metadata.UploadedBy > 0 {
+		fileRequest.UploadedBy = &model.Lookup{Id: int(metadata.Metadata.UploadedBy)}
+	}
+	if metadata.Metadata.CreatedAt > 0 {
+		fileRequest.CreatedAt = metadata.Metadata.CreatedAt
+	}
 
 	// TODO DEV-5174
 	if metadata.Metadata.Channel == storage.UploadFileChannel_MailChannel {
@@ -706,6 +712,11 @@ func channelType(channel storage.UploadFileChannel) string {
 		return model.UploadFileChannelMedia
 	case storage.UploadFileChannel_LogChannel:
 		return model.UploadFileChannelLog
+	case storage.UploadFileChannel_ScreenSharingChannel:
+		return model.UploadFileChannelScreenShare
+	case storage.UploadFileChannel_ScreenshotChannel:
+		return model.UploadFileChannelScreenshot
+
 	default:
 		return model.UploadFileChannelChat
 
