@@ -19,7 +19,12 @@ func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId,
 }
 
 func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFile) model.AppError {
-	return c.app.SyncUpload(src, file)
+	src2, err := c.app.FilePolicyForUpload(file.DomainId, &file.BaseFile, src)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+	return c.app.SyncUpload(src2, file)
 }
 
 func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int, file *model.JobUploadFile) model.AppError {
