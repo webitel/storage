@@ -52,7 +52,7 @@ func unaryInterceptor(ctx context.Context,
 			// 	}
 			// 	return er.Message
 			// }
-			return h, status.Error(httpCodeToGrpc(e.GetStatusCode()), e.GetDetailedError())
+			return h, wrapGrpcErr(e)
 		default:
 			return h, err
 		}
@@ -74,7 +74,7 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 		switch err.(type) {
 		case model.AppError:
 			e := err.(model.AppError)
-			return status.Error(httpCodeToGrpc(e.GetStatusCode()), e.GetDetailedError())
+			return wrapGrpcErr(e)
 		default:
 			return err
 		}
@@ -85,22 +85,32 @@ func streamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamS
 	return err
 }
 
-func httpCodeToGrpc(c int) codes.Code {
-	switch c {
+func wrapGrpcErr(err model.AppError) error {
+
+	if model.IsFilePolicyError(err) { // WTEL-6931
+		return status.Error(codes.FailedPrecondition, err.GetId())
+	}
+
+	var code codes.Code
+
+	switch err.GetStatusCode() {
 	case http.StatusBadRequest:
-		return codes.InvalidArgument
+		code = codes.InvalidArgument
 	case http.StatusAccepted:
-		return codes.ResourceExhausted
+		code = codes.ResourceExhausted
 	case http.StatusUnauthorized:
-		return codes.Unauthenticated
+		code = codes.Unauthenticated
 	case http.StatusForbidden:
-		return codes.PermissionDenied
+		code = codes.PermissionDenied
 	case http.StatusNotFound:
-		return codes.NotFound
+		code = codes.NotFound
 	default:
-		return codes.Internal
+
+		code = codes.Internal
 
 	}
+
+	return status.Error(code, err.GetDetailedError())
 }
 
 func NewGrpcServer(settings model.ServerSettings) *GrpcServer {
