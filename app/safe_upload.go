@@ -33,7 +33,7 @@ type SafeUpload struct {
 	request         *model.JobUploadFile
 	profileId       *int
 	cancelSleepChan chan struct{}
-	err             chan error // todo
+	err             model.AppError
 	uploaded        chan struct{}
 	size            int
 	mx              sync.RWMutex
@@ -83,6 +83,9 @@ func (s *SafeUpload) SetError(err error) {
 }
 
 func (s *SafeUpload) Write(src []byte) error {
+	if s.err != nil {
+		return s.err
+	}
 	n, err := s.writer.Write(src)
 	s.mx.Lock()
 	s.size += n
@@ -101,6 +104,10 @@ func (s *SafeUpload) run() {
 
 	s.setState(SafeUploadStateFinished)
 	if err != nil {
+		s.mx.Lock()
+		s.err = err
+		s.mx.Unlock()
+
 		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, error=%s", s.id, s.request.Name, err.GetDetailedError()))
 	} else {
 		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
@@ -192,7 +199,7 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpl
 		state:     SafeUploadStateActive,
 		profileId: profileId,
 		id:        model.NewId(),
-		err:       make(chan error),
+		err:       nil,
 		uploaded:  make(chan struct{}),
 		request:   req,
 		writer:    w,

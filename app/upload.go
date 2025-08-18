@@ -138,6 +138,7 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 
 	// Завершення обробки мініатюри, якщо вона існує
 	if ch != nil {
+		thumbnail.StopWriter()
 		if err := <-ch; err != nil {
 			return err
 		}

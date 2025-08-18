@@ -118,6 +118,15 @@ func (c *FilePolicy) IsValid() AppError {
 	return nil
 }
 
-func IsFilePolicyError(err AppError) bool {
-	return err != nil && err.GetId() == filePolicyErrorId
+func IsFilePolicyError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	switch e := err.(type) {
+	case AppError:
+		return e.GetId() == filePolicyErrorId
+	default:
+		return false
+	}
 }

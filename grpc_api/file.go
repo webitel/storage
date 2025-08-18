@@ -431,7 +431,10 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 			break
 		}
 
-		su.Write(chunk.Chunk)
+		gErr = su.Write(chunk.Chunk)
+		if gErr != nil {
+			break
+		}
 
 		if su.Progress {
 			in.Send(&storage.SafeUploadFileResponse{
@@ -444,12 +447,16 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		}
 	}
 
-	if gErr != nil && gErr != io.EOF {
+	policyErr := model.IsFilePolicyError(gErr)
+	if gErr != nil && gErr != io.EOF && !policyErr {
 		su.Sleep()
 		wlog.Error(gErr.Error())
 		return gErr
 	} else {
 		su.CloseWrite()
+		if policyErr {
+			return gErr
+		}
 	}
 
 	<-su.WaitUploaded()
