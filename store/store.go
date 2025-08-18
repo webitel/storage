@@ -86,6 +86,7 @@ type FileBackendProfileStore interface {
 	Update(profile *model.FileBackendProfile) (*model.FileBackendProfile, model.AppError)
 	Delete(domainId, id int64) model.AppError
 	GetSyncTime(domainId int64, id int) (*model.FileBackendProfileSync, model.AppError)
+	Default(domainId int64) (*model.DomainFileBackendHashKey, model.AppError)
 }
 
 type FileStore interface {

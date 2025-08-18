@@ -96,6 +96,13 @@ func (f *BaseFile) SetEncrypted(encrypted bool) {
 	f.Properties["encrypted"] = encrypted
 }
 
+func (f *BaseFile) SetPolicyId(id int) {
+	if f.Properties == nil {
+		f.Properties = StringInterface{}
+	}
+	f.Properties["policy_id"] = id
+}
+
 func (f *BaseFile) GetChannel() *string {
 
 	return f.Channel
