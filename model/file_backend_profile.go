@@ -114,6 +114,11 @@ type FileBackendProfileSync struct {
 	Disabled  bool  `json:"disabled" db:"disabled"`
 }
 
+type DomainFileBackendHashKey struct {
+	Id        int   `db:"id"`
+	UpdatedAt int64 `db:"updated_at"`
+}
+
 type FileBackendProfilePath struct {
 	Name        *string          `json:"name"`
 	ExpireDay   *int             `json:"expire_day"`

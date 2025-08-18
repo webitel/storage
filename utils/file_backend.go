@@ -22,6 +22,7 @@ type BaseFileBackend struct {
 	expireDay   int
 	maxFileSize float64
 	chipher     Chipher
+	id          int
 }
 
 func (b *BaseFileBackend) GetSyncTime() int64 {
@@ -38,6 +39,13 @@ func (b *BaseFileBackend) ExpireDay() int {
 	b.RLock()
 	defer b.RUnlock()
 	return b.expireDay
+}
+
+func (b *BaseFileBackend) Id() *int {
+	if b.id > 0 {
+		return &b.id
+	}
+	return nil
 }
 
 // save to megabytes
@@ -69,6 +77,7 @@ type FileBackend interface {
 	GetSize() float64
 	ExpireDay() int
 	Name() string
+	Id() *int
 }
 
 func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBackend, model.AppError) {
@@ -76,6 +85,7 @@ func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBa
 	case model.FileDriverLocal:
 		return &LocalFileBackend{
 			BaseFileBackend: BaseFileBackend{
+				id:        int(profile.Id),
 				syncTime:  profile.UpdatedAt,
 				writeSize: 0,
 				expireDay: profile.ExpireDay,
@@ -88,6 +98,7 @@ func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBa
 	case model.FileDriverS3:
 		d := &S3FileBackend{
 			BaseFileBackend: BaseFileBackend{
+				id:        int(profile.Id),
 				syncTime:  profile.UpdatedAt,
 				writeSize: 0,
 				expireDay: profile.ExpireDay,

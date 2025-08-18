@@ -4,11 +4,19 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
+	"golang.org/x/sync/singleflight"
 	"io"
+	"time"
+)
+
+var (
+	domainProfileCache = expirable.NewLRU[int64, utils.FileBackend](100, nil, time.Second*15)
+	sgDomainProfile    = singleflight.Group{}
 )
 
 // AddUploadJobFile додає файл до черги завантаження
@@ -34,13 +42,60 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) model
 	return err
 }
 
-// SyncUpload синхронно завантажує файл за замовчуванням
-func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) model.AppError {
-	if !app.UseDefaultStore() {
-		return model.NewInternalError("SyncUpload", "default store error")
+func (app *App) domainStore(domainId int64) (utils.FileBackend, model.AppError) {
+	store, ok := domainProfileCache.Get(domainId)
+	if ok {
+		return store, nil
 	}
 
-	return app.upload(src, nil, app.DefaultFileStore, file)
+	v, err, shared := sgDomainProfile.Do(fmt.Sprintf("%d", domainId), func() (any, error) {
+		var hk *model.DomainFileBackendHashKey
+		var err model.AppError
+		var s utils.FileBackend
+
+		hk, err = app.Store.FileBackendProfile().Default(domainId)
+		if err != nil {
+			return nil, err
+		}
+
+		if hk != nil {
+			if s, err = app.GetFileBackendStore(&hk.Id, &hk.UpdatedAt); err != nil {
+				return nil, err
+			}
+			return s, nil
+		}
+
+		if !app.UseDefaultStore() {
+			return nil, model.NewInternalError("SyncUpload", "default store error")
+		}
+
+		return app.DefaultFileStore, nil
+	})
+
+	if err != nil {
+		switch err.(type) {
+		case model.AppError:
+			return nil, err.(model.AppError)
+		default:
+			return nil, model.NewInternalError("app.domain_store.app_error", err.Error())
+		}
+	}
+
+	if !shared {
+		domainProfileCache.Add(domainId, v.(utils.FileBackend))
+	}
+
+	return v.(utils.FileBackend), nil
+}
+
+// SyncUpload синхронно завантажує файл за замовчуванням
+func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) model.AppError {
+	store, err := app.domainStore(file.DomainId)
+	if err != nil {
+		return err
+	}
+
+	return app.upload(src, store.Id(), store, file)
 }
 
 // SyncUploadToProfile синхронно завантажує файл у профіль користувача
@@ -131,6 +186,11 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 
 // syncUpload здійснює запис файлу до файлового сховища
 func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) (*model.File, model.AppError) {
+
+	if file.CreatedAt == 0 {
+		file.CreatedAt = model.GetMillis()
+	}
+
 	f := &model.File{
 		DomainId:  file.DomainId,
 		Uuid:      file.Uuid,
@@ -147,10 +207,6 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			UploadedBy:     file.UploadedBy,
 		},
 		ProfileId: profileId,
-	}
-
-	if file.CreatedAt == 0 {
-		file.CreatedAt = model.GetMillis()
 	}
 
 	h := sha256.New()

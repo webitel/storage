@@ -28,8 +28,13 @@ func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFi
 }
 
 func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int, file *model.JobUploadFile) model.AppError {
-	//c.app.FilePolicy(file.DomainId, &file.BaseFile, src)
-	return c.app.SyncUploadToProfile(src, profileId, file)
+	src2, err := c.app.FilePolicyForUpload(file.DomainId, &file.BaseFile, src)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	return c.app.SyncUploadToProfile(src2, profileId, file)
 }
 
 func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, model.AppError) {

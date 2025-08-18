@@ -1,6 +1,8 @@
 package sqlstore
 
 import (
+	dbsql "database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/lib/pq"
@@ -247,4 +249,22 @@ where p.domain_id = :DomainId and p.id = :Id`, map[string]interface{}{
 	}
 
 	return sync, nil
+}
+
+func (e SqlFileBackendProfileStore) Default(domainId int64) (*model.DomainFileBackendHashKey, model.AppError) {
+	var hk *model.DomainFileBackendHashKey
+	err := e.GetReplica().SelectOne(&hk, `select p.id, p.updated_at
+from storage.file_backend_profiles p
+where domain_id = :DomainId
+    and not disabled
+order by priority desc
+limit 1`, map[string]any{
+		"DomainId": domainId,
+	})
+
+	if !errors.Is(err, dbsql.ErrNoRows) && err != nil {
+		return nil, model.NewCustomCodeError("store.sql_file_backend_profile.default.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return hk, nil
 }

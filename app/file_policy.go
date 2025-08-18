@@ -29,6 +29,7 @@ type PolicyReader struct {
 }
 
 type FilePolicy struct {
+	id   int
 	name string
 	mime []string
 
@@ -94,6 +95,7 @@ func (app *App) newPoliciesHub(domainId int64, policies []model.FilePolicy) *Pol
 		}
 
 		p := FilePolicy{
+			id:            int(v.Id),
 			name:          v.Name,
 			speedDownload: v.SpeedDownload * 1024, // kbs
 			speedUpload:   v.SpeedUpload * 1024,   // kbs
@@ -193,6 +195,8 @@ func (ph *DomainFilePolicy) policyReaderForUpload(domainId int64, file *model.Ba
 		maxSize: policy.maxUploadSize,
 		name:    policy.name,
 	}
+
+	file.SetPolicyId(policy.id)
 
 	if file.Channel == nil || *file.Channel != model.UploadFileChannelMedia {
 		// TODO check all channel ?
