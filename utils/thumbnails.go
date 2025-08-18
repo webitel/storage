@@ -80,6 +80,10 @@ func (t *Thumbnail) Close() (err error) {
 	return nil
 }
 
+func (t *Thumbnail) StopWriter() {
+	t.stdin.Close()
+}
+
 func (t *Thumbnail) Size() int64 {
 	return t.l
 }
