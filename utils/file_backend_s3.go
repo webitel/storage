@@ -1,13 +1,16 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/webitel/storage/model"
 	"io"
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
+
+	"github.com/webitel/storage/model"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -103,25 +106,22 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppErro
 	}
 
 	res, err := self.uploader.Upload(params)
-
 	if err != nil {
-		if _, ok := err.(awserr.Error); ok {
-			err = err.(awserr.Error).OrigErr()
+		var apperr model.AppError
+		if errors.As(err, &apperr) {
+			return 0, apperr
 		}
-		switch e := err.(type) {
-		case model.AppError:
-			return 0, e
-		default:
-			if err != nil {
-				return 0, model.NewInternalError("utils.file.s3.writing.app_error", err.Error())
-			} else {
-				return 0, model.NewInternalError("utils.file.s3.writing.app_error", "unknown S3 upload error")
-			}
+
+		var aerr awserr.Error
+		if errors.As(err, &aerr) {
+			return 0, model.NewInternalError("utils.file.s3.writing", aerr.OrigErr().Error())
 		}
+
+		return 0, model.NewInternalError("utils.file.s3.writing.unknown", err.Error())
 	}
+
 	file.SetPropertyString("location", location)
 	wlog.Debug(fmt.Sprintf("[%s] create new file %s", self.name, res.Location))
-
 	h, _ := self.svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: params.Bucket,
 		Key:    params.Key,
