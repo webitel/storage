@@ -28,6 +28,7 @@ const (
 	FileService_DeleteFiles_FullMethodName            = "/storage.FileService/DeleteFiles"
 	FileService_SearchFiles_FullMethodName            = "/storage.FileService/SearchFiles"
 	FileService_SearchScreenRecordings_FullMethodName = "/storage.FileService/SearchScreenRecordings"
+	FileService_DeleteScreenRecordings_FullMethodName = "/storage.FileService/DeleteScreenRecordings"
 )
 
 // FileServiceClient is the client API for FileService service.
@@ -43,6 +44,7 @@ type FileServiceClient interface {
 	DeleteFiles(ctx context.Context, in *DeleteFilesRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	SearchFiles(ctx context.Context, in *SearchFilesRequest, opts ...grpc.CallOption) (*ListFile, error)
 	SearchScreenRecordings(ctx context.Context, in *SearchScreenRecordingsRequest, opts ...grpc.CallOption) (*ListFile, error)
+	DeleteScreenRecordings(ctx context.Context, in *DeleteScreenRecordingsRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 }
 
 type fileServiceClient struct {
@@ -204,6 +206,15 @@ func (c *fileServiceClient) SearchScreenRecordings(ctx context.Context, in *Sear
 	return out, nil
 }
 
+func (c *fileServiceClient) DeleteScreenRecordings(ctx context.Context, in *DeleteScreenRecordingsRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error) {
+	out := new(DeleteFilesResponse)
+	err := c.cc.Invoke(ctx, FileService_DeleteScreenRecordings_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileServiceServer is the server API for FileService service.
 // All implementations must embed UnimplementedFileServiceServer
 // for forward compatibility
@@ -217,6 +228,7 @@ type FileServiceServer interface {
 	DeleteFiles(context.Context, *DeleteFilesRequest) (*DeleteFilesResponse, error)
 	SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error)
 	SearchScreenRecordings(context.Context, *SearchScreenRecordingsRequest) (*ListFile, error)
+	DeleteScreenRecordings(context.Context, *DeleteScreenRecordingsRequest) (*DeleteFilesResponse, error)
 	mustEmbedUnimplementedFileServiceServer()
 }
 
@@ -250,6 +262,9 @@ func (UnimplementedFileServiceServer) SearchFiles(context.Context, *SearchFilesR
 }
 func (UnimplementedFileServiceServer) SearchScreenRecordings(context.Context, *SearchScreenRecordingsRequest) (*ListFile, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchScreenRecordings not implemented")
+}
+func (UnimplementedFileServiceServer) DeleteScreenRecordings(context.Context, *DeleteScreenRecordingsRequest) (*DeleteFilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteScreenRecordings not implemented")
 }
 func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
 
@@ -445,6 +460,24 @@ func _FileService_SearchScreenRecordings_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_DeleteScreenRecordings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteScreenRecordingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).DeleteScreenRecordings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_DeleteScreenRecordings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).DeleteScreenRecordings(ctx, req.(*DeleteScreenRecordingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileService_ServiceDesc is the grpc.ServiceDesc for FileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -475,6 +508,10 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchScreenRecordings",
 			Handler:    _FileService_SearchScreenRecordings_Handler,
+		},
+		{
+			MethodName: "DeleteScreenRecordings",
+			Handler:    _FileService_DeleteScreenRecordings_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

@@ -25,7 +25,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine/pkg/discovery v0.0.0-20250508122206-b7fb2a4de82e
 	github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30
-	github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30
+	github.com/webitel/engine/pkg/wbt v0.0.0-20250909063325-9c4271861b61
 	github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8
 	github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/otel v0.0.0-20250605113615-1ee94622655d

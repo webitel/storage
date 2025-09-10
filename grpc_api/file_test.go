@@ -13,16 +13,17 @@ import (
 	"time"
 )
 
-var service = "10.10.10.25:8767"
+var service = "10.10.10.25:10039"
 var testFolder = "../test_data"
 
 func TestFile(t *testing.T) {
-	downloadFile()
+	//downloadFile()
 	var uploadId *string
-	fileLoc := testFolder + "/2.mp4"
+	fileLoc := testFolder + "/img.png"
 	uploadId = sendFile(uploadId, fileLoc)
 	for {
 		time.Sleep(time.Millisecond * 500)
+		return
 		uploadId = sendFile(uploadId, fileLoc)
 		if uploadId == nil {
 			fmt.Println("OK")
@@ -147,11 +148,11 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 					DomainId: 1,
 					Name:     stats.Name(),
 					//MimeType: "image/png",
-					MimeType:          "audio/mp4",
+					MimeType:          "image/png",
 					Uuid:              "blabla",
 					StreamResponse:    false,
-					ProfileId:         221,
-					GenerateThumbnail: true,
+					ProfileId:         220,
+					GenerateThumbnail: false,
 				},
 			},
 		})
@@ -177,10 +178,10 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 		}
 		i++
 
-		if i == 50 {
-			cancel()
-			return
-		}
+		//if i == 500009000000 {
+		//	cancel()
+		//	return
+		//}
 
 		if n == 0 {
 			break

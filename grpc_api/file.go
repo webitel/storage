@@ -558,7 +558,16 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		},
 		Ids:        in.Id,
 		UploadedBy: []int64{in.GetUserId()},
-		Channels:   []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
+		Channels:   []string{channelType(in.GetChannel())},
+	}
+
+	switch in.GetChannel() {
+	case storage.UploadFileChannel_ScreenSharingChannel:
+		search.Channels = []string{model.UploadFileChannelScreenShare}
+	case storage.UploadFileChannel_ScreenshotChannel:
+		search.Channels = []string{model.UploadFileChannelScreenshot}
+	default:
+		return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
 	}
 
 	if in.UploadedAt != nil {
@@ -589,6 +598,21 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		Next:  !next,
 		Items: items,
 	}, nil
+}
+
+func (api *file) DeleteScreenRecordings(ctx context.Context, in *storage.DeleteScreenRecordingsRequest) (*storage.DeleteFilesResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.ctrl.DeleteScreenRecordings(ctx, session, in.UserId, in.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.DeleteFilesResponse{}, nil
+
 }
 
 func channelsType(channels []storage.UploadFileChannel) []string {
