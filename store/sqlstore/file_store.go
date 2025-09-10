@@ -38,7 +38,7 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
 		`domain_id = :DomainId
-				and (:UserId::int[] isnull or (uploaded_by->>'id')::bigint = any(:UserId))
+				and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
 				and (:Ids::int[] isnull or id = any(:Ids))
 				and (:Channels::varchar[] isnull or channel = any(:Channels::varchar[]))
 				and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
@@ -86,7 +86,7 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	})
 }
 
-func (self SqlFileStore) MarkRemove(domainId int64, ids []int64) model.AppError {
+func (self *SqlFileStore) MarkRemove(domainId int64, ids []int64) model.AppError {
 	_, err := self.GetMaster().Exec(`update storage.files
 set removed = true
 where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
@@ -96,6 +96,24 @@ where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
 
 	if err != nil {
 		return model.NewCustomCodeError("store.sql_file.remove.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return nil
+}
+
+func (self *SqlFileStore) MarkRemoveByChannels(ctx context.Context, domainId int64, ids []int64, channels []string) model.AppError {
+	_, err := self.GetMaster().WithContext(ctx).Exec(`update storage.files
+set removed = true
+where domain_id = :DomainId
+  and id = any (:Ids::int8[])
+  and (:Channels::text[] isnull or channel = any(:Channels))`, map[string]interface{}{
+		"DomainId": domainId,
+		"Ids":      pq.Array(ids),
+		"Channels": pq.Array(channels),
+	})
+
+	if err != nil {
+		return model.NewCustomCodeError("store.sql_file.remove_by_chan.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return nil

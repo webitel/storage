@@ -33,7 +33,7 @@ func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Sessi
 	return c.app.SearchFiles(ctx, session.Domain(0), search)
 }
 
-var errNoActionSearchScreenRecordings = model.NewForbiddenError("controller.media_file.search_screen_recordings", "You don't have access to control_agent_screen action")
+var errNoActionSearchScreenRecordings = model.NewForbiddenError("files.search.screen", "You don't have access to control_agent_screen action")
 
 const (
 	PermissionControlAgentScreen = "control_agent_screen"
@@ -44,4 +44,41 @@ func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_m
 		return nil, false, errNoActionSearchScreenRecordings
 	}
 	return c.app.SearchFiles(ctx, session.Domain(0), search)
+}
+
+func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_manager.Session, userId int64, ids []int64) model.AppError {
+	if !session.HasAction(PermissionControlAgentScreen) {
+		return errNoActionSearchScreenRecordings
+	}
+
+	if len(ids) == 0 {
+		return model.NewBadRequestError("files.delete.screen", "id is empty")
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Fields:  []string{"id"},
+			Page:    0,
+			PerPage: 1000, // TODO
+		},
+		Ids:        ids,
+		UploadedBy: []int64{userId},
+		Channels:   []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
+	}
+
+	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
+	if err != nil {
+		return err
+	}
+
+	ids = make([]int64, 0, len(res))
+	for _, v := range res {
+		ids = append(ids, v.Id)
+	}
+
+	if len(ids) == 0 {
+		return nil
+	}
+
+	return c.app.RemoveFilesByChannels(ctx, session.Domain(0), ids, search.Channels)
 }
