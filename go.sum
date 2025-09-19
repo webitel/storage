@@ -351,10 +351,8 @@ github.com/webitel/engine/pkg/discovery v0.0.0-20250508122206-b7fb2a4de82e h1:F7
 github.com/webitel/engine/pkg/discovery v0.0.0-20250508122206-b7fb2a4de82e/go.mod h1:SYOLV0TUj7A8ZfCLdNgI08twGMXAlPzqkQ68XL5ePzo=
 github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30 h1:v7oEwlannQv2/Y4GdGlpFNS959ZL+xzx+Ed4NGfzdsA=
 github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30/go.mod h1:C5rpf4XfdQ6a5+MpL0Ix0SsH/RNcrerpzqSomDH3VQY=
-github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30 h1:9FHpHBohR3Twsekw0savL2zVTeYvVFjMbrHgj1O5n6s=
-github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30/go.mod h1:X0IamnomNaWvRaJihNIZSTiz3rcFuRm19qZq6uO8Tig=
-github.com/webitel/engine/pkg/wbt v0.0.0-20250909063325-9c4271861b61 h1:yqoj8zcIlUHXRwf1cK/+Z8yN47qvca1bpsdyYe/QE2k=
-github.com/webitel/engine/pkg/wbt v0.0.0-20250909063325-9c4271861b61/go.mod h1:15PVfPhimD18i+1ARcWq5ZZ8P5ugjpriGIT1+5/bDEw=
+github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3 h1:CGi0a21xjtalAzOmhhuiNsNzItKG4JLv+ZC/TyzCxN4=
+github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3/go.mod h1:15PVfPhimD18i+1ARcWq5ZZ8P5ugjpriGIT1+5/bDEw=
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8 h1:3++AqBWhwSUuhOSNcrSOpW8UdFaUn/CsXm++zzichCI=
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8/go.mod h1:xLS6bkOYzvYv0dYXUkd5yvYOtujUrXf9lS0gd4qAGO4=
 github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d h1:iKhk7+ocx0mAHp56CobtIj2/Ut4Ssg9gPN/OKnQLYaY=
