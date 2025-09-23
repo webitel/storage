@@ -92,3 +92,11 @@ func GetBetweenFromTime(src *FilterBetween) *time.Time {
 	t := time.Unix(0, src.From*int64(time.Millisecond))
 	return &t
 }
+
+func GetBetweenToTime(src *FilterBetween) *time.Time {
+	if src == nil || src.To == 0 {
+		return nil
+	}
+	t := time.Unix(0, src.To*int64(time.Millisecond))
+	return &t
+}

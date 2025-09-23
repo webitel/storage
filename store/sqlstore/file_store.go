@@ -34,10 +34,14 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 		"ReferenceIds": pq.Array(search.ReferenceIds),
 		"Channels":     pq.Array(search.Channels),
 		"UserId":       pq.Array(search.UploadedBy),
+		"From":         model.GetBetweenFromTime(search.UploadedAt),
+		"To":           model.GetBetweenToTime(search.UploadedAt),
 	}
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
 		`domain_id = :DomainId
+				and ( :From::timestamptz isnull or uploaded_at >= :From::timestamptz )
+				and ( :To::timestamptz isnull or uploaded_at <= :To::timestamptz )
 				and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
 				and (:Ids::int[] isnull or id = any(:Ids))
 				and (:Channels::varchar[] isnull or channel = any(:Channels::varchar[]))
