@@ -349,6 +349,8 @@ github.com/tv42/httpunix v0.0.0-20150427012821-b75d8614f926/go.mod h1:9ESjWnEqri
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
 github.com/webitel/engine/pkg/discovery v0.0.0-20250508122206-b7fb2a4de82e h1:F7gZsv63fNIvQFXDCkIK3lmxCREk9ADB1s0VnWgJY4g=
 github.com/webitel/engine/pkg/discovery v0.0.0-20250508122206-b7fb2a4de82e/go.mod h1:SYOLV0TUj7A8ZfCLdNgI08twGMXAlPzqkQ68XL5ePzo=
+github.com/webitel/engine/pkg/discovery v0.0.0-20250924123523-9c98a8a1adb1 h1:SEcRdIl0+7ZCEA08rR5DGzl9zUDc12E16KTGqvV0b+E=
+github.com/webitel/engine/pkg/discovery v0.0.0-20250924123523-9c98a8a1adb1/go.mod h1:SYOLV0TUj7A8ZfCLdNgI08twGMXAlPzqkQ68XL5ePzo=
 github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30 h1:v7oEwlannQv2/Y4GdGlpFNS959ZL+xzx+Ed4NGfzdsA=
 github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30/go.mod h1:C5rpf4XfdQ6a5+MpL0Ix0SsH/RNcrerpzqSomDH3VQY=
 github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3 h1:CGi0a21xjtalAzOmhhuiNsNzItKG4JLv+ZC/TyzCxN4=
