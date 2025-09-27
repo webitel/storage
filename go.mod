@@ -23,7 +23,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/robfig/cron v1.2.0
-	github.com/webitel/engine/pkg/discovery v0.0.0-20250508122206-b7fb2a4de82e
+	github.com/webitel/engine/pkg/discovery v0.0.0-20250925094226-59b6a9641d79
 	github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30
 	github.com/webitel/engine/pkg/wbt v0.0.0-20250508102602-4109efdb5e30
 	github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8
