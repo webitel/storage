@@ -30,6 +30,7 @@ const (
 	FileService_SearchScreenRecordings_FullMethodName        = "/storage.FileService/SearchScreenRecordings"
 	FileService_SearchScreenRecordingsByAgent_FullMethodName = "/storage.FileService/SearchScreenRecordingsByAgent"
 	FileService_DeleteScreenRecordings_FullMethodName        = "/storage.FileService/DeleteScreenRecordings"
+	FileService_DeleteScreenRecordingsByAgent_FullMethodName = "/storage.FileService/DeleteScreenRecordingsByAgent"
 )
 
 // FileServiceClient is the client API for FileService service.
@@ -47,6 +48,7 @@ type FileServiceClient interface {
 	SearchScreenRecordings(ctx context.Context, in *SearchScreenRecordingsRequest, opts ...grpc.CallOption) (*ListFile, error)
 	SearchScreenRecordingsByAgent(ctx context.Context, in *SearchScreenRecordingsByAgentRequest, opts ...grpc.CallOption) (*ListFile, error)
 	DeleteScreenRecordings(ctx context.Context, in *DeleteScreenRecordingsRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
+	DeleteScreenRecordingsByAgent(ctx context.Context, in *DeleteScreenRecordingsByAgentRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 }
 
 type fileServiceClient struct {
@@ -226,6 +228,15 @@ func (c *fileServiceClient) DeleteScreenRecordings(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *fileServiceClient) DeleteScreenRecordingsByAgent(ctx context.Context, in *DeleteScreenRecordingsByAgentRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error) {
+	out := new(DeleteFilesResponse)
+	err := c.cc.Invoke(ctx, FileService_DeleteScreenRecordingsByAgent_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FileServiceServer is the server API for FileService service.
 // All implementations must embed UnimplementedFileServiceServer
 // for forward compatibility
@@ -241,6 +252,7 @@ type FileServiceServer interface {
 	SearchScreenRecordings(context.Context, *SearchScreenRecordingsRequest) (*ListFile, error)
 	SearchScreenRecordingsByAgent(context.Context, *SearchScreenRecordingsByAgentRequest) (*ListFile, error)
 	DeleteScreenRecordings(context.Context, *DeleteScreenRecordingsRequest) (*DeleteFilesResponse, error)
+	DeleteScreenRecordingsByAgent(context.Context, *DeleteScreenRecordingsByAgentRequest) (*DeleteFilesResponse, error)
 	mustEmbedUnimplementedFileServiceServer()
 }
 
@@ -280,6 +292,9 @@ func (UnimplementedFileServiceServer) SearchScreenRecordingsByAgent(context.Cont
 }
 func (UnimplementedFileServiceServer) DeleteScreenRecordings(context.Context, *DeleteScreenRecordingsRequest) (*DeleteFilesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteScreenRecordings not implemented")
+}
+func (UnimplementedFileServiceServer) DeleteScreenRecordingsByAgent(context.Context, *DeleteScreenRecordingsByAgentRequest) (*DeleteFilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteScreenRecordingsByAgent not implemented")
 }
 func (UnimplementedFileServiceServer) mustEmbedUnimplementedFileServiceServer() {}
 
@@ -511,6 +526,24 @@ func _FileService_DeleteScreenRecordings_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_DeleteScreenRecordingsByAgent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteScreenRecordingsByAgentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).DeleteScreenRecordingsByAgent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_DeleteScreenRecordingsByAgent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).DeleteScreenRecordingsByAgent(ctx, req.(*DeleteScreenRecordingsByAgentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FileService_ServiceDesc is the grpc.ServiceDesc for FileService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -549,6 +582,10 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteScreenRecordings",
 			Handler:    _FileService_DeleteScreenRecordings_Handler,
+		},
+		{
+			MethodName: "DeleteScreenRecordingsByAgent",
+			Handler:    _FileService_DeleteScreenRecordingsByAgent_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

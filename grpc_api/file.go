@@ -675,6 +675,20 @@ func (api *file) DeleteScreenRecordings(ctx context.Context, in *storage.DeleteS
 
 }
 
+func (api *file) DeleteScreenRecordingsByAgent(ctx context.Context, in *storage.DeleteScreenRecordingsByAgentRequest) (*storage.DeleteFilesResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.ctrl.DeleteScreenRecordingsByAgent(ctx, session, int(in.AgentId), in.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.DeleteFilesResponse{}, nil
+}
+
 func channelsType(channels []storage.UploadFileChannel) []string {
 	l := make([]string, 0, len(channels))
 	for _, v := range channels {
