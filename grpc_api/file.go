@@ -557,8 +557,68 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 			Sort:    in.Sort,
 		},
 		Ids:        in.Id,
+		Removed:    model.NewBool(false),
 		UploadedBy: []int64{in.GetUserId()},
 		Channels:   []string{channelType(in.GetChannel())},
+	}
+
+	switch in.GetChannel() {
+	case storage.UploadFileChannel_ScreenSharingChannel:
+		search.Channels = []string{model.UploadFileChannelScreenShare}
+	case storage.UploadFileChannel_ScreenshotChannel:
+		search.Channels = []string{model.UploadFileChannelScreenshot}
+	default:
+		return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
+	}
+
+	if in.UploadedAt != nil {
+		search.UploadedAt = &model.FilterBetween{
+			From: in.GetUploadedAt().GetFrom(),
+			To:   in.GetUploadedAt().GetTo(),
+		}
+	}
+
+	if in.RetentionUntil != nil {
+		search.RetentionUntil = &model.FilterBetween{
+			From: in.GetRetentionUntil().GetFrom(),
+			To:   in.GetRetentionUntil().GetTo(),
+		}
+	}
+
+	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*storage.File, 0, len(output))
+	for _, v := range output {
+		items = append(items, toGrpcFile(v))
+	}
+
+	return &storage.ListFile{
+		Next:  !next,
+		Items: items,
+	}, nil
+}
+
+func (api *file) SearchScreenRecordingsByAgent(ctx context.Context, in *storage.SearchScreenRecordingsByAgentRequest) (*storage.ListFile, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Q:       in.GetQ(),
+			Page:    int(in.GetPage()),
+			PerPage: int(in.GetSize()),
+			Fields:  in.Fields,
+			Sort:    in.Sort,
+		},
+		Ids:      in.Id,
+		Removed:  model.NewBool(false),
+		Channels: []string{channelType(in.GetChannel())},
+		AgentIds: []int{int(in.GetAgentId())},
 	}
 
 	switch in.GetChannel() {

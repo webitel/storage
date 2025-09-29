@@ -13,6 +13,8 @@ type SearchFile struct {
 	ReferenceIds   []string // todo uuid rename
 	Channels       []string
 	RetentionUntil *FilterBetween
+	Removed        *bool
+	AgentIds       []int
 }
 
 type BaseFile struct {

@@ -36,6 +36,8 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 		"UserId":       pq.Array(search.UploadedBy),
 		"From":         model.GetBetweenFromTime(search.UploadedAt),
 		"To":           model.GetBetweenToTime(search.UploadedAt),
+		"Removed":      search.Removed,
+		"AgentIds":     pq.Array(search.AgentIds),
 	}
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
@@ -44,8 +46,14 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 				and ( :To::timestamptz isnull or uploaded_at <= :To::timestamptz )
 				and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
 				and (:Ids::int[] isnull or id = any(:Ids))
+				and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)
 				and (:Channels::varchar[] isnull or channel = any(:Channels::varchar[]))
 				and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
+				and (:AgentIds::int[] isnull or uploaded_by_id = any(array(select a.user_id
+					from call_center.cc_agent a
+					where a.domain_id = :DomainId
+						and a.id = any (:AgentIds::int[])))
+				)
 		`,
 		model.File{}, f)
 
