@@ -82,3 +82,40 @@ func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_m
 
 	return c.app.RemoveFilesByChannels(ctx, session.Domain(0), ids, search.Channels)
 }
+
+func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session *auth_manager.Session, agentId int, ids []int64) model.AppError {
+	if !session.HasAction(PermissionControlAgentScreen) {
+		return errNoActionSearchScreenRecordings
+	}
+
+	if len(ids) == 0 {
+		return model.NewBadRequestError("files.delete.screen", "id is empty")
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Fields:  []string{"id"},
+			Page:    0,
+			PerPage: 1000, // TODO
+		},
+		Ids:      ids,
+		AgentIds: []int{agentId},
+		Channels: []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
+	}
+
+	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
+	if err != nil {
+		return err
+	}
+
+	ids = make([]int64, 0, len(res))
+	for _, v := range res {
+		ids = append(ids, v.Id)
+	}
+
+	if len(ids) == 0 {
+		return nil
+	}
+
+	return c.app.RemoveFilesByChannels(ctx, session.Domain(0), ids, search.Channels)
+}
