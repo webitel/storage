@@ -19,6 +19,19 @@ func (c *Controller) DeleteFiles(session *auth_manager.Session, ids []int64) mod
 	return c.app.RemoveFiles(session.Domain(0), ids)
 }
 
+func (c *Controller) RestoreFiles(ctx context.Context, session *auth_manager.Session, ids []int64) model.AppError {
+	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
+	if !permission.CanRead() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+	}
+
+	if !permission.CanUpdate() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_UPDATE)
+	}
+
+	return c.app.RestoreFiles(ctx, session.Domain(0), ids, session.UserId)
+}
+
 // SearchFile TODO PERMISSION (OBAC or RBAC)
 func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Session, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFiles)

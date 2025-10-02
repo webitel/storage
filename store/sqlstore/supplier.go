@@ -194,7 +194,7 @@ func (me typeConverter) ToDb(val interface{}) (interface{}, error) {
 func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 	switch target.(type) {
 
-	case **model.Thumbnail:
+	case **model.Thumbnail, **model.MalwareScan:
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*[]byte)
 			if !ok {

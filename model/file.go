@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -28,6 +29,15 @@ type BaseFile struct {
 	Channel        *string         `db:"channel" json:"channel"`
 	RetentionUntil *time.Time      `db:"retention_until" json:"retention_until"`
 	UploadedBy     *Lookup         `db:"uploaded_by" json:"uploaded_by"`
+	Malware        *MalwareScan    `db:"malware" json:"malware,omitempty"`
+}
+
+type MalwareScan struct {
+	Found      bool       `db:"found" json:"found"`
+	Status     string     `db:"status" json:"status"`
+	Desc       *string    `db:"description" json:"description,omitempty"`
+	ScanDate   *time.Time `db:"scan_date" json:"scan_date,omitempty"`
+	Quarantine bool       `db:"-" json:"-"`
 }
 
 type File struct {
@@ -52,6 +62,15 @@ type Thumbnail struct {
 }
 
 func (t *Thumbnail) ToJson() *[]byte {
+	if t == nil {
+		return nil
+	}
+
+	d, _ := json.Marshal(t)
+	return &d
+}
+
+func (t *MalwareScan) ToJson() *[]byte {
 	if t == nil {
 		return nil
 	}
@@ -96,6 +115,27 @@ func (f *BaseFile) SetEncrypted(encrypted bool) {
 		f.Properties = StringInterface{}
 	}
 	f.Properties["encrypted"] = encrypted
+}
+
+func (f *BaseFile) SetMalwareScan(ms MalwareScan) {
+	f.Malware = &ms
+}
+
+func (f *BaseFile) StringMalware() string {
+	if f.Malware == nil {
+		return "false"
+	}
+
+	desc := "empty"
+	if f.Malware.Desc != nil {
+		desc = *f.Malware.Desc
+	}
+
+	return fmt.Sprintf("true (%s/%s)", f.Malware.Status, desc)
+}
+
+func (f *BaseFile) IsQuarantine() bool {
+	return f.Malware != nil && f.Malware.Quarantine
 }
 
 func (f *BaseFile) SetPolicyId(id int) {

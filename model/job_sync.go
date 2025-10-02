@@ -4,6 +4,7 @@ const (
 	SyncJobRemove = "remove"
 	SyncJobSTT    = "STT"
 	Transcoding   = "transcoding"
+	Restore       = "restore"
 )
 
 type SyncJob struct {

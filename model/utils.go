@@ -57,6 +57,14 @@ func (s StringInterface) Remove(name string) {
 	delete(s, name)
 }
 
+func (s StringInterface) Copy() StringInterface {
+	n := make(StringInterface)
+	for k, v := range s {
+		n[k] = v
+	}
+	return n
+}
+
 var encoding = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769")
 
 // NewId is a globally unique identifier.  It is a [A-Z0-9] string 26

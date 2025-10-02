@@ -76,7 +76,13 @@ type Config struct {
 	MessageBroker      MessageBrokerSettings  `json:"message_broker"`
 	TriggerWatcher     TriggerWatcherSettings `json:"trigger_watcher"`
 	LoggerWatcher      LoggerWatcherSettings  `json:"logger_watcher"`
+	Clamav             ClamavSettings         `json:"clamav"`
 	WatchersEnabled    bool                   `json:"watchers_enabled,omitempty" flag:"watchers_enabled|1|Enable watcher" env:"WATCHERS_ENABLED"`
+}
+
+type ClamavSettings struct {
+	Address string `json:"address" flag:"clam_address||Clam address" env:"CLAM_ADDRESS"`
+	Mode    string `json:"mode" flag:"clam_mode|quarantine|Clam mode - aggressive (not save), quarantine (default), skip" env:"CLAM_MODE"` // aggressive (not save), quarantine, skip
 }
 
 type MessageBrokerSettings struct {

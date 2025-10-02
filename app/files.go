@@ -7,6 +7,11 @@ import (
 	"github.com/webitel/storage/utils"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
+	"net/http"
+)
+
+var (
+	FileMalwareErr = model.NewCustomCodeError("file.malware", "Malicious software", http.StatusForbidden)
 )
 
 func (app *App) SearchFiles(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
@@ -32,9 +37,14 @@ func (app *App) GetFileWithProfile(domainId, id int64) (*model.File, utils.FileB
 		return nil, nil, err
 	}
 
+	if file.Malware != nil && file.Malware.Found {
+		return nil, nil, FileMalwareErr
+	}
+
 	if backend, err = app.GetFileBackendStore(file.ProfileId, file.ProfileUpdatedAt); err != nil {
 		return nil, nil, err
 	}
+
 	//is bug ?
 	return &file.File, backend, nil
 }
@@ -46,6 +56,10 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 
 	if file, err = app.Store.File().GetFileByUuidWithProfile(domainId, uuid); err != nil {
 		return nil, nil, err
+	}
+
+	if file.Malware != nil && file.Malware.Found {
+		return nil, nil, FileMalwareErr
 	}
 
 	if backend, err = app.GetFileBackendStore(file.ProfileId, file.ProfileUpdatedAt); err != nil {
@@ -88,6 +102,14 @@ func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
 
 func (app *App) RemoveFilesByChannels(ctx context.Context, domainId int64, ids []int64, channels []string) model.AppError {
 	if err := app.Store.File().MarkRemoveByChannels(ctx, domainId, ids, channels); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (app *App) RestoreFiles(ctx context.Context, domainId int64, ids []int64, userId int64) model.AppError {
+	if _, err := app.Store.File().RestoreFile(ctx, domainId, ids, userId); err != nil {
 		return err
 	}
 
