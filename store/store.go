@@ -100,6 +100,8 @@ type FileStore interface {
 
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface, retentionUntil *time.Time) StoreChannel
 	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, model.AppError)
+	RestoreFile(ctx context.Context, domainId int64, fileIds []int64, userId int64) (int, model.AppError)
+	Restored(fileId int64, props model.StringInterface, uploadedBy *int64) model.AppError
 }
 
 type MediaFileStore interface {

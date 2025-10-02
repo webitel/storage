@@ -88,6 +88,7 @@ type App struct {
 	// ---- Logger ------
 	wtelLogger      *wlogger.Logger
 	loggerPublisher rabbitmq.Publisher
+	clamd           *Clamav
 }
 
 func New(options ...string) (outApp *App, outErr error) {
@@ -112,7 +113,7 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	app.filePolicies = &DomainFilePolicy{
 		app:      app,
-		policies: utils.NewLruWithParams(100, "domain policies", filePolicyExpire, ""),
+		policies: utils.NewLruWithParams(400, "domain policies", filePolicyExpire, ""),
 	}
 
 	defer func() {
@@ -186,6 +187,11 @@ func New(options ...string) (outApp *App, outErr error) {
 	wlog.Info("Server is initializing...")
 
 	app.cluster = NewCluster(app)
+
+	if app.Config().Clamav.Address != "" {
+		app.clamd = NewClamav(app.Config().Clamav)
+		app.Log.Info("use clamd")
+	}
 
 	if app.newStore == nil {
 		app.newStore = func() store.Store {

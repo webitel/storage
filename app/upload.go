@@ -11,6 +11,8 @@ import (
 	"github.com/webitel/wlog"
 	"golang.org/x/sync/singleflight"
 	"io"
+	"os"
+	"path"
 	"time"
 )
 
@@ -108,12 +110,82 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 	return app.upload(src, &profileId, store, file)
 }
 
-// upload - основний метод завантаження файлу з підтримкою мініатюр
+func (app *App) useClamd(file *model.BaseFile) bool {
+	return app.clamd != nil && file.Channel != nil && *file.Channel == model.UploadFileChannelChat
+}
+
 func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) model.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail
 	var ch chan model.AppError
 	var err model.AppError
+	var ms *model.MalwareScan
+
+	if app.useClamd(&file.BaseFile) {
+		ms = &model.MalwareScan{
+			Status:   "ERROR",
+			ScanDate: nil,
+		}
+
+		fn := path.Join(model.CacheDir, model.NewId())
+		fSrc, errCl := os.Create(fn)
+		if errCl != nil {
+			ms.Desc = model.NewString(errCl.Error())
+			goto endScan
+		}
+
+		defer func() {
+			_ = fSrc.Close()
+			_ = os.Remove(fn)
+		}()
+
+		cancel := make(chan bool)
+		defer close(cancel)
+
+		rc := io.TeeReader(src, fSrc) // todo подумати використати io_clam, із мінусів: ми будемо генерувати Thumbnail якщо буде потреба
+
+		scanResultChan, errScan := app.clamd.ScanStream(rc, cancel)
+		if errScan != nil {
+			ms.Desc = model.NewString(errScan.Error())
+			goto endScan
+		}
+
+		scanResult := <-scanResultChan
+
+		ms.Status = scanResult.Status
+		if scanResult.Description != "" {
+			ms.Found = true
+			ms.Desc = &scanResult.Description
+		}
+
+		fSrc.Seek(0, 0)
+		src = fSrc
+	}
+
+endScan:
+
+	if ms != nil {
+
+		switch app.clamd.mode {
+		case ClamavModeAggressive:
+			if ms.Status == "ERROR" || ms.Found {
+				return FileMalwareErr // todo err
+			}
+
+		case ClamavModeSkip:
+
+		default:
+			if ms.Found {
+				ms.Quarantine = true
+			}
+		}
+
+		if ms.Found && ms.Desc != nil {
+			app.Log.Warn(fmt.Sprintf("virus detected on upload of file '%s'. Signature: %s", file.Name, *ms.Desc))
+		}
+
+		file.Malware = ms
+	}
 
 	if file.GenerateThumbnail {
 		reader, thumbnail, ch, err = app.setupThumbnail(src, store, file)
@@ -206,6 +278,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			Channel:        file.Channel,
 			RetentionUntil: file.RetentionUntil,
 			UploadedBy:     file.UploadedBy,
+			Malware:        file.Malware,
 		},
 		ProfileId: profileId,
 	}
@@ -235,7 +308,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 
 	file.Id, _ = res.Data.(int64)
 
-	wlog.Debug(fmt.Sprintf("stored %s in %s, %d bytes [encrypted=%v, SHA256=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil))
+	wlog.Debug(fmt.Sprintf("stored %s in %s, %d bytes [encrypted=%v, SHA256=%v, clamd=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil, file.BaseFile.StringMalware()))
 
 	//TODO
 	if file.Channel != nil && *file.Channel == model.UploadFileChannelCase {

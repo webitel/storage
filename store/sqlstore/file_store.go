@@ -68,9 +68,9 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		id, err := self.GetMaster().SelectInt(`
 			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name, 
-			                          profile_id, sha256sum, channel, thumbnail, retention_until, uploaded_by)
+			                          profile_id, sha256sum, channel, thumbnail, retention_until, uploaded_by, malware)
             values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName, 
-                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz, :UploadedBy::int8)
+                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz, :UploadedBy::int8, :Malware::jsonb)
 			returning id
 		`, map[string]interface{}{
 			"Name":           file.Name,
@@ -88,6 +88,7 @@ func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 			"Thumbnail":      file.Thumbnail.ToJson(),
 			"RetentionUntil": file.RetentionUntil,
 			"UploadedBy":     file.UploadedBy.GetSafeId(),
+			"Malware":        file.Malware.ToJson(),
 		})
 
 		if err != nil {
@@ -200,7 +201,8 @@ func (s SqlFileStore) GetFileWithProfile(domainId, id int64) (*model.FileWithPro
        f.view_name,
        f.channel,
        f.thumbnail,
-       p.updated_at as profile_updated_at
+       p.updated_at as profile_updated_at,
+       f.malware
 FROM storage.files f
          left join storage.file_backend_profiles p on p.id = f.profile_id
 	WHERE f.id = :Id
@@ -261,4 +263,46 @@ where domain_id = :DomainId and id = :Id`, map[string]any{
 	}
 
 	return m, nil
+}
+
+func (s *SqlFileStore) Restored(fileId int64, props model.StringInterface, uploadedBy *int64) model.AppError {
+	_, err := s.GetMaster().Exec(`update storage.files
+set properties = :Props::jsonb,
+    updated_by = :UploadedBy,
+    malware = malware || '{"found":false,"status":"RESTORE"}'
+where id = :Id`, map[string]interface{}{
+		"Props":      props.ToJson(),
+		"UploadedBy": uploadedBy,
+		"Id":         fileId,
+	})
+
+	if err != nil {
+		return model.NewCustomCodeError("store.sql_file.set_props.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return nil
+}
+
+func (s *SqlFileStore) RestoreFile(ctx context.Context, domainId int64, fileIds []int64, userId int64) (int, model.AppError) {
+	var cnt int64
+	r, err := s.GetMaster().WithContext(ctx).Exec(`insert into storage.file_jobs (file_id, action, config)
+select id, 'restore', jsonb_build_object('user_id', :UserId::int8)
+from storage.files
+where (malware->'found')::bool
+    and domain_id = :DomainId
+    and(:Ids::int8[] isnull or id = any(:Ids::int8[]))`, map[string]any{
+		"DomainId": domainId,
+		"UserId":   userId,
+		"Ids":      pq.Array(fileIds),
+	})
+	if err != nil {
+		return 0, model.NewCustomCodeError("store.sql_file.restore.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	cnt, err = r.RowsAffected()
+	if err != nil {
+		return 0, model.NewCustomCodeError("store.sql_file.restore.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return int(cnt), nil
 }

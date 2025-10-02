@@ -38,9 +38,12 @@ func (self *LocalFileBackend) TestConnection() model.AppError {
 
 func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppError) {
 	directory := self.GetStoreDirectory(file)
+	return self.write(src, file, directory, file.IsEncrypted())
+}
+
+func (self *LocalFileBackend) write(src io.Reader, file File, directory string, encrypt bool) (int64, model.AppError) {
 	root := path.Join(self.directory, directory)
 	allPath := path.Join(root, file.GetStoreName())
-	isEncrypted := file.IsEncrypted()
 
 	fi, _ := os.Stat(allPath)
 	if fi != nil && fi.Size() > 0 {
@@ -61,7 +64,7 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 
 	var written int64
 
-	if isEncrypted {
+	if encrypt {
 		written, err = io.Copy(fw, NewEncryptingReader(src, self.chipher))
 	} else {
 		written, err = io.Copy(fw, src)
@@ -79,7 +82,7 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 
 	self.setWriteSize(written)
 
-	if isEncrypted {
+	if encrypt {
 		written, _ = EstimateOriginalSize(written)
 	}
 	file.SetPropertyString("directory", directory)
@@ -97,6 +100,27 @@ func (self *LocalFileBackend) Remove(file File) model.AppError {
 			return model.NewInternalError("utils.file.locally.removing.app_error", err.Error())
 		}
 	}
+	return nil
+}
+
+func (self *LocalFileBackend) CopyTo(file File, to func(string) string) model.AppError {
+	s, err := self.Reader(file, 0)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+
+	oldPath := file.GetPropertyString("directory")
+	newPath := to(oldPath)
+
+	file.SetPropertyString("old_path", oldPath)
+
+	_, err = self.write(s, file, newPath, false)
+	if err != nil {
+		return err
+	}
+	file.SetPropertyString("directory", newPath)
+
 	return nil
 }
 

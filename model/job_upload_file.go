@@ -76,7 +76,7 @@ func (self *JobUploadFile) GetPropertyString(name string) string {
 	return ""
 }
 func (self *JobUploadFile) SetPropertyString(name, value string) {
-
+	self.BaseFile.SetPropertyString(name, value)
 }
 func (self *JobUploadFile) Domain() int64 {
 	return self.DomainId

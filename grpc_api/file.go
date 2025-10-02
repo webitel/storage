@@ -136,6 +136,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		Code:    storage.UploadStatusCode_Ok,
 		FileUrl: publicUrl,
 		Server:  api.publicHost,
+		Malware: getMalware(fileRequest.Malware),
 	}
 
 	if fileRequest.SHA256Sum != nil {
@@ -143,6 +144,24 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	}
 
 	return in.SendAndClose(result)
+}
+
+func getMalware(in *model.MalwareScan) *storage.FileMalwareScan {
+	if in == nil {
+		return nil
+	}
+
+	malware := &storage.FileMalwareScan{
+		Found:       false,
+		Status:      in.Status,
+		Description: "",
+	}
+	if in.Desc != nil {
+		malware.Description = *in.Desc
+		malware.Found = true
+	}
+
+	return malware
 }
 
 func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileLinkRequest) (*storage.GenerateFileLinkResponse, error) {
@@ -325,12 +344,13 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	}
 
 	result := &storage.UploadFileUrlResponse{
-		Id:     fileRequest.Id,
-		Code:   storage.UploadStatusCode_Ok,
-		Url:    publicUrl,
-		Size:   fileRequest.Size,
-		Mime:   fileRequest.MimeType,
-		Server: api.publicHost,
+		Id:      fileRequest.Id,
+		Code:    storage.UploadStatusCode_Ok,
+		Url:     publicUrl,
+		Size:    fileRequest.Size,
+		Mime:    fileRequest.MimeType,
+		Server:  api.publicHost,
+		Malware: getMalware(fileRequest.Malware),
 	}
 
 	if fileRequest.SHA256Sum != nil {
@@ -352,6 +372,20 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 	}
 
 	return &storage.DeleteFilesResponse{}, nil
+}
+
+func (api *file) RestoreFiles(ctx context.Context, in *storage.RestoreFilesRequest) (*storage.RestoreFilesResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.ctrl.RestoreFiles(ctx, session, in.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.RestoreFilesResponse{}, nil
 }
 
 func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) error {
@@ -476,6 +510,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		Name:     fileRequest.GetViewName(),
 		Uuid:     fileRequest.Uuid,
 		MimeType: fileRequest.GetMimeType(),
+		Malware:  getMalware(fileRequest.Malware),
 	}
 
 	if fileRequest.SHA256Sum != nil {

@@ -89,6 +89,29 @@ func (self *S3FileBackend) Write(src io.Reader, file File) (int64, model.AppErro
 	return self.write(src, file)
 }
 
+func (self *S3FileBackend) CopyTo(file File, to func(string) string) model.AppError {
+	oldPath := file.GetPropertyString("location")
+	newPath := to(oldPath)
+
+	file.SetPropertyString("old_path", oldPath)
+
+	params := &s3.CopyObjectInput{
+		Bucket:     &self.bucket,
+		CopySource: aws.String(fmt.Sprintf("%s/%s", self.bucket, oldPath)),
+		Key:        aws.String(newPath),
+	}
+
+	_, err := self.svc.CopyObject(params)
+	if err != nil {
+		return model.NewInternalError("utils.file.s3.copy", err.Error())
+	}
+
+	file.SetPropertyString("location", newPath)
+
+	return nil
+
+}
+
 func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppError) {
 	directory := self.GetStoreDirectory(file)
 	location := path.Join(directory, file.GetStoreName())
@@ -144,9 +167,11 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppErro
 }
 
 func (self *S3FileBackend) Remove(file File) model.AppError {
-	directory := self.GetStoreDirectory(file)
-	location := path.Join(directory, file.GetStoreName())
+	location := file.GetPropertyString("location")
+	return self.remove(location)
+}
 
+func (self *S3FileBackend) remove(location string) model.AppError {
 	_, err := self.svc.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: &self.bucket,
 		Key:    aws.String(location),

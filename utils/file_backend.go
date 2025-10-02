@@ -5,6 +5,7 @@ import (
 	"github.com/webitel/storage/model"
 	"io"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -66,6 +67,7 @@ type File interface {
 	GetChannel() *string
 	IsEncrypted() bool
 	SetEncrypted(encrypted bool)
+	IsQuarantine() bool
 }
 
 type FileBackend interface {
@@ -73,6 +75,8 @@ type FileBackend interface {
 	Reader(file File, offset int64) (io.ReadCloser, model.AppError)
 	Remove(file File) model.AppError
 	Write(src io.Reader, file File) (int64, model.AppError)
+	CopyTo(file File, toPathFn func(string) string) model.AppError
+
 	GetSyncTime() int64
 	GetSize() float64
 	ExpireDay() int
@@ -124,6 +128,10 @@ func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBa
 
 func parseStorePattern(pattern string, f File) string {
 	now := time.Now()
+	if f.IsQuarantine() {
+		pattern = strings.ReplaceAll(pattern, "$DOMAIN", "$DOMAIN/quarantine")
+	}
+
 	return regCompileMask.ReplaceAllStringFunc(pattern, func(s string) string {
 		switch s {
 		case "$DOMAIN":
