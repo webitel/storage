@@ -100,6 +100,14 @@ func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
 	return nil
 }
 
+func (app *App) RemoveQuarantineFiles(domainId int64, ids []int64) model.AppError {
+	if err := app.Store.File().MarkRemoveQuarantine(domainId, ids); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (app *App) RemoveFilesByChannels(ctx context.Context, domainId int64, ids []int64, channels []string) model.AppError {
 	if err := app.Store.File().MarkRemoveByChannels(ctx, domainId, ids, channels); err != nil {
 		return err

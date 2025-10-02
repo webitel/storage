@@ -95,6 +95,7 @@ type FileStore interface {
 	GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, model.AppError)
 	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, model.AppError)
 	MarkRemove(domainId int64, ids []int64) model.AppError
+	MarkRemoveQuarantine(domainId int64, ids []int64) model.AppError
 	MarkRemoveByChannels(ctx context.Context, domainId int64, ids []int64, channels []string) model.AppError
 	Metadata(domainId int64, id int64) (model.BaseFile, model.AppError)
 

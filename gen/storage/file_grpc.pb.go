@@ -27,6 +27,7 @@ const (
 	FileService_BulkGenerateFileLink_FullMethodName          = "/storage.FileService/BulkGenerateFileLink"
 	FileService_DeleteFiles_FullMethodName                   = "/storage.FileService/DeleteFiles"
 	FileService_RestoreFiles_FullMethodName                  = "/storage.FileService/RestoreFiles"
+	FileService_DeleteQuarantineFiles_FullMethodName         = "/storage.FileService/DeleteQuarantineFiles"
 	FileService_SearchFiles_FullMethodName                   = "/storage.FileService/SearchFiles"
 	FileService_SearchScreenRecordings_FullMethodName        = "/storage.FileService/SearchScreenRecordings"
 	FileService_SearchScreenRecordingsByAgent_FullMethodName = "/storage.FileService/SearchScreenRecordingsByAgent"
@@ -46,6 +47,7 @@ type FileServiceClient interface {
 	BulkGenerateFileLink(ctx context.Context, in *BulkGenerateFileLinkRequest, opts ...grpc.CallOption) (*BulkGenerateFileLinkResponse, error)
 	DeleteFiles(ctx context.Context, in *DeleteFilesRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	RestoreFiles(ctx context.Context, in *RestoreFilesRequest, opts ...grpc.CallOption) (*RestoreFilesResponse, error)
+	DeleteQuarantineFiles(ctx context.Context, in *DeleteQuarantineFilesRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	SearchFiles(ctx context.Context, in *SearchFilesRequest, opts ...grpc.CallOption) (*ListFile, error)
 	SearchScreenRecordings(ctx context.Context, in *SearchScreenRecordingsRequest, opts ...grpc.CallOption) (*ListFile, error)
 	SearchScreenRecordingsByAgent(ctx context.Context, in *SearchScreenRecordingsByAgentRequest, opts ...grpc.CallOption) (*ListFile, error)
@@ -203,6 +205,15 @@ func (c *fileServiceClient) RestoreFiles(ctx context.Context, in *RestoreFilesRe
 	return out, nil
 }
 
+func (c *fileServiceClient) DeleteQuarantineFiles(ctx context.Context, in *DeleteQuarantineFilesRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error) {
+	out := new(DeleteFilesResponse)
+	err := c.cc.Invoke(ctx, FileService_DeleteQuarantineFiles_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *fileServiceClient) SearchFiles(ctx context.Context, in *SearchFilesRequest, opts ...grpc.CallOption) (*ListFile, error) {
 	out := new(ListFile)
 	err := c.cc.Invoke(ctx, FileService_SearchFiles_FullMethodName, in, out, opts...)
@@ -260,6 +271,7 @@ type FileServiceServer interface {
 	BulkGenerateFileLink(context.Context, *BulkGenerateFileLinkRequest) (*BulkGenerateFileLinkResponse, error)
 	DeleteFiles(context.Context, *DeleteFilesRequest) (*DeleteFilesResponse, error)
 	RestoreFiles(context.Context, *RestoreFilesRequest) (*RestoreFilesResponse, error)
+	DeleteQuarantineFiles(context.Context, *DeleteQuarantineFilesRequest) (*DeleteFilesResponse, error)
 	SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error)
 	SearchScreenRecordings(context.Context, *SearchScreenRecordingsRequest) (*ListFile, error)
 	SearchScreenRecordingsByAgent(context.Context, *SearchScreenRecordingsByAgentRequest) (*ListFile, error)
@@ -295,6 +307,9 @@ func (UnimplementedFileServiceServer) DeleteFiles(context.Context, *DeleteFilesR
 }
 func (UnimplementedFileServiceServer) RestoreFiles(context.Context, *RestoreFilesRequest) (*RestoreFilesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RestoreFiles not implemented")
+}
+func (UnimplementedFileServiceServer) DeleteQuarantineFiles(context.Context, *DeleteQuarantineFilesRequest) (*DeleteFilesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteQuarantineFiles not implemented")
 }
 func (UnimplementedFileServiceServer) SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchFiles not implemented")
@@ -487,6 +502,24 @@ func _FileService_RestoreFiles_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_DeleteQuarantineFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteQuarantineFilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).DeleteQuarantineFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_DeleteQuarantineFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).DeleteQuarantineFiles(ctx, req.(*DeleteQuarantineFilesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FileService_SearchFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchFilesRequest)
 	if err := dec(in); err != nil {
@@ -603,6 +636,10 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RestoreFiles",
 			Handler:    _FileService_RestoreFiles_Handler,
+		},
+		{
+			MethodName: "DeleteQuarantineFiles",
+			Handler:    _FileService_DeleteQuarantineFiles_Handler,
 		},
 		{
 			MethodName: "SearchFiles",

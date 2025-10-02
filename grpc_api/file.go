@@ -388,6 +388,20 @@ func (api *file) RestoreFiles(ctx context.Context, in *storage.RestoreFilesReque
 	return &storage.RestoreFilesResponse{}, nil
 }
 
+func (api *file) DeleteQuarantineFiles(ctx context.Context, in *storage.DeleteQuarantineFilesRequest) (*storage.DeleteFilesResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.ctrl.DeleteQuarantineFiles(session, in.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.DeleteFilesResponse{}, nil
+}
+
 func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) error {
 	var su *app.SafeUpload
 	ctx := in.Context()

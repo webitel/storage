@@ -141,6 +141,53 @@ func (UploadFileChannel) EnumDescriptor() ([]byte, []int) {
 	return file_file_proto_rawDescGZIP(), []int{1}
 }
 
+type DeleteQuarantineFilesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id []int64 `protobuf:"varint,1,rep,packed,name=id,proto3" json:"id,omitempty"`
+}
+
+func (x *DeleteQuarantineFilesRequest) Reset() {
+	*x = DeleteQuarantineFilesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_file_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeleteQuarantineFilesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteQuarantineFilesRequest) ProtoMessage() {}
+
+func (x *DeleteQuarantineFilesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_file_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteQuarantineFilesRequest.ProtoReflect.Descriptor instead.
+func (*DeleteQuarantineFilesRequest) Descriptor() ([]byte, []int) {
+	return file_file_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *DeleteQuarantineFilesRequest) GetId() []int64 {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
 type RestoreFilesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -152,7 +199,7 @@ type RestoreFilesRequest struct {
 func (x *RestoreFilesRequest) Reset() {
 	*x = RestoreFilesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[0]
+		mi := &file_file_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -165,7 +212,7 @@ func (x *RestoreFilesRequest) String() string {
 func (*RestoreFilesRequest) ProtoMessage() {}
 
 func (x *RestoreFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[0]
+	mi := &file_file_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -178,7 +225,7 @@ func (x *RestoreFilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestoreFilesRequest.ProtoReflect.Descriptor instead.
 func (*RestoreFilesRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{0}
+	return file_file_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *RestoreFilesRequest) GetId() []int64 {
@@ -197,7 +244,7 @@ type RestoreFilesResponse struct {
 func (x *RestoreFilesResponse) Reset() {
 	*x = RestoreFilesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[1]
+		mi := &file_file_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -210,7 +257,7 @@ func (x *RestoreFilesResponse) String() string {
 func (*RestoreFilesResponse) ProtoMessage() {}
 
 func (x *RestoreFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[1]
+	mi := &file_file_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -223,7 +270,7 @@ func (x *RestoreFilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestoreFilesResponse.ProtoReflect.Descriptor instead.
 func (*RestoreFilesResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{1}
+	return file_file_proto_rawDescGZIP(), []int{2}
 }
 
 type DeleteScreenRecordingsRequest struct {
@@ -238,7 +285,7 @@ type DeleteScreenRecordingsRequest struct {
 func (x *DeleteScreenRecordingsRequest) Reset() {
 	*x = DeleteScreenRecordingsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[2]
+		mi := &file_file_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -251,7 +298,7 @@ func (x *DeleteScreenRecordingsRequest) String() string {
 func (*DeleteScreenRecordingsRequest) ProtoMessage() {}
 
 func (x *DeleteScreenRecordingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[2]
+	mi := &file_file_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -264,7 +311,7 @@ func (x *DeleteScreenRecordingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteScreenRecordingsRequest.ProtoReflect.Descriptor instead.
 func (*DeleteScreenRecordingsRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{2}
+	return file_file_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *DeleteScreenRecordingsRequest) GetUserId() int64 {
@@ -293,7 +340,7 @@ type DeleteScreenRecordingsByAgentRequest struct {
 func (x *DeleteScreenRecordingsByAgentRequest) Reset() {
 	*x = DeleteScreenRecordingsByAgentRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[3]
+		mi := &file_file_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -306,7 +353,7 @@ func (x *DeleteScreenRecordingsByAgentRequest) String() string {
 func (*DeleteScreenRecordingsByAgentRequest) ProtoMessage() {}
 
 func (x *DeleteScreenRecordingsByAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[3]
+	mi := &file_file_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -319,7 +366,7 @@ func (x *DeleteScreenRecordingsByAgentRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use DeleteScreenRecordingsByAgentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteScreenRecordingsByAgentRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{3}
+	return file_file_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *DeleteScreenRecordingsByAgentRequest) GetAgentId() int64 {
@@ -357,7 +404,7 @@ type SearchScreenRecordingsRequest struct {
 func (x *SearchScreenRecordingsRequest) Reset() {
 	*x = SearchScreenRecordingsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[4]
+		mi := &file_file_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -370,7 +417,7 @@ func (x *SearchScreenRecordingsRequest) String() string {
 func (*SearchScreenRecordingsRequest) ProtoMessage() {}
 
 func (x *SearchScreenRecordingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[4]
+	mi := &file_file_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -383,7 +430,7 @@ func (x *SearchScreenRecordingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchScreenRecordingsRequest.ProtoReflect.Descriptor instead.
 func (*SearchScreenRecordingsRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{4}
+	return file_file_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *SearchScreenRecordingsRequest) GetUserId() int64 {
@@ -484,7 +531,7 @@ type SearchScreenRecordingsByAgentRequest struct {
 func (x *SearchScreenRecordingsByAgentRequest) Reset() {
 	*x = SearchScreenRecordingsByAgentRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[5]
+		mi := &file_file_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -497,7 +544,7 @@ func (x *SearchScreenRecordingsByAgentRequest) String() string {
 func (*SearchScreenRecordingsByAgentRequest) ProtoMessage() {}
 
 func (x *SearchScreenRecordingsByAgentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[5]
+	mi := &file_file_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -510,7 +557,7 @@ func (x *SearchScreenRecordingsByAgentRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use SearchScreenRecordingsByAgentRequest.ProtoReflect.Descriptor instead.
 func (*SearchScreenRecordingsByAgentRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{5}
+	return file_file_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SearchScreenRecordingsByAgentRequest) GetAgentId() int64 {
@@ -601,7 +648,7 @@ type BulkGenerateFileLinkRequest struct {
 func (x *BulkGenerateFileLinkRequest) Reset() {
 	*x = BulkGenerateFileLinkRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[6]
+		mi := &file_file_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -614,7 +661,7 @@ func (x *BulkGenerateFileLinkRequest) String() string {
 func (*BulkGenerateFileLinkRequest) ProtoMessage() {}
 
 func (x *BulkGenerateFileLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[6]
+	mi := &file_file_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -627,7 +674,7 @@ func (x *BulkGenerateFileLinkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BulkGenerateFileLinkRequest.ProtoReflect.Descriptor instead.
 func (*BulkGenerateFileLinkRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{6}
+	return file_file_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *BulkGenerateFileLinkRequest) GetFiles() []*GenerateFileLinkRequest {
@@ -648,7 +695,7 @@ type BulkGenerateFileLinkResponse struct {
 func (x *BulkGenerateFileLinkResponse) Reset() {
 	*x = BulkGenerateFileLinkResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[7]
+		mi := &file_file_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -661,7 +708,7 @@ func (x *BulkGenerateFileLinkResponse) String() string {
 func (*BulkGenerateFileLinkResponse) ProtoMessage() {}
 
 func (x *BulkGenerateFileLinkResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[7]
+	mi := &file_file_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -674,7 +721,7 @@ func (x *BulkGenerateFileLinkResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BulkGenerateFileLinkResponse.ProtoReflect.Descriptor instead.
 func (*BulkGenerateFileLinkResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{7}
+	return file_file_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *BulkGenerateFileLinkResponse) GetLinks() []*GenerateFileLinkResponse {
@@ -705,7 +752,7 @@ type SearchFilesRequest struct {
 func (x *SearchFilesRequest) Reset() {
 	*x = SearchFilesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[8]
+		mi := &file_file_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -718,7 +765,7 @@ func (x *SearchFilesRequest) String() string {
 func (*SearchFilesRequest) ProtoMessage() {}
 
 func (x *SearchFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[8]
+	mi := &file_file_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -731,7 +778,7 @@ func (x *SearchFilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchFilesRequest.ProtoReflect.Descriptor instead.
 func (*SearchFilesRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{8}
+	return file_file_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *SearchFilesRequest) GetPage() int32 {
@@ -823,7 +870,7 @@ type ListFile struct {
 func (x *ListFile) Reset() {
 	*x = ListFile{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[9]
+		mi := &file_file_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -836,7 +883,7 @@ func (x *ListFile) String() string {
 func (*ListFile) ProtoMessage() {}
 
 func (x *ListFile) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[9]
+	mi := &file_file_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -849,7 +896,7 @@ func (x *ListFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFile.ProtoReflect.Descriptor instead.
 func (*ListFile) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{9}
+	return file_file_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ListFile) GetNext() bool {
@@ -889,7 +936,7 @@ type File struct {
 func (x *File) Reset() {
 	*x = File{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[10]
+		mi := &file_file_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -902,7 +949,7 @@ func (x *File) String() string {
 func (*File) ProtoMessage() {}
 
 func (x *File) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[10]
+	mi := &file_file_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -915,7 +962,7 @@ func (x *File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use File.ProtoReflect.Descriptor instead.
 func (*File) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{10}
+	return file_file_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *File) GetId() int64 {
@@ -1022,7 +1069,7 @@ type Thumbnail struct {
 func (x *Thumbnail) Reset() {
 	*x = Thumbnail{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[11]
+		mi := &file_file_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1035,7 +1082,7 @@ func (x *Thumbnail) String() string {
 func (*Thumbnail) ProtoMessage() {}
 
 func (x *Thumbnail) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[11]
+	mi := &file_file_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1048,7 +1095,7 @@ func (x *Thumbnail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Thumbnail.ProtoReflect.Descriptor instead.
 func (*Thumbnail) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{11}
+	return file_file_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Thumbnail) GetMimeType() string {
@@ -1085,7 +1132,7 @@ type FileMalwareScan struct {
 func (x *FileMalwareScan) Reset() {
 	*x = FileMalwareScan{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[12]
+		mi := &file_file_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1098,7 +1145,7 @@ func (x *FileMalwareScan) String() string {
 func (*FileMalwareScan) ProtoMessage() {}
 
 func (x *FileMalwareScan) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[12]
+	mi := &file_file_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1111,7 +1158,7 @@ func (x *FileMalwareScan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileMalwareScan.ProtoReflect.Descriptor instead.
 func (*FileMalwareScan) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{12}
+	return file_file_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *FileMalwareScan) GetFound() bool {
@@ -1151,7 +1198,7 @@ type GenerateFileLinkRequest struct {
 func (x *GenerateFileLinkRequest) Reset() {
 	*x = GenerateFileLinkRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[13]
+		mi := &file_file_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1164,7 +1211,7 @@ func (x *GenerateFileLinkRequest) String() string {
 func (*GenerateFileLinkRequest) ProtoMessage() {}
 
 func (x *GenerateFileLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[13]
+	mi := &file_file_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1177,7 +1224,7 @@ func (x *GenerateFileLinkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateFileLinkRequest.ProtoReflect.Descriptor instead.
 func (*GenerateFileLinkRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{13}
+	return file_file_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GenerateFileLinkRequest) GetDomainId() int64 {
@@ -1235,7 +1282,7 @@ type GenerateFileLinkResponse struct {
 func (x *GenerateFileLinkResponse) Reset() {
 	*x = GenerateFileLinkResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[14]
+		mi := &file_file_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1248,7 +1295,7 @@ func (x *GenerateFileLinkResponse) String() string {
 func (*GenerateFileLinkResponse) ProtoMessage() {}
 
 func (x *GenerateFileLinkResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[14]
+	mi := &file_file_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1261,7 +1308,7 @@ func (x *GenerateFileLinkResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateFileLinkResponse.ProtoReflect.Descriptor instead.
 func (*GenerateFileLinkResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{14}
+	return file_file_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GenerateFileLinkResponse) GetUrl() string {
@@ -1301,7 +1348,7 @@ type DownloadFileRequest struct {
 func (x *DownloadFileRequest) Reset() {
 	*x = DownloadFileRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[15]
+		mi := &file_file_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1314,7 +1361,7 @@ func (x *DownloadFileRequest) String() string {
 func (*DownloadFileRequest) ProtoMessage() {}
 
 func (x *DownloadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[15]
+	mi := &file_file_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1327,7 +1374,7 @@ func (x *DownloadFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DownloadFileRequest.ProtoReflect.Descriptor instead.
 func (*DownloadFileRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{15}
+	return file_file_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *DownloadFileRequest) GetId() int64 {
@@ -1387,7 +1434,7 @@ type StreamFile struct {
 func (x *StreamFile) Reset() {
 	*x = StreamFile{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[16]
+		mi := &file_file_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1400,7 +1447,7 @@ func (x *StreamFile) String() string {
 func (*StreamFile) ProtoMessage() {}
 
 func (x *StreamFile) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[16]
+	mi := &file_file_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1413,7 +1460,7 @@ func (x *StreamFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamFile.ProtoReflect.Descriptor instead.
 func (*StreamFile) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{16}
+	return file_file_proto_rawDescGZIP(), []int{17}
 }
 
 func (m *StreamFile) GetData() isStreamFile_Data {
@@ -1464,7 +1511,7 @@ type DeleteFilesRequest struct {
 func (x *DeleteFilesRequest) Reset() {
 	*x = DeleteFilesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[17]
+		mi := &file_file_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1477,7 +1524,7 @@ func (x *DeleteFilesRequest) String() string {
 func (*DeleteFilesRequest) ProtoMessage() {}
 
 func (x *DeleteFilesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[17]
+	mi := &file_file_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1490,7 +1537,7 @@ func (x *DeleteFilesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFilesRequest.ProtoReflect.Descriptor instead.
 func (*DeleteFilesRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{17}
+	return file_file_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *DeleteFilesRequest) GetId() []int64 {
@@ -1509,7 +1556,7 @@ type DeleteFilesResponse struct {
 func (x *DeleteFilesResponse) Reset() {
 	*x = DeleteFilesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[18]
+		mi := &file_file_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1522,7 +1569,7 @@ func (x *DeleteFilesResponse) String() string {
 func (*DeleteFilesResponse) ProtoMessage() {}
 
 func (x *DeleteFilesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[18]
+	mi := &file_file_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1535,7 +1582,7 @@ func (x *DeleteFilesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFilesResponse.ProtoReflect.Descriptor instead.
 func (*DeleteFilesResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{18}
+	return file_file_proto_rawDescGZIP(), []int{19}
 }
 
 type UploadFileUrlRequest struct {
@@ -1555,7 +1602,7 @@ type UploadFileUrlRequest struct {
 func (x *UploadFileUrlRequest) Reset() {
 	*x = UploadFileUrlRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[19]
+		mi := &file_file_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1568,7 +1615,7 @@ func (x *UploadFileUrlRequest) String() string {
 func (*UploadFileUrlRequest) ProtoMessage() {}
 
 func (x *UploadFileUrlRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[19]
+	mi := &file_file_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1581,7 +1628,7 @@ func (x *UploadFileUrlRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadFileUrlRequest.ProtoReflect.Descriptor instead.
 func (*UploadFileUrlRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{19}
+	return file_file_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *UploadFileUrlRequest) GetDomainId() int64 {
@@ -1652,7 +1699,7 @@ type UploadFileUrlResponse struct {
 func (x *UploadFileUrlResponse) Reset() {
 	*x = UploadFileUrlResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[20]
+		mi := &file_file_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1665,7 +1712,7 @@ func (x *UploadFileUrlResponse) String() string {
 func (*UploadFileUrlResponse) ProtoMessage() {}
 
 func (x *UploadFileUrlResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[20]
+	mi := &file_file_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1678,7 +1725,7 @@ func (x *UploadFileUrlResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadFileUrlResponse.ProtoReflect.Descriptor instead.
 func (*UploadFileUrlResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{20}
+	return file_file_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *UploadFileUrlResponse) GetId() int64 {
@@ -1759,7 +1806,7 @@ type UploadFileRequest struct {
 func (x *UploadFileRequest) Reset() {
 	*x = UploadFileRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[21]
+		mi := &file_file_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1772,7 +1819,7 @@ func (x *UploadFileRequest) String() string {
 func (*UploadFileRequest) ProtoMessage() {}
 
 func (x *UploadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[21]
+	mi := &file_file_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1785,7 +1832,7 @@ func (x *UploadFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadFileRequest.ProtoReflect.Descriptor instead.
 func (*UploadFileRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{21}
+	return file_file_proto_rawDescGZIP(), []int{22}
 }
 
 func (m *UploadFileRequest) GetData() isUploadFileRequest_Data {
@@ -1836,7 +1883,7 @@ type SafeUploadCancelRequest struct {
 func (x *SafeUploadCancelRequest) Reset() {
 	*x = SafeUploadCancelRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[22]
+		mi := &file_file_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1849,7 +1896,7 @@ func (x *SafeUploadCancelRequest) String() string {
 func (*SafeUploadCancelRequest) ProtoMessage() {}
 
 func (x *SafeUploadCancelRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[22]
+	mi := &file_file_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1862,7 +1909,7 @@ func (x *SafeUploadCancelRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadCancelRequest.ProtoReflect.Descriptor instead.
 func (*SafeUploadCancelRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{22}
+	return file_file_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *SafeUploadCancelRequest) GetUploadId() string {
@@ -1881,7 +1928,7 @@ type SafeUploadCancelResponse struct {
 func (x *SafeUploadCancelResponse) Reset() {
 	*x = SafeUploadCancelResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[23]
+		mi := &file_file_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1894,7 +1941,7 @@ func (x *SafeUploadCancelResponse) String() string {
 func (*SafeUploadCancelResponse) ProtoMessage() {}
 
 func (x *SafeUploadCancelResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[23]
+	mi := &file_file_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1907,7 +1954,7 @@ func (x *SafeUploadCancelResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadCancelResponse.ProtoReflect.Descriptor instead.
 func (*SafeUploadCancelResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{23}
+	return file_file_proto_rawDescGZIP(), []int{24}
 }
 
 type SafeUploadFileRequest struct {
@@ -1927,7 +1974,7 @@ type SafeUploadFileRequest struct {
 func (x *SafeUploadFileRequest) Reset() {
 	*x = SafeUploadFileRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[24]
+		mi := &file_file_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1940,7 +1987,7 @@ func (x *SafeUploadFileRequest) String() string {
 func (*SafeUploadFileRequest) ProtoMessage() {}
 
 func (x *SafeUploadFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[24]
+	mi := &file_file_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1953,7 +2000,7 @@ func (x *SafeUploadFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadFileRequest.ProtoReflect.Descriptor instead.
 func (*SafeUploadFileRequest) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{24}
+	return file_file_proto_rawDescGZIP(), []int{25}
 }
 
 func (m *SafeUploadFileRequest) GetData() isSafeUploadFileRequest_Data {
@@ -2035,7 +2082,7 @@ type SafeUploadFileResponse struct {
 func (x *SafeUploadFileResponse) Reset() {
 	*x = SafeUploadFileResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[25]
+		mi := &file_file_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2048,7 +2095,7 @@ func (x *SafeUploadFileResponse) String() string {
 func (*SafeUploadFileResponse) ProtoMessage() {}
 
 func (x *SafeUploadFileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[25]
+	mi := &file_file_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2061,7 +2108,7 @@ func (x *SafeUploadFileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadFileResponse.ProtoReflect.Descriptor instead.
 func (*SafeUploadFileResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{25}
+	return file_file_proto_rawDescGZIP(), []int{26}
 }
 
 func (m *SafeUploadFileResponse) GetData() isSafeUploadFileResponse_Data {
@@ -2132,7 +2179,7 @@ type UploadFileResponse struct {
 func (x *UploadFileResponse) Reset() {
 	*x = UploadFileResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[26]
+		mi := &file_file_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2145,7 +2192,7 @@ func (x *UploadFileResponse) String() string {
 func (*UploadFileResponse) ProtoMessage() {}
 
 func (x *UploadFileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[26]
+	mi := &file_file_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2158,7 +2205,7 @@ func (x *UploadFileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadFileResponse.ProtoReflect.Descriptor instead.
 func (*UploadFileResponse) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{26}
+	return file_file_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *UploadFileResponse) GetFileId() int64 {
@@ -2232,7 +2279,7 @@ type GenerateFileLinkResponse_Metadata struct {
 func (x *GenerateFileLinkResponse_Metadata) Reset() {
 	*x = GenerateFileLinkResponse_Metadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[28]
+		mi := &file_file_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2245,7 +2292,7 @@ func (x *GenerateFileLinkResponse_Metadata) String() string {
 func (*GenerateFileLinkResponse_Metadata) ProtoMessage() {}
 
 func (x *GenerateFileLinkResponse_Metadata) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[28]
+	mi := &file_file_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2258,7 +2305,7 @@ func (x *GenerateFileLinkResponse_Metadata) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use GenerateFileLinkResponse_Metadata.ProtoReflect.Descriptor instead.
 func (*GenerateFileLinkResponse_Metadata) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{14, 0}
+	return file_file_proto_rawDescGZIP(), []int{15, 0}
 }
 
 func (x *GenerateFileLinkResponse_Metadata) GetId() int64 {
@@ -2313,7 +2360,7 @@ type StreamFile_Metadata struct {
 func (x *StreamFile_Metadata) Reset() {
 	*x = StreamFile_Metadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[29]
+		mi := &file_file_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2326,7 +2373,7 @@ func (x *StreamFile_Metadata) String() string {
 func (*StreamFile_Metadata) ProtoMessage() {}
 
 func (x *StreamFile_Metadata) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[29]
+	mi := &file_file_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2339,7 +2386,7 @@ func (x *StreamFile_Metadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamFile_Metadata.ProtoReflect.Descriptor instead.
 func (*StreamFile_Metadata) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{16, 0}
+	return file_file_proto_rawDescGZIP(), []int{17, 0}
 }
 
 func (x *StreamFile_Metadata) GetId() int64 {
@@ -2411,7 +2458,7 @@ type UploadFileRequest_Metadata struct {
 func (x *UploadFileRequest_Metadata) Reset() {
 	*x = UploadFileRequest_Metadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[30]
+		mi := &file_file_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2424,7 +2471,7 @@ func (x *UploadFileRequest_Metadata) String() string {
 func (*UploadFileRequest_Metadata) ProtoMessage() {}
 
 func (x *UploadFileRequest_Metadata) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[30]
+	mi := &file_file_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2437,7 +2484,7 @@ func (x *UploadFileRequest_Metadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadFileRequest_Metadata.ProtoReflect.Descriptor instead.
 func (*UploadFileRequest_Metadata) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{21, 0}
+	return file_file_proto_rawDescGZIP(), []int{22, 0}
 }
 
 func (x *UploadFileRequest_Metadata) GetDomainId() int64 {
@@ -2529,7 +2576,7 @@ type SafeUploadFileRequest_Metadata struct {
 func (x *SafeUploadFileRequest_Metadata) Reset() {
 	*x = SafeUploadFileRequest_Metadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[31]
+		mi := &file_file_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2542,7 +2589,7 @@ func (x *SafeUploadFileRequest_Metadata) String() string {
 func (*SafeUploadFileRequest_Metadata) ProtoMessage() {}
 
 func (x *SafeUploadFileRequest_Metadata) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[31]
+	mi := &file_file_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2555,7 +2602,7 @@ func (x *SafeUploadFileRequest_Metadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadFileRequest_Metadata.ProtoReflect.Descriptor instead.
 func (*SafeUploadFileRequest_Metadata) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{24, 0}
+	return file_file_proto_rawDescGZIP(), []int{25, 0}
 }
 
 func (x *SafeUploadFileRequest_Metadata) GetDomainId() int64 {
@@ -2642,7 +2689,7 @@ type SafeUploadFileResponse_Metadata struct {
 func (x *SafeUploadFileResponse_Metadata) Reset() {
 	*x = SafeUploadFileResponse_Metadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[32]
+		mi := &file_file_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2655,7 +2702,7 @@ func (x *SafeUploadFileResponse_Metadata) String() string {
 func (*SafeUploadFileResponse_Metadata) ProtoMessage() {}
 
 func (x *SafeUploadFileResponse_Metadata) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[32]
+	mi := &file_file_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2668,7 +2715,7 @@ func (x *SafeUploadFileResponse_Metadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadFileResponse_Metadata.ProtoReflect.Descriptor instead.
 func (*SafeUploadFileResponse_Metadata) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{25, 0}
+	return file_file_proto_rawDescGZIP(), []int{26, 0}
 }
 
 func (x *SafeUploadFileResponse_Metadata) GetFileId() int64 {
@@ -2760,7 +2807,7 @@ type SafeUploadFileResponse_Part struct {
 func (x *SafeUploadFileResponse_Part) Reset() {
 	*x = SafeUploadFileResponse_Part{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[33]
+		mi := &file_file_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2773,7 +2820,7 @@ func (x *SafeUploadFileResponse_Part) String() string {
 func (*SafeUploadFileResponse_Part) ProtoMessage() {}
 
 func (x *SafeUploadFileResponse_Part) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[33]
+	mi := &file_file_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2786,7 +2833,7 @@ func (x *SafeUploadFileResponse_Part) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadFileResponse_Part.ProtoReflect.Descriptor instead.
 func (*SafeUploadFileResponse_Part) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{25, 1}
+	return file_file_proto_rawDescGZIP(), []int{26, 1}
 }
 
 func (x *SafeUploadFileResponse_Part) GetUploadId() string {
@@ -2814,7 +2861,7 @@ type SafeUploadFileResponse_Progress struct {
 func (x *SafeUploadFileResponse_Progress) Reset() {
 	*x = SafeUploadFileResponse_Progress{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_file_proto_msgTypes[34]
+		mi := &file_file_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2827,7 +2874,7 @@ func (x *SafeUploadFileResponse_Progress) String() string {
 func (*SafeUploadFileResponse_Progress) ProtoMessage() {}
 
 func (x *SafeUploadFileResponse_Progress) ProtoReflect() protoreflect.Message {
-	mi := &file_file_proto_msgTypes[34]
+	mi := &file_file_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2840,7 +2887,7 @@ func (x *SafeUploadFileResponse_Progress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SafeUploadFileResponse_Progress.ProtoReflect.Descriptor instead.
 func (*SafeUploadFileResponse_Progress) Descriptor() ([]byte, []int) {
-	return file_file_proto_rawDescGZIP(), []int{25, 2}
+	return file_file_proto_rawDescGZIP(), []int{26, 2}
 }
 
 func (x *SafeUploadFileResponse_Progress) GetUploaded() int64 {
@@ -2857,6 +2904,9 @@ var file_file_proto_rawDesc = []byte{
 	0x6f, 0x72, 0x61, 0x67, 0x65, 0x1a, 0x0b, 0x63, 0x6f, 0x6e, 0x73, 0x74, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x1c, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x61,
 	0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x22, 0x2e, 0x0a, 0x1c, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x51, 0x75, 0x61, 0x72, 0x61, 0x6e,
+	0x74, 0x69, 0x6e, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x03, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64,
 	0x22, 0x25, 0x0a, 0x13, 0x52, 0x65, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20,
 	0x03, 0x28, 0x03, 0x52, 0x02, 0x69, 0x64, 0x22, 0x16, 0x0a, 0x14, 0x52, 0x65, 0x73, 0x74, 0x6f,
@@ -3244,7 +3294,7 @@ var file_file_proto_rawDesc = []byte{
 	0x12, 0x15, 0x0a, 0x11, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x73, 0x68, 0x6f, 0x74, 0x43, 0x68,
 	0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x10, 0x08, 0x12, 0x18, 0x0a, 0x14, 0x53, 0x63, 0x72, 0x65, 0x65,
 	0x6e, 0x53, 0x68, 0x61, 0x72, 0x69, 0x6e, 0x67, 0x43, 0x68, 0x61, 0x6e, 0x6e, 0x65, 0x6c, 0x10,
-	0x09, 0x32, 0xd8, 0x0a, 0x0a, 0x0b, 0x46, 0x69, 0x6c, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
+	0x09, 0x32, 0xdc, 0x0b, 0x0a, 0x0b, 0x46, 0x69, 0x6c, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
 	0x65, 0x12, 0x49, 0x0a, 0x0a, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x12,
 	0x1a, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x55, 0x70, 0x6c, 0x6f, 0x61, 0x64,
 	0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x73, 0x74,
@@ -3290,54 +3340,63 @@ var file_file_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x72, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
 	0x65, 0x22, 0x20, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x3a, 0x01, 0x2a, 0x32, 0x15, 0x2f, 0x73,
 	0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x66, 0x69, 0x6c, 0x65, 0x2f, 0x72, 0x65, 0x73, 0x74,
-	0x6f, 0x72, 0x65, 0x12, 0x54, 0x0a, 0x0b, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x46, 0x69, 0x6c,
-	0x65, 0x73, 0x12, 0x1b, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x53, 0x65, 0x61,
-	0x72, 0x63, 0x68, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x6f, 0x72, 0x65, 0x12, 0x81, 0x01, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x51, 0x75,
+	0x61, 0x72, 0x61, 0x6e, 0x74, 0x69, 0x6e, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x12, 0x25, 0x2e,
+	0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x51, 0x75,
+	0x61, 0x72, 0x61, 0x6e, 0x74, 0x69, 0x6e, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x44,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x3a, 0x01, 0x2a, 0x2a, 0x18, 0x2f,
+	0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x66, 0x69, 0x6c, 0x65, 0x2f, 0x71, 0x75, 0x61,
+	0x72, 0x61, 0x6e, 0x74, 0x69, 0x6e, 0x65, 0x12, 0x54, 0x0a, 0x0b, 0x53, 0x65, 0x61, 0x72, 0x63,
+	0x68, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x12, 0x1b, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65,
+	0x2e, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x69,
+	0x73, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x22, 0x15, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x0f, 0x12, 0x0d,
+	0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x66, 0x69, 0x6c, 0x65, 0x12, 0x75, 0x0a,
+	0x16, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x26, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67,
+	0x65, 0x2e, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
 	0x11, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x69,
-	0x6c, 0x65, 0x22, 0x15, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x0f, 0x12, 0x0d, 0x2f, 0x73, 0x74, 0x6f,
-	0x72, 0x61, 0x67, 0x65, 0x2f, 0x66, 0x69, 0x6c, 0x65, 0x12, 0x75, 0x0a, 0x16, 0x53, 0x65, 0x61,
-	0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69,
-	0x6e, 0x67, 0x73, 0x12, 0x26, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x53, 0x65,
-	0x61, 0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
-	0x69, 0x6e, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x73, 0x74,
-	0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x22, 0x20,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x12, 0x18, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65,
-	0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d,
-	0x12, 0x84, 0x01, 0x0a, 0x1d, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65,
-	0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x42, 0x79, 0x41, 0x67, 0x65,
-	0x6e, 0x74, 0x12, 0x2d, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x53, 0x65, 0x61,
-	0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69,
-	0x6e, 0x67, 0x73, 0x42, 0x79, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x11, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x4c, 0x69, 0x73, 0x74,
-	0x46, 0x69, 0x6c, 0x65, 0x22, 0x21, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b, 0x12, 0x19, 0x2f, 0x73,
-	0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x2f, 0x7b, 0x61, 0x67,
-	0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x88, 0x01, 0x0a, 0x16, 0x44, 0x65, 0x6c, 0x65,
-	0x74, 0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e,
-	0x67, 0x73, 0x12, 0x26, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x6c,
-	0x65, 0x74, 0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69,
-	0x6e, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x73, 0x74, 0x6f,
-	0x72, 0x61, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22,
-	0x3a, 0x01, 0x2a, 0x2a, 0x1d, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x75, 0x73,
-	0x65, 0x72, 0x73, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69,
-	0x64, 0x7d, 0x12, 0x97, 0x01, 0x0a, 0x1d, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x63, 0x72,
-	0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x42, 0x79, 0x41,
-	0x67, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x44,
-	0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72,
-	0x64, 0x69, 0x6e, 0x67, 0x73, 0x42, 0x79, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x44, 0x65,
-	0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x29, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x23, 0x3a, 0x01, 0x2a, 0x2a, 0x1e, 0x2f, 0x73,
-	0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x2f, 0x7b, 0x61, 0x67,
-	0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x42, 0x77, 0x0a, 0x0b,
-	0x63, 0x6f, 0x6d, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x42, 0x09, 0x46, 0x69, 0x6c,
-	0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x21, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x77, 0x65, 0x62, 0x69, 0x74, 0x65, 0x6c, 0x2f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x53, 0x58,
-	0x58, 0xaa, 0x02, 0x07, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0xca, 0x02, 0x07, 0x53, 0x74,
-	0x6f, 0x72, 0x61, 0x67, 0x65, 0xe2, 0x02, 0x13, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x07, 0x53, 0x74,
-	0x6f, 0x72, 0x61, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6c, 0x65, 0x22, 0x20, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1a, 0x12, 0x18, 0x2f, 0x73, 0x74, 0x6f,
+	0x72, 0x61, 0x67, 0x65, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72,
+	0x5f, 0x69, 0x64, 0x7d, 0x12, 0x84, 0x01, 0x0a, 0x1d, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x53,
+	0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x42,
+	0x79, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65,
+	0x2e, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x42, 0x79, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x46, 0x69, 0x6c, 0x65, 0x22, 0x21, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1b,
+	0x12, 0x19, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x61, 0x67, 0x65, 0x6e, 0x74,
+	0x2f, 0x7b, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x88, 0x01, 0x0a, 0x16,
+	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x26, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65,
+	0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c,
+	0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46,
+	0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x22, 0x3a, 0x01, 0x2a, 0x2a, 0x1d, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67,
+	0x65, 0x2f, 0x75, 0x73, 0x65, 0x72, 0x73, 0x2f, 0x7b, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0x97, 0x01, 0x0a, 0x1d, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67,
+	0x73, 0x42, 0x79, 0x41, 0x67, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61,
+	0x67, 0x65, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52,
+	0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x73, 0x42, 0x79, 0x41, 0x67, 0x65, 0x6e, 0x74,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67,
+	0x65, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x29, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x23, 0x3a, 0x01, 0x2a,
+	0x2a, 0x1e, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x2f, 0x61, 0x67, 0x65, 0x6e, 0x74,
+	0x2f, 0x7b, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x69, 0x64, 0x7d,
+	0x42, 0x77, 0x0a, 0x0b, 0x63, 0x6f, 0x6d, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x42,
+	0x09, 0x46, 0x69, 0x6c, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x21, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x77, 0x65, 0x62, 0x69, 0x74, 0x65, 0x6c,
+	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0xa2,
+	0x02, 0x03, 0x53, 0x58, 0x58, 0xaa, 0x02, 0x07, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0xca,
+	0x02, 0x07, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0xe2, 0x02, 0x13, 0x53, 0x74, 0x6f, 0x72,
+	0x61, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x07, 0x53, 0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -3353,113 +3412,116 @@ func file_file_proto_rawDescGZIP() []byte {
 }
 
 var file_file_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_file_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
+var file_file_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
 var file_file_proto_goTypes = []interface{}{
 	(UploadStatusCode)(0),                        // 0: storage.UploadStatusCode
 	(UploadFileChannel)(0),                       // 1: storage.UploadFileChannel
-	(*RestoreFilesRequest)(nil),                  // 2: storage.RestoreFilesRequest
-	(*RestoreFilesResponse)(nil),                 // 3: storage.RestoreFilesResponse
-	(*DeleteScreenRecordingsRequest)(nil),        // 4: storage.DeleteScreenRecordingsRequest
-	(*DeleteScreenRecordingsByAgentRequest)(nil), // 5: storage.DeleteScreenRecordingsByAgentRequest
-	(*SearchScreenRecordingsRequest)(nil),        // 6: storage.SearchScreenRecordingsRequest
-	(*SearchScreenRecordingsByAgentRequest)(nil), // 7: storage.SearchScreenRecordingsByAgentRequest
-	(*BulkGenerateFileLinkRequest)(nil),          // 8: storage.BulkGenerateFileLinkRequest
-	(*BulkGenerateFileLinkResponse)(nil),         // 9: storage.BulkGenerateFileLinkResponse
-	(*SearchFilesRequest)(nil),                   // 10: storage.SearchFilesRequest
-	(*ListFile)(nil),                             // 11: storage.ListFile
-	(*File)(nil),                                 // 12: storage.File
-	(*Thumbnail)(nil),                            // 13: storage.Thumbnail
-	(*FileMalwareScan)(nil),                      // 14: storage.FileMalwareScan
-	(*GenerateFileLinkRequest)(nil),              // 15: storage.GenerateFileLinkRequest
-	(*GenerateFileLinkResponse)(nil),             // 16: storage.GenerateFileLinkResponse
-	(*DownloadFileRequest)(nil),                  // 17: storage.DownloadFileRequest
-	(*StreamFile)(nil),                           // 18: storage.StreamFile
-	(*DeleteFilesRequest)(nil),                   // 19: storage.DeleteFilesRequest
-	(*DeleteFilesResponse)(nil),                  // 20: storage.DeleteFilesResponse
-	(*UploadFileUrlRequest)(nil),                 // 21: storage.UploadFileUrlRequest
-	(*UploadFileUrlResponse)(nil),                // 22: storage.UploadFileUrlResponse
-	(*UploadFileRequest)(nil),                    // 23: storage.UploadFileRequest
-	(*SafeUploadCancelRequest)(nil),              // 24: storage.SafeUploadCancelRequest
-	(*SafeUploadCancelResponse)(nil),             // 25: storage.SafeUploadCancelResponse
-	(*SafeUploadFileRequest)(nil),                // 26: storage.SafeUploadFileRequest
-	(*SafeUploadFileResponse)(nil),               // 27: storage.SafeUploadFileResponse
-	(*UploadFileResponse)(nil),                   // 28: storage.UploadFileResponse
-	nil,                                          // 29: storage.GenerateFileLinkRequest.QueryEntry
-	(*GenerateFileLinkResponse_Metadata)(nil),    // 30: storage.GenerateFileLinkResponse.Metadata
-	(*StreamFile_Metadata)(nil),                  // 31: storage.StreamFile.Metadata
-	(*UploadFileRequest_Metadata)(nil),           // 32: storage.UploadFileRequest.Metadata
-	(*SafeUploadFileRequest_Metadata)(nil),       // 33: storage.SafeUploadFileRequest.Metadata
-	(*SafeUploadFileResponse_Metadata)(nil),      // 34: storage.SafeUploadFileResponse.Metadata
-	(*SafeUploadFileResponse_Part)(nil),          // 35: storage.SafeUploadFileResponse.Part
-	(*SafeUploadFileResponse_Progress)(nil),      // 36: storage.SafeUploadFileResponse.Progress
-	(*engine.FilterBetween)(nil),                 // 37: engine.FilterBetween
-	(*engine.Lookup)(nil),                        // 38: engine.Lookup
+	(*DeleteQuarantineFilesRequest)(nil),         // 2: storage.DeleteQuarantineFilesRequest
+	(*RestoreFilesRequest)(nil),                  // 3: storage.RestoreFilesRequest
+	(*RestoreFilesResponse)(nil),                 // 4: storage.RestoreFilesResponse
+	(*DeleteScreenRecordingsRequest)(nil),        // 5: storage.DeleteScreenRecordingsRequest
+	(*DeleteScreenRecordingsByAgentRequest)(nil), // 6: storage.DeleteScreenRecordingsByAgentRequest
+	(*SearchScreenRecordingsRequest)(nil),        // 7: storage.SearchScreenRecordingsRequest
+	(*SearchScreenRecordingsByAgentRequest)(nil), // 8: storage.SearchScreenRecordingsByAgentRequest
+	(*BulkGenerateFileLinkRequest)(nil),          // 9: storage.BulkGenerateFileLinkRequest
+	(*BulkGenerateFileLinkResponse)(nil),         // 10: storage.BulkGenerateFileLinkResponse
+	(*SearchFilesRequest)(nil),                   // 11: storage.SearchFilesRequest
+	(*ListFile)(nil),                             // 12: storage.ListFile
+	(*File)(nil),                                 // 13: storage.File
+	(*Thumbnail)(nil),                            // 14: storage.Thumbnail
+	(*FileMalwareScan)(nil),                      // 15: storage.FileMalwareScan
+	(*GenerateFileLinkRequest)(nil),              // 16: storage.GenerateFileLinkRequest
+	(*GenerateFileLinkResponse)(nil),             // 17: storage.GenerateFileLinkResponse
+	(*DownloadFileRequest)(nil),                  // 18: storage.DownloadFileRequest
+	(*StreamFile)(nil),                           // 19: storage.StreamFile
+	(*DeleteFilesRequest)(nil),                   // 20: storage.DeleteFilesRequest
+	(*DeleteFilesResponse)(nil),                  // 21: storage.DeleteFilesResponse
+	(*UploadFileUrlRequest)(nil),                 // 22: storage.UploadFileUrlRequest
+	(*UploadFileUrlResponse)(nil),                // 23: storage.UploadFileUrlResponse
+	(*UploadFileRequest)(nil),                    // 24: storage.UploadFileRequest
+	(*SafeUploadCancelRequest)(nil),              // 25: storage.SafeUploadCancelRequest
+	(*SafeUploadCancelResponse)(nil),             // 26: storage.SafeUploadCancelResponse
+	(*SafeUploadFileRequest)(nil),                // 27: storage.SafeUploadFileRequest
+	(*SafeUploadFileResponse)(nil),               // 28: storage.SafeUploadFileResponse
+	(*UploadFileResponse)(nil),                   // 29: storage.UploadFileResponse
+	nil,                                          // 30: storage.GenerateFileLinkRequest.QueryEntry
+	(*GenerateFileLinkResponse_Metadata)(nil),    // 31: storage.GenerateFileLinkResponse.Metadata
+	(*StreamFile_Metadata)(nil),                  // 32: storage.StreamFile.Metadata
+	(*UploadFileRequest_Metadata)(nil),           // 33: storage.UploadFileRequest.Metadata
+	(*SafeUploadFileRequest_Metadata)(nil),       // 34: storage.SafeUploadFileRequest.Metadata
+	(*SafeUploadFileResponse_Metadata)(nil),      // 35: storage.SafeUploadFileResponse.Metadata
+	(*SafeUploadFileResponse_Part)(nil),          // 36: storage.SafeUploadFileResponse.Part
+	(*SafeUploadFileResponse_Progress)(nil),      // 37: storage.SafeUploadFileResponse.Progress
+	(*engine.FilterBetween)(nil),                 // 38: engine.FilterBetween
+	(*engine.Lookup)(nil),                        // 39: engine.Lookup
 }
 var file_file_proto_depIdxs = []int32{
-	37, // 0: storage.SearchScreenRecordingsRequest.uploaded_at:type_name -> engine.FilterBetween
-	37, // 1: storage.SearchScreenRecordingsRequest.retention_until:type_name -> engine.FilterBetween
+	38, // 0: storage.SearchScreenRecordingsRequest.uploaded_at:type_name -> engine.FilterBetween
+	38, // 1: storage.SearchScreenRecordingsRequest.retention_until:type_name -> engine.FilterBetween
 	1,  // 2: storage.SearchScreenRecordingsRequest.channel:type_name -> storage.UploadFileChannel
-	37, // 3: storage.SearchScreenRecordingsByAgentRequest.uploaded_at:type_name -> engine.FilterBetween
-	37, // 4: storage.SearchScreenRecordingsByAgentRequest.retention_until:type_name -> engine.FilterBetween
+	38, // 3: storage.SearchScreenRecordingsByAgentRequest.uploaded_at:type_name -> engine.FilterBetween
+	38, // 4: storage.SearchScreenRecordingsByAgentRequest.retention_until:type_name -> engine.FilterBetween
 	1,  // 5: storage.SearchScreenRecordingsByAgentRequest.channel:type_name -> storage.UploadFileChannel
-	15, // 6: storage.BulkGenerateFileLinkRequest.files:type_name -> storage.GenerateFileLinkRequest
-	16, // 7: storage.BulkGenerateFileLinkResponse.links:type_name -> storage.GenerateFileLinkResponse
-	37, // 8: storage.SearchFilesRequest.uploaded_at:type_name -> engine.FilterBetween
+	16, // 6: storage.BulkGenerateFileLinkRequest.files:type_name -> storage.GenerateFileLinkRequest
+	17, // 7: storage.BulkGenerateFileLinkResponse.links:type_name -> storage.GenerateFileLinkResponse
+	38, // 8: storage.SearchFilesRequest.uploaded_at:type_name -> engine.FilterBetween
 	1,  // 9: storage.SearchFilesRequest.channel:type_name -> storage.UploadFileChannel
-	37, // 10: storage.SearchFilesRequest.retention_until:type_name -> engine.FilterBetween
-	12, // 11: storage.ListFile.items:type_name -> storage.File
-	38, // 12: storage.File.uploaded_by:type_name -> engine.Lookup
-	13, // 13: storage.File.thumbnail:type_name -> storage.Thumbnail
+	38, // 10: storage.SearchFilesRequest.retention_until:type_name -> engine.FilterBetween
+	13, // 11: storage.ListFile.items:type_name -> storage.File
+	39, // 12: storage.File.uploaded_by:type_name -> engine.Lookup
+	14, // 13: storage.File.thumbnail:type_name -> storage.Thumbnail
 	1,  // 14: storage.File.channel:type_name -> storage.UploadFileChannel
-	29, // 15: storage.GenerateFileLinkRequest.query:type_name -> storage.GenerateFileLinkRequest.QueryEntry
-	30, // 16: storage.GenerateFileLinkResponse.metadata:type_name -> storage.GenerateFileLinkResponse.Metadata
-	31, // 17: storage.StreamFile.metadata:type_name -> storage.StreamFile.Metadata
+	30, // 15: storage.GenerateFileLinkRequest.query:type_name -> storage.GenerateFileLinkRequest.QueryEntry
+	31, // 16: storage.GenerateFileLinkResponse.metadata:type_name -> storage.GenerateFileLinkResponse.Metadata
+	32, // 17: storage.StreamFile.metadata:type_name -> storage.StreamFile.Metadata
 	1,  // 18: storage.UploadFileUrlRequest.channel:type_name -> storage.UploadFileChannel
 	0,  // 19: storage.UploadFileUrlResponse.code:type_name -> storage.UploadStatusCode
-	13, // 20: storage.UploadFileUrlResponse.thumbnail:type_name -> storage.Thumbnail
-	14, // 21: storage.UploadFileUrlResponse.malware:type_name -> storage.FileMalwareScan
-	32, // 22: storage.UploadFileRequest.metadata:type_name -> storage.UploadFileRequest.Metadata
-	33, // 23: storage.SafeUploadFileRequest.metadata:type_name -> storage.SafeUploadFileRequest.Metadata
-	35, // 24: storage.SafeUploadFileResponse.part:type_name -> storage.SafeUploadFileResponse.Part
-	34, // 25: storage.SafeUploadFileResponse.metadata:type_name -> storage.SafeUploadFileResponse.Metadata
-	36, // 26: storage.SafeUploadFileResponse.progress:type_name -> storage.SafeUploadFileResponse.Progress
+	14, // 20: storage.UploadFileUrlResponse.thumbnail:type_name -> storage.Thumbnail
+	15, // 21: storage.UploadFileUrlResponse.malware:type_name -> storage.FileMalwareScan
+	33, // 22: storage.UploadFileRequest.metadata:type_name -> storage.UploadFileRequest.Metadata
+	34, // 23: storage.SafeUploadFileRequest.metadata:type_name -> storage.SafeUploadFileRequest.Metadata
+	36, // 24: storage.SafeUploadFileResponse.part:type_name -> storage.SafeUploadFileResponse.Part
+	35, // 25: storage.SafeUploadFileResponse.metadata:type_name -> storage.SafeUploadFileResponse.Metadata
+	37, // 26: storage.SafeUploadFileResponse.progress:type_name -> storage.SafeUploadFileResponse.Progress
 	0,  // 27: storage.UploadFileResponse.code:type_name -> storage.UploadStatusCode
-	13, // 28: storage.UploadFileResponse.thumbnail:type_name -> storage.Thumbnail
-	14, // 29: storage.UploadFileResponse.malware:type_name -> storage.FileMalwareScan
-	13, // 30: storage.StreamFile.Metadata.thumbnail:type_name -> storage.Thumbnail
+	14, // 28: storage.UploadFileResponse.thumbnail:type_name -> storage.Thumbnail
+	15, // 29: storage.UploadFileResponse.malware:type_name -> storage.FileMalwareScan
+	14, // 30: storage.StreamFile.Metadata.thumbnail:type_name -> storage.Thumbnail
 	1,  // 31: storage.UploadFileRequest.Metadata.channel:type_name -> storage.UploadFileChannel
 	1,  // 32: storage.SafeUploadFileRequest.Metadata.channel:type_name -> storage.UploadFileChannel
 	0,  // 33: storage.SafeUploadFileResponse.Metadata.code:type_name -> storage.UploadStatusCode
-	13, // 34: storage.SafeUploadFileResponse.Metadata.thumbnail:type_name -> storage.Thumbnail
-	14, // 35: storage.SafeUploadFileResponse.Metadata.malware:type_name -> storage.FileMalwareScan
-	23, // 36: storage.FileService.UploadFile:input_type -> storage.UploadFileRequest
-	26, // 37: storage.FileService.SafeUploadFile:input_type -> storage.SafeUploadFileRequest
-	17, // 38: storage.FileService.DownloadFile:input_type -> storage.DownloadFileRequest
-	21, // 39: storage.FileService.UploadFileUrl:input_type -> storage.UploadFileUrlRequest
-	15, // 40: storage.FileService.GenerateFileLink:input_type -> storage.GenerateFileLinkRequest
-	8,  // 41: storage.FileService.BulkGenerateFileLink:input_type -> storage.BulkGenerateFileLinkRequest
-	19, // 42: storage.FileService.DeleteFiles:input_type -> storage.DeleteFilesRequest
-	2,  // 43: storage.FileService.RestoreFiles:input_type -> storage.RestoreFilesRequest
-	10, // 44: storage.FileService.SearchFiles:input_type -> storage.SearchFilesRequest
-	6,  // 45: storage.FileService.SearchScreenRecordings:input_type -> storage.SearchScreenRecordingsRequest
-	7,  // 46: storage.FileService.SearchScreenRecordingsByAgent:input_type -> storage.SearchScreenRecordingsByAgentRequest
-	4,  // 47: storage.FileService.DeleteScreenRecordings:input_type -> storage.DeleteScreenRecordingsRequest
-	5,  // 48: storage.FileService.DeleteScreenRecordingsByAgent:input_type -> storage.DeleteScreenRecordingsByAgentRequest
-	28, // 49: storage.FileService.UploadFile:output_type -> storage.UploadFileResponse
-	27, // 50: storage.FileService.SafeUploadFile:output_type -> storage.SafeUploadFileResponse
-	18, // 51: storage.FileService.DownloadFile:output_type -> storage.StreamFile
-	22, // 52: storage.FileService.UploadFileUrl:output_type -> storage.UploadFileUrlResponse
-	16, // 53: storage.FileService.GenerateFileLink:output_type -> storage.GenerateFileLinkResponse
-	9,  // 54: storage.FileService.BulkGenerateFileLink:output_type -> storage.BulkGenerateFileLinkResponse
-	20, // 55: storage.FileService.DeleteFiles:output_type -> storage.DeleteFilesResponse
-	3,  // 56: storage.FileService.RestoreFiles:output_type -> storage.RestoreFilesResponse
-	11, // 57: storage.FileService.SearchFiles:output_type -> storage.ListFile
-	11, // 58: storage.FileService.SearchScreenRecordings:output_type -> storage.ListFile
-	11, // 59: storage.FileService.SearchScreenRecordingsByAgent:output_type -> storage.ListFile
-	20, // 60: storage.FileService.DeleteScreenRecordings:output_type -> storage.DeleteFilesResponse
-	20, // 61: storage.FileService.DeleteScreenRecordingsByAgent:output_type -> storage.DeleteFilesResponse
-	49, // [49:62] is the sub-list for method output_type
-	36, // [36:49] is the sub-list for method input_type
+	14, // 34: storage.SafeUploadFileResponse.Metadata.thumbnail:type_name -> storage.Thumbnail
+	15, // 35: storage.SafeUploadFileResponse.Metadata.malware:type_name -> storage.FileMalwareScan
+	24, // 36: storage.FileService.UploadFile:input_type -> storage.UploadFileRequest
+	27, // 37: storage.FileService.SafeUploadFile:input_type -> storage.SafeUploadFileRequest
+	18, // 38: storage.FileService.DownloadFile:input_type -> storage.DownloadFileRequest
+	22, // 39: storage.FileService.UploadFileUrl:input_type -> storage.UploadFileUrlRequest
+	16, // 40: storage.FileService.GenerateFileLink:input_type -> storage.GenerateFileLinkRequest
+	9,  // 41: storage.FileService.BulkGenerateFileLink:input_type -> storage.BulkGenerateFileLinkRequest
+	20, // 42: storage.FileService.DeleteFiles:input_type -> storage.DeleteFilesRequest
+	3,  // 43: storage.FileService.RestoreFiles:input_type -> storage.RestoreFilesRequest
+	2,  // 44: storage.FileService.DeleteQuarantineFiles:input_type -> storage.DeleteQuarantineFilesRequest
+	11, // 45: storage.FileService.SearchFiles:input_type -> storage.SearchFilesRequest
+	7,  // 46: storage.FileService.SearchScreenRecordings:input_type -> storage.SearchScreenRecordingsRequest
+	8,  // 47: storage.FileService.SearchScreenRecordingsByAgent:input_type -> storage.SearchScreenRecordingsByAgentRequest
+	5,  // 48: storage.FileService.DeleteScreenRecordings:input_type -> storage.DeleteScreenRecordingsRequest
+	6,  // 49: storage.FileService.DeleteScreenRecordingsByAgent:input_type -> storage.DeleteScreenRecordingsByAgentRequest
+	29, // 50: storage.FileService.UploadFile:output_type -> storage.UploadFileResponse
+	28, // 51: storage.FileService.SafeUploadFile:output_type -> storage.SafeUploadFileResponse
+	19, // 52: storage.FileService.DownloadFile:output_type -> storage.StreamFile
+	23, // 53: storage.FileService.UploadFileUrl:output_type -> storage.UploadFileUrlResponse
+	17, // 54: storage.FileService.GenerateFileLink:output_type -> storage.GenerateFileLinkResponse
+	10, // 55: storage.FileService.BulkGenerateFileLink:output_type -> storage.BulkGenerateFileLinkResponse
+	21, // 56: storage.FileService.DeleteFiles:output_type -> storage.DeleteFilesResponse
+	4,  // 57: storage.FileService.RestoreFiles:output_type -> storage.RestoreFilesResponse
+	21, // 58: storage.FileService.DeleteQuarantineFiles:output_type -> storage.DeleteFilesResponse
+	12, // 59: storage.FileService.SearchFiles:output_type -> storage.ListFile
+	12, // 60: storage.FileService.SearchScreenRecordings:output_type -> storage.ListFile
+	12, // 61: storage.FileService.SearchScreenRecordingsByAgent:output_type -> storage.ListFile
+	21, // 62: storage.FileService.DeleteScreenRecordings:output_type -> storage.DeleteFilesResponse
+	21, // 63: storage.FileService.DeleteScreenRecordingsByAgent:output_type -> storage.DeleteFilesResponse
+	50, // [50:64] is the sub-list for method output_type
+	36, // [36:50] is the sub-list for method input_type
 	36, // [36:36] is the sub-list for extension type_name
 	36, // [36:36] is the sub-list for extension extendee
 	0,  // [0:36] is the sub-list for field type_name
@@ -3472,7 +3534,7 @@ func file_file_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_file_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RestoreFilesRequest); i {
+			switch v := v.(*DeleteQuarantineFilesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3484,7 +3546,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RestoreFilesResponse); i {
+			switch v := v.(*RestoreFilesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3496,7 +3558,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteScreenRecordingsRequest); i {
+			switch v := v.(*RestoreFilesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3508,7 +3570,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteScreenRecordingsByAgentRequest); i {
+			switch v := v.(*DeleteScreenRecordingsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3520,7 +3582,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SearchScreenRecordingsRequest); i {
+			switch v := v.(*DeleteScreenRecordingsByAgentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3532,7 +3594,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SearchScreenRecordingsByAgentRequest); i {
+			switch v := v.(*SearchScreenRecordingsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3544,7 +3606,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BulkGenerateFileLinkRequest); i {
+			switch v := v.(*SearchScreenRecordingsByAgentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3556,7 +3618,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BulkGenerateFileLinkResponse); i {
+			switch v := v.(*BulkGenerateFileLinkRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3568,7 +3630,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SearchFilesRequest); i {
+			switch v := v.(*BulkGenerateFileLinkResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3580,7 +3642,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListFile); i {
+			switch v := v.(*SearchFilesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3592,7 +3654,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*File); i {
+			switch v := v.(*ListFile); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3604,7 +3666,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Thumbnail); i {
+			switch v := v.(*File); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3616,7 +3678,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*FileMalwareScan); i {
+			switch v := v.(*Thumbnail); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3628,7 +3690,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GenerateFileLinkRequest); i {
+			switch v := v.(*FileMalwareScan); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3640,7 +3702,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GenerateFileLinkResponse); i {
+			switch v := v.(*GenerateFileLinkRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3652,7 +3714,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DownloadFileRequest); i {
+			switch v := v.(*GenerateFileLinkResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3664,7 +3726,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StreamFile); i {
+			switch v := v.(*DownloadFileRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3676,7 +3738,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteFilesRequest); i {
+			switch v := v.(*StreamFile); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3688,7 +3750,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteFilesResponse); i {
+			switch v := v.(*DeleteFilesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3700,7 +3762,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UploadFileUrlRequest); i {
+			switch v := v.(*DeleteFilesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3712,7 +3774,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UploadFileUrlResponse); i {
+			switch v := v.(*UploadFileUrlRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3724,7 +3786,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UploadFileRequest); i {
+			switch v := v.(*UploadFileUrlResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3736,7 +3798,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SafeUploadCancelRequest); i {
+			switch v := v.(*UploadFileRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3748,7 +3810,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SafeUploadCancelResponse); i {
+			switch v := v.(*SafeUploadCancelRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3760,7 +3822,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SafeUploadFileRequest); i {
+			switch v := v.(*SafeUploadCancelResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3772,7 +3834,7 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SafeUploadFileResponse); i {
+			switch v := v.(*SafeUploadFileRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3784,6 +3846,18 @@ func file_file_proto_init() {
 			}
 		}
 		file_file_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SafeUploadFileResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_file_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UploadFileResponse); i {
 			case 0:
 				return &v.state
@@ -3795,7 +3869,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenerateFileLinkResponse_Metadata); i {
 			case 0:
 				return &v.state
@@ -3807,7 +3881,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StreamFile_Metadata); i {
 			case 0:
 				return &v.state
@@ -3819,7 +3893,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UploadFileRequest_Metadata); i {
 			case 0:
 				return &v.state
@@ -3831,7 +3905,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SafeUploadFileRequest_Metadata); i {
 			case 0:
 				return &v.state
@@ -3843,7 +3917,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SafeUploadFileResponse_Metadata); i {
 			case 0:
 				return &v.state
@@ -3855,7 +3929,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SafeUploadFileResponse_Part); i {
 			case 0:
 				return &v.state
@@ -3867,7 +3941,7 @@ func file_file_proto_init() {
 				return nil
 			}
 		}
-		file_file_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
+		file_file_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SafeUploadFileResponse_Progress); i {
 			case 0:
 				return &v.state
@@ -3880,21 +3954,21 @@ func file_file_proto_init() {
 			}
 		}
 	}
-	file_file_proto_msgTypes[16].OneofWrappers = []interface{}{
+	file_file_proto_msgTypes[17].OneofWrappers = []interface{}{
 		(*StreamFile_Metadata_)(nil),
 		(*StreamFile_Chunk)(nil),
 	}
-	file_file_proto_msgTypes[21].OneofWrappers = []interface{}{
+	file_file_proto_msgTypes[22].OneofWrappers = []interface{}{
 		(*UploadFileRequest_Metadata_)(nil),
 		(*UploadFileRequest_Chunk)(nil),
 	}
-	file_file_proto_msgTypes[24].OneofWrappers = []interface{}{
+	file_file_proto_msgTypes[25].OneofWrappers = []interface{}{
 		(*SafeUploadFileRequest_UploadId)(nil),
 		(*SafeUploadFileRequest_Metadata_)(nil),
 		(*SafeUploadFileRequest_Chunk)(nil),
 		(*SafeUploadFileRequest_Cancel)(nil),
 	}
-	file_file_proto_msgTypes[25].OneofWrappers = []interface{}{
+	file_file_proto_msgTypes[26].OneofWrappers = []interface{}{
 		(*SafeUploadFileResponse_Part_)(nil),
 		(*SafeUploadFileResponse_Metadata_)(nil),
 		(*SafeUploadFileResponse_Progress_)(nil),
@@ -3905,7 +3979,7 @@ func file_file_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_file_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   35,
+			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
