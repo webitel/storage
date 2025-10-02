@@ -3,6 +3,7 @@ package sqlstore
 import (
 	"context"
 	"fmt"
+	"github.com/webitel/wlog"
 	"time"
 
 	"github.com/lib/pq"
@@ -109,6 +110,29 @@ where domain_id = :DomainId and id = any(:Ids::int8[])`, map[string]interface{}{
 
 	if err != nil {
 		return model.NewCustomCodeError("store.sql_file.remove.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return nil
+}
+
+func (self *SqlFileStore) MarkRemoveQuarantine(domainId int64, ids []int64) model.AppError {
+	res, err := self.GetMaster().Exec(`update storage.files
+set removed = true
+where domain_id = :DomainId
+  and channel = 'chat' --TODO
+  and (malware->'found')::bool
+  and (:Ids::int8[] isnull or id = any (:Ids::int8[]))`, map[string]interface{}{
+		"DomainId": domainId,
+		"Ids":      pq.Array(ids),
+	})
+
+	if err != nil {
+		return model.NewCustomCodeError("store.sql_file.remove_quarantine.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	i, _ := res.RowsAffected()
+	if i != 0 {
+		wlog.Debug(fmt.Sprintf("%d rows removed", i))
 	}
 
 	return nil
