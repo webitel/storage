@@ -182,6 +182,9 @@ endScan:
 
 		if ms.Found && ms.Desc != nil {
 			app.Log.Warn(fmt.Sprintf("virus detected on upload of file '%s'. Signature: %s", file.Name, *ms.Desc))
+			if file.UploadedBy != nil { // internal user
+				return FileMalwareErr
+			}
 		}
 
 		file.Malware = ms
