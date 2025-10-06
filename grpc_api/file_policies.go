@@ -2,10 +2,11 @@ package grpc_api
 
 import (
 	"context"
+	"unicode"
+
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
-	"unicode"
 )
 
 type filePolicies struct {
@@ -217,7 +218,7 @@ func (api *filePolicies) FilePolicyApply(ctx context.Context, in *storage.FilePo
 		return nil, err
 	}
 
-	count, err = api.ctrl.ApplyFilePolicy(ctx, session, in.GetId())
+	count, err = api.ctrl.ApplyFilePolicy(ctx, session, in.GetId(), in.GetApplyToNullChannel())
 	if err != nil {
 		return nil, err
 	}

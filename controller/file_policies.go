@@ -2,9 +2,10 @@ package controller
 
 import (
 	"context"
+	"time"
+
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
-	"time"
 )
 
 func (c *Controller) CreateFilePolicy(ctx context.Context, session *auth_manager.Session, policy *model.FilePolicy) (*model.FilePolicy, model.AppError) {
@@ -115,7 +116,7 @@ func (c *Controller) ChangePositionFilePolicy(ctx context.Context, session *auth
 	return c.app.ChangePositionFilePolicy(ctx, session.Domain(0), fromId, toId)
 }
 
-func (c *Controller) ApplyFilePolicy(ctx context.Context, session *auth_manager.Session, policyId int32) (int64, model.AppError) {
+func (c *Controller) ApplyFilePolicy(ctx context.Context, session *auth_manager.Session, policyId int32, applyToNullChannel bool) (int64, model.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFilePolicy)
 	if !permission.CanRead() {
 		return 0, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -125,5 +126,5 @@ func (c *Controller) ApplyFilePolicy(ctx context.Context, session *auth_manager.
 		return 0, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
 	}
 
-	return c.app.ApplyFilePolicy(ctx, session.Domain(0), policyId)
+	return c.app.ApplyFilePolicy(ctx, session.Domain(0), policyId, applyToNullChannel)
 }
