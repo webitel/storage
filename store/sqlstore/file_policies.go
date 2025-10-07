@@ -3,6 +3,7 @@ package sqlstore
 import (
 	"context"
 	"fmt"
+
 	"github.com/lib/pq"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -244,23 +245,32 @@ order by position desc;`, map[string]interface{}{
 	return list, nil
 }
 
-func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy) (int64, model.AppError) {
+func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy, applyToNullChannel bool) (int64, model.AppError) {
 	m := make([]string, 0, len(policy.MimeTypes))
 	for _, v := range policy.MimeTypes {
 		m = append(m, policyMaskToLike(v))
 	}
 
-	res, err := s.GetMaster().WithContext(ctx).Exec(`update storage.files
-set retention_until = uploaded_at + (:RetentionDays || 'days')::interval
-where domain_id = :DomainId
-    and channel = any(:Channels::varchar[])
-    and mime_type ilike any (:Mime::varchar[])`, map[string]any{
-		"DomainId":      domainId,
-		"Channels":      pq.Array(policy.Channels),
-		"Mime":          pq.Array(m),
-		"RetentionDays": policy.RetentionDays,
-	})
+	const query = `
+		update storage.files
+		set retention_until = uploaded_at + (:RetentionDays || 'days')::interval
+		where domain_id = :DomainId
+		and (
+			channel = any(:Channels::varchar [])
+			or (:ApplyToNullChannel and channel is null)  
+		)
+		and mime_type ilike any(:Mime::varchar [])
+	`
 
+	args := map[string]any{
+		"DomainId":           domainId,
+		"Channels":           pq.Array(policy.Channels),
+		"Mime":               pq.Array(m),
+		"RetentionDays":      policy.RetentionDays,
+		"ApplyToNullChannel": applyToNullChannel,
+	}
+
+	res, err := s.GetMaster().WithContext(ctx).Exec(query, args)
 	if err != nil {
 		return 0, model.NewCustomCodeError("store.sql_file_policy.apply.app_error", err.Error(), extractCodeFromErr(err))
 	}

@@ -183,7 +183,7 @@ type FilePoliciesStore interface {
 	ChangePosition(ctx context.Context, domainId int64, fromId, toId int32) model.AppError
 	// AllByDomainId internal
 	AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, model.AppError)
-	SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy) (int64, model.AppError)
+	SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy, applyToNullChannel bool) (int64, model.AppError)
 }
 
 type SystemSettingsStore interface {
