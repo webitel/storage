@@ -7,7 +7,6 @@ import (
 
 const (
 	BackendCacheSize             = 1000
-	CacheDir                     = "./cache"
 	BackendProfileAccessKeyField = "access_key"
 )
 
