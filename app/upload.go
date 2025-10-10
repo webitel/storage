@@ -127,7 +127,7 @@ func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, f
 			ScanDate: nil,
 		}
 
-		fn := path.Join(model.CacheDir, model.NewId())
+		fn := path.Join(app.Config().TempDir, model.NewId())
 		fSrc, errCl := os.Create(fn)
 		if errCl != nil {
 			ms.Desc = model.NewString(errCl.Error())
