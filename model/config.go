@@ -68,6 +68,7 @@ type Config struct {
 
 	DefaultFileStore   *DefaultFileStore `json:"default_file_store"`
 	ServerSettings     ServerSettings    `json:"server_settings"`
+	TempDir            string            `json:"temp_dir" flag:"temp_dir|./cache|Temp directory" env:"TEMP_DIRECTORY"`
 	ProxyUploadUrl     string            `json:"proxy_upload" flag:"proxy_upload||Proxy upload url" env:"PROXY_UPLOAD"`
 	MaxSafeUploadSleep time.Duration     `json:"safe_upload_max_sleep" flag:"safe_upload_max_sleep|60sec|Maximum upload second sleep process" env:"SAFE_UPLOAD_MAX_SLEEP"`
 	Thumbnail          ThumbnailSettings `json:"thumbnail"`

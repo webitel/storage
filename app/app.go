@@ -206,7 +206,7 @@ func (app *App) initLocalFileStores() engine.AppError {
 	if app.FileCache, appErr = utils.NewBackendStore(&model.FileBackendProfile{
 		Name:       "Internal file cache",
 		Type:       model.FileDriverLocal,
-		Properties: model.StringInterface{"directory": model.CacheDir, "path_pattern": ""},
+		Properties: model.StringInterface{"directory": app.Config().TempDir, "path_pattern": ""},
 	}); appErr != nil {
 		return appErr
 	}
