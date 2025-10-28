@@ -14,7 +14,7 @@ const (
 	UploadFileChannelKnowledgebase = "knowledgebase"
 	UploadFileChannelCase          = "case"
 	UploadFileChannelScreenshot    = "screenshot"
-	UploadFileChannelScreenShare   = "screensharing"
+	UploadFileChannelScreenShare   = "screenSharing"
 )
 
 type JobUploadFile struct {
