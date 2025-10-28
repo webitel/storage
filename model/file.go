@@ -92,7 +92,7 @@ func (f *BaseFile) GetMimeType() string {
 }
 
 func (f *BaseFile) GetViewName() string {
-	if f.ViewName != nil {
+	if f.ViewName != nil && *f.ViewName != "" {
 		return *f.ViewName
 	}
 
