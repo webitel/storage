@@ -23,6 +23,8 @@ var uploadFileChannelName = map[storage.UploadFileChannel]string{
 	5: model.UploadFileChannelMedia,
 	6: model.UploadFileChannelKnowledgebase,
 	7: model.UploadFileChannelCase,
+	8: model.UploadFileChannelScreenshot,
+	9: model.UploadFileChannelScreenShare,
 }
 
 func NewFilePoliciesApi(c *controller.Controller) *filePolicies {
