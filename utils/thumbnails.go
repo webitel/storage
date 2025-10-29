@@ -108,7 +108,7 @@ func mimeCmdArgs(mime string, scale string) []string {
 			"-err_detect", "ignore_err",
 			//"-f", "mp4", // Вказуємо формат вхідного файлу
 			"-i", "pipe:0", // Використання pipe:0 для отримання даних з io.Reader
-			"-ss", "00:00:01", // Затримка 2 секунди
+			//"-ss", "00:00:01", // Затримка 2 секунди
 			"-vframes", "1", // Захопити лише 1 кадр
 			"-f", "image2pipe", // Вивід у форматі image2pipe
 			"-vcodec", "png", // Виведення у форматі PNG
