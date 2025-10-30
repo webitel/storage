@@ -6,6 +6,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -100,6 +101,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.Uuid = c.Params.Id
 			file.GenerateThumbnail = generateThumbnail
 			file.Channel = &channel
+			file.CustomProperties = CustomPropertiesFromQuery(r.URL.Query()) // TODO
 			file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
 
 			var reader io.ReadCloser
@@ -139,6 +141,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.Uuid = c.Params.Id
 		file.GenerateThumbnail = generateThumbnail
 		file.Channel = &channel
+		file.CustomProperties = CustomPropertiesFromQuery(r.URL.Query())
 		file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
 
 		var reader io.ReadCloser
@@ -174,4 +177,24 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 
 	// todo app generate public download
+}
+
+func CustomPropertiesFromQuery(q url.Values) *model.CustomFileProperties {
+	var c model.CustomFileProperties
+	set := func(v *int, s string) {
+		if s != "" {
+			*v, _ = strconv.Atoi(s)
+		}
+	}
+
+	set(&c.StartTime, q.Get("start_time"))
+	set(&c.EndTime, q.Get("end_time"))
+	set(&c.Width, q.Get("width"))
+	set(&c.Height, q.Get("height"))
+
+	if c.Width != 0 || c.Height != 0 || c.StartTime != 0 || c.EndTime != 0 {
+		return &c
+	}
+
+	return nil
 }

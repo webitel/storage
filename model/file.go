@@ -18,18 +18,26 @@ type SearchFile struct {
 	AgentIds       []int
 }
 
+type CustomFileProperties struct {
+	StartTime int `json:"start_time,omitempty"`
+	EndTime   int `json:"end_time,omitempty"`
+	Width     int `json:"width,omitempty"`
+	Height    int `json:"height,omitempty"`
+}
+
 type BaseFile struct {
-	Name           string          `db:"name" json:"name"`
-	ViewName       *string         `db:"view_name" json:"view_name,omitempty"`
-	Size           int64           `db:"size" json:"size"`
-	MimeType       string          `db:"mime_type" json:"mime_type"`
-	Properties     StringInterface `db:"properties" json:"properties"`
-	SHA256Sum      *string         `db:"sha256sum" json:"sha256sum,omitempty"`
-	Instance       string          `db:"instance" json:"-"`
-	Channel        *string         `db:"channel" json:"channel"`
-	RetentionUntil *time.Time      `db:"retention_until" json:"retention_until"`
-	UploadedBy     *Lookup         `db:"uploaded_by" json:"uploaded_by"`
-	Malware        *MalwareScan    `db:"malware" json:"malware,omitempty"`
+	Name             string                `db:"name" json:"name"`
+	ViewName         *string               `db:"view_name" json:"view_name,omitempty"`
+	Size             int64                 `db:"size" json:"size"`
+	MimeType         string                `db:"mime_type" json:"mime_type"`
+	Properties       StringInterface       `db:"properties" json:"properties"`
+	SHA256Sum        *string               `db:"sha256sum" json:"sha256sum,omitempty"`
+	Instance         string                `db:"instance" json:"-"`
+	Channel          *string               `db:"channel" json:"channel"`
+	RetentionUntil   *time.Time            `db:"retention_until" json:"retention_until"`
+	UploadedBy       *Lookup               `db:"uploaded_by" json:"uploaded_by"`
+	Malware          *MalwareScan          `db:"malware" json:"malware,omitempty"`
+	CustomProperties *CustomFileProperties `db:"custom_properties" json:"custom_properties"`
 }
 
 type MalwareScan struct {
@@ -71,6 +79,15 @@ func (t *Thumbnail) ToJson() *[]byte {
 }
 
 func (t *MalwareScan) ToJson() *[]byte {
+	if t == nil {
+		return nil
+	}
+
+	d, _ := json.Marshal(t)
+	return &d
+}
+
+func (t *CustomFileProperties) ToJson() *[]byte {
 	if t == nil {
 		return nil
 	}
