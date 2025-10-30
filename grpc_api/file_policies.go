@@ -14,6 +14,15 @@ type filePolicies struct {
 	storage.UnsafeFilePoliciesServiceServer
 }
 
+var convertedChannelMap map[string]int32
+
+func init() {
+	convertedChannelMap = make(map[string]int32, len(storage.UploadFileChannel_value))
+	for key, value := range storage.UploadFileChannel_value {
+		convertedChannelMap[strings.ToLower(key)] = value
+	}
+}
+
 var uploadFileChannelName = map[storage.UploadFileChannel]string{
 	0: model.UploadFileChannelUnknown,
 	1: model.UploadFileChannelChat,
@@ -267,21 +276,15 @@ func fileChannelsFromProto(in []storage.UploadFileChannel) []string {
 	return res
 }
 
-
 func fileChannelsProto(in []string) []storage.UploadFileChannel {
 	var (
-		res []storage.UploadFileChannel
+		res     []storage.UploadFileChannel
 		channel int32
-		ok bool 
+		ok      bool
 	)
 
-	convertedMap := make(map[string]int32, len(storage.UploadFileChannel_value))
-	for key, value := range storage.UploadFileChannel_value {
-		convertedMap[strings.ToLower(key)] = value
-	}
-
 	for _, value := range in {
-		if channel, ok = convertedMap[value + "channel"]; !ok {
+		if channel, ok = convertedChannelMap[value+"channel"]; !ok {
 			channel = int32(storage.UploadFileChannel_UnknownChannel)
 		}
 		res = append(res, storage.UploadFileChannel(channel))
