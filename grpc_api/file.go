@@ -45,6 +45,19 @@ func NewFileApi(proxy string, ph string, api *controller.Controller) *file {
 	return c
 }
 
+func CustomPropertiesFromProto(in *storage.CustomFileProperties) *model.CustomFileProperties {
+	if in == nil {
+		return nil
+	}
+
+	return &model.CustomFileProperties{
+		StartTime: int(in.StartTime),
+		EndTime:   int(in.EndTime),
+		Width:     int(in.Width),
+		Height:    int(in.Height),
+	}
+}
+
 func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	var chunk *storage.UploadFileRequest_Chunk
 
@@ -64,6 +77,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	fileRequest.DomainId = metadata.Metadata.DomainId
 	fileRequest.MimeType = metadata.Metadata.MimeType
 	fileRequest.Uuid = metadata.Metadata.Uuid
+	fileRequest.CustomProperties = CustomPropertiesFromProto(metadata.Metadata.Properties)
 
 	fileRequest.ViewName = &metadata.Metadata.Name
 	fileRequest.Channel = model.NewString(channelType(metadata.Metadata.Channel))
@@ -327,6 +341,7 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	fileRequest.Size = res.ContentLength
 	fileRequest.Channel = model.NewString(channelType(in.Channel))
 	fileRequest.GenerateThumbnail = in.GetGenerateThumbnail()
+	fileRequest.CustomProperties = CustomPropertiesFromProto(in.GetProperties())
 	if fileRequest.Uuid == "" {
 		fileRequest.Uuid = model.NewId() // bad request ?
 	}
@@ -428,6 +443,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		fileRequest.ViewName = &r.Metadata.Name
 		fileRequest.Channel = model.NewString(channelType(r.Metadata.Channel))
 		fileRequest.GenerateThumbnail = r.Metadata.GetGenerateThumbnail()
+		fileRequest.CustomProperties = CustomPropertiesFromProto(r.Metadata.Properties)
 		var pid *int
 		if r.Metadata.ProfileId > 0 {
 			pid = model.NewInt(int(r.Metadata.ProfileId))

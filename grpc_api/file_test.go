@@ -17,7 +17,10 @@ var service = "10.10.10.25:10039"
 var testFolder = "../test_data"
 
 func TestFile(t *testing.T) {
+
+	sendFile(nil, "/Users/ihor/Documents/test/1.mp4")
 	//downloadFile()
+	return
 	var uploadId *string
 	fileLoc := testFolder + "/img.png"
 	uploadId = sendFile(uploadId, fileLoc)
@@ -148,11 +151,17 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 					DomainId: 1,
 					Name:     stats.Name(),
 					//MimeType: "image/png",
-					MimeType:          "image/png",
+					MimeType:          "video/mp3",
 					Uuid:              "blabla",
 					StreamResponse:    false,
 					ProfileId:         220,
-					GenerateThumbnail: false,
+					GenerateThumbnail: true,
+					//Properties: &storage.CustomFileProperties{
+					//	StartTime: 1,
+					//	EndTime:   2,
+					//	Width:     3,
+					//	Height:    4,
+					//},
 				},
 			},
 		})

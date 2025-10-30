@@ -286,6 +286,10 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 		ProfileId: profileId,
 	}
 
+	if file.CustomProperties != nil {
+		f.CustomProperties = file.CustomProperties
+	}
+
 	h := sha256.New()
 	tr := io.TeeReader(src, h)
 

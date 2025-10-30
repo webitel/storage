@@ -68,28 +68,29 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		id, err := self.GetMaster().SelectInt(`
-			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name, 
-			                          profile_id, sha256sum, channel, thumbnail, retention_until, uploaded_by, malware)
-            values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName, 
-                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz, :UploadedBy::int8, :Malware::jsonb)
+			insert into storage.files(id, name, uuid, size, domain_id, mime_type, properties, created_at, instance, view_name,
+			                          profile_id, sha256sum, channel, thumbnail, retention_until, uploaded_by, malware, custom_properties)
+            values(nextval('storage.upload_file_jobs_id_seq'::regclass), :Name, :Uuid, :Size, :DomainId, :Mime, :Props, :CreatedAt, :Inst, :VName,
+                   :ProfileId, :SHA256Sum, :Channel, :Thumbnail::jsonb, :RetentionUntil::timestamptz, :UploadedBy::int8, :Malware::jsonb, :CustomProperties::jsonb)
 			returning id
 		`, map[string]interface{}{
-			"Name":           file.Name,
-			"Uuid":           file.Uuid,
-			"Size":           file.Size,
-			"DomainId":       file.DomainId,
-			"Mime":           file.MimeType,
-			"Props":          file.Properties.ToJson(),
-			"CreatedAt":      file.CreatedAt,
-			"Inst":           file.Instance,
-			"VName":          file.ViewName,
-			"ProfileId":      file.ProfileId,
-			"SHA256Sum":      file.SHA256Sum,
-			"Channel":        file.Channel,
-			"Thumbnail":      file.Thumbnail.ToJson(),
-			"RetentionUntil": file.RetentionUntil,
-			"UploadedBy":     file.UploadedBy.GetSafeId(),
-			"Malware":        file.Malware.ToJson(),
+			"Name":             file.Name,
+			"Uuid":             file.Uuid,
+			"Size":             file.Size,
+			"DomainId":         file.DomainId,
+			"Mime":             file.MimeType,
+			"Props":            file.Properties.ToJson(),
+			"CreatedAt":        file.CreatedAt,
+			"Inst":             file.Instance,
+			"VName":            file.ViewName,
+			"ProfileId":        file.ProfileId,
+			"SHA256Sum":        file.SHA256Sum,
+			"Channel":          file.Channel,
+			"Thumbnail":        file.Thumbnail.ToJson(),
+			"RetentionUntil":   file.RetentionUntil,
+			"UploadedBy":       file.UploadedBy.GetSafeId(),
+			"Malware":          file.Malware.ToJson(),
+			"CustomProperties": file.CustomProperties.ToJson(),
 		})
 
 		if err != nil {
@@ -164,9 +165,9 @@ func (self SqlFileStore) MoveFromJob(jobId int64, profileId *int, properties mod
   where id = $1
   returning id, name, uuid, size, domain_id, mime_type, created_at, instance, view_name, channel
 )
-insert into storage.files(id, name, uuid, profile_id, size, domain_id, mime_type, properties, created_at, instance, view_name, 
+insert into storage.files(id, name, uuid, profile_id, size, domain_id, mime_type, properties, created_at, instance, view_name,
 	channel, retention_until)
-select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $3, del.created_at, del.instance, del.view_name, 
+select del.id, del.name, del.uuid, $2, del.size, del.domain_id, del.mime_type, $3, del.created_at, del.instance, del.view_name,
 	del.channel, $4::timestamptz
 from del`, jobId, profileId, properties.ToJson(), retentionUntil)
 
