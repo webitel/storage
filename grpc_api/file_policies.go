@@ -2,7 +2,7 @@ package grpc_api
 
 import (
 	"context"
-	"unicode"
+	"strings"
 
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/gen/storage"
@@ -12,6 +12,15 @@ import (
 type filePolicies struct {
 	ctrl *controller.Controller
 	storage.UnsafeFilePoliciesServiceServer
+}
+
+var convertedChannelMap map[string]int32
+
+func init() {
+	convertedChannelMap = make(map[string]int32, len(storage.UploadFileChannel_value))
+	for key, value := range storage.UploadFileChannel_value {
+		convertedChannelMap[strings.ToLower(key)] = value
+	}
 }
 
 var uploadFileChannelName = map[storage.UploadFileChannel]string{
@@ -268,29 +277,18 @@ func fileChannelsFromProto(in []storage.UploadFileChannel) []string {
 }
 
 func fileChannelsProto(in []string) []storage.UploadFileChannel {
-	var res []storage.UploadFileChannel
-	var channel int32
-	var ok bool
-	for _, v := range in {
-		channel, ok = storage.UploadFileChannel_value[capitalizeFirstLetterUnicode(v, true)+"Channel"]
-		if !ok {
+	var (
+		res     []storage.UploadFileChannel
+		channel int32
+		ok      bool
+	)
+
+	for _, value := range in {
+		if channel, ok = convertedChannelMap[value+"channel"]; !ok {
 			channel = int32(storage.UploadFileChannel_UnknownChannel)
 		}
 		res = append(res, storage.UploadFileChannel(channel))
 	}
 
 	return res
-}
-
-func capitalizeFirstLetterUnicode(s string, upper bool) string {
-	if len(s) == 0 {
-		return s
-	}
-	runes := []rune(s)
-	if upper {
-		runes[0] = unicode.ToUpper(runes[0])
-	} else {
-		runes[0] = unicode.ToLower(runes[0])
-	}
-	return string(runes)
 }
