@@ -214,7 +214,7 @@ func (f *File) GetStoreName() string {
 }
 
 func (f File) DefaultOrder() string {
-	return "uploaded_at desc"
+	return "-uploaded_at"
 }
 
 func (f File) AllowFields() []string {
