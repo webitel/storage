@@ -52,6 +52,8 @@ func putRecordCallFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		fileRequest.EmailSub = r.URL.Query().Get("email_sbj")
 	}
 
+	fileRequest.GenerateThumbnail = r.URL.Query().Get("thumbnail") == "true"
+
 	defer r.Body.Close()
 
 	if err := c.App.AddUploadJobFile(r.Body, &fileRequest); err != nil {
