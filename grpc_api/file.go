@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/webitel/storage/app"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/webitel/storage/app"
 
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/gen/storage"
@@ -613,6 +614,12 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		return nil, err
 	}
 
+	var uploadedBy []int64
+	if in.GetUserId() != 0 {
+		uploadedBy = []int64{in.GetUserId()}
+	} else {
+		uploadedBy = nil
+	}
 	search := &model.SearchFile{
 		ListRequest: model.ListRequest{
 			Q:       in.GetQ(),
@@ -623,7 +630,7 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		},
 		Ids:        in.Id,
 		Removed:    model.NewBool(false),
-		UploadedBy: []int64{in.GetUserId()},
+		UploadedBy: uploadedBy,
 		Channels:   []string{channelType(in.GetChannel())},
 	}
 
