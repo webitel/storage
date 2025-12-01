@@ -87,7 +87,7 @@ func Build(req *model.ListRequest, schema string, where string, e Entity, args m
 		t = pq.QuoteIdentifier(schema) + "." + t
 	}
 
-	query := fmt.Sprintf(`select %s 
+	query := fmt.Sprintf(`select %s
 	from %s as t
 	where %s
 	%s

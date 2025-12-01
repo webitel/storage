@@ -785,7 +785,7 @@ func (api *file) SearchFilesByCall(ctx context.Context, in *storage.SearchFilesB
 		search.Channels = append(search.Channels, channelType(v))
 	}
 
-	files, next, err := api.ctrl.SearchCallFiles(ctx, session, in.GetCallId(), search)
+	files, endOfData, err := api.ctrl.SearchCallFiles(ctx, session, in.GetCallId(), search)
 	if err != nil {
 		return nil, err
 	}
@@ -796,7 +796,7 @@ func (api *file) SearchFilesByCall(ctx context.Context, in *storage.SearchFilesB
 	}
 
 	return &storage.ListFile{
-		Next:  !next,
+		Next:  !endOfData,
 		Items: items,
 	}, nil
 }

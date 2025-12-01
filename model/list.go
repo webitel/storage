@@ -33,8 +33,8 @@ func (l *ListRequest) RemoveLastElemIfNeed(slicePtr interface{}) {
 	}
 
 	itr := s.Elem()
-
-	l.endList = itr.Len() <= l.PerPage
+	length := itr.Len()
+	l.endList = length <= l.GetLimit()-1
 
 	if l.endList {
 		return
