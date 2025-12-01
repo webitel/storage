@@ -224,7 +224,7 @@ func (f File) AllowFields() []string {
 }
 
 func (f File) DefaultFields() []string {
-	return []string{"id", "name", "view_name", "size", "mime_type", "uploaded_at", "channel", "uploaded_by"}
+	return []string{"id", "name", "view_name", "size", "mime_type", "uploaded_at", "channel", "uploaded_by", "thumbnail"}
 }
 
 func (f File) EntityName() string {
