@@ -145,3 +145,17 @@ func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session 
 
 	return c.app.RemoveFilesByChannels(ctx, session.Domain(0), ids, search.Channels)
 }
+
+func (c *Controller) SearchCallFiles(ctx context.Context, session *auth_manager.Session, callId string, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
+	if !session.HasAction(auth_manager.PermissionRecordFile) {
+		permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
+		if !permission.CanRead() {
+			return nil, false, model.NewForbiddenError("call.recordings.access.forbidden", "Not allow")
+		}
+
+		// TODO RBAC ?
+	}
+
+	search.ReferenceIds = []string{callId}
+	return c.app.SearchFiles(ctx, session.Domain(0), search)
+}

@@ -15,3 +15,14 @@ func GetProtoLookup(src *model.Lookup) *engine.Lookup {
 		Name: src.Name,
 	}
 }
+
+func GetFilterBetween(src *engine.FilterBetween) *model.FilterBetween {
+	if src == nil {
+		return nil
+	}
+
+	return &model.FilterBetween{
+		From: src.GetFrom(),
+		To:   src.GetTo(),
+	}
+}

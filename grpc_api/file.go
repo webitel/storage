@@ -761,6 +761,46 @@ func (api *file) DeleteScreenRecordingsByAgent(ctx context.Context, in *storage.
 	return &storage.DeleteFilesResponse{}, nil
 }
 
+func (api *file) SearchFilesByCall(ctx context.Context, in *storage.SearchFilesByCallRequest) (*storage.ListFile, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Q:       in.GetQ(),
+			Page:    int(in.GetPage()),
+			PerPage: int(in.GetSize()),
+			Fields:  in.Fields,
+			Sort:    in.Sort,
+		},
+		Ids:            in.Id,
+		Removed:        model.NewBool(false),
+		RetentionUntil: GetFilterBetween(in.GetRetentionUntil()),
+		UploadedAt:     GetFilterBetween(in.GetUploadedAt()),
+	}
+
+	for _, v := range in.GetChannel() {
+		search.Channels = append(search.Channels, channelType(v))
+	}
+
+	files, next, err := api.ctrl.SearchCallFiles(ctx, session, in.GetCallId(), search)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*storage.File, 0, len(files))
+	for _, v := range files {
+		items = append(items, toGrpcFile(v))
+	}
+
+	return &storage.ListFile{
+		Next:  !next,
+		Items: items,
+	}, nil
+}
+
 func channelsType(channels []storage.UploadFileChannel) []string {
 	l := make([]string, 0, len(channels))
 	for _, v := range channels {
