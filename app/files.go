@@ -3,11 +3,13 @@ package app
 import (
 	"context"
 	"fmt"
+
+	"net/http"
+
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
-	"net/http"
 )
 
 var (
@@ -15,7 +17,7 @@ var (
 )
 
 func (app *App) SearchFiles(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
-	res, err := app.Store.File().GetAllPage(ctx, domainId, search)
+	res, err := app.Store.File().GetScreenRecordings(ctx, domainId, search)
 	if err != nil {
 		return nil, false, err
 	}
