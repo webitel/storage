@@ -17,6 +17,15 @@ var (
 )
 
 func (app *App) SearchFiles(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
+	res, err := app.Store.File().GetAllPage(ctx, domainId, search)
+	if err != nil {
+		return nil, false, err
+	}
+	search.RemoveLastElemIfNeed(&res)
+	return res, search.EndOfList(), nil
+}
+
+func (app *App) SearchScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
 	res, err := app.Store.File().GetScreenRecordings(ctx, domainId, search)
 	if err != nil {
 		return nil, false, err
