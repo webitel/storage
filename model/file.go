@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+var (
+	ImageMimePrefix = "image/"
+	VideoMimePrefix = "video/"
+	AudioMimePrefix = "audio/"
+)
+
 type SearchFile struct {
 	ListRequest
 	Ids            []int64
@@ -16,6 +22,7 @@ type SearchFile struct {
 	RetentionUntil *FilterBetween
 	Removed        *bool
 	AgentIds       []int
+	MimeType       *string
 }
 
 type CustomFileProperties struct {
