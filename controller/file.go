@@ -89,7 +89,7 @@ func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_m
 		},
 		Ids:        ids,
 		UploadedBy: []int64{userId},
-		Channels:   []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
+		Channels:   []string{model.UploadFileChannelScreenRecording},
 	}
 
 	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
@@ -126,7 +126,7 @@ func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session 
 		},
 		Ids:      ids,
 		AgentIds: []int{agentId},
-		Channels: []string{model.UploadFileChannelScreenshot, model.UploadFileChannelScreenShare},
+		Channels: []string{model.UploadFileChannelScreenRecording},
 	}
 
 	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
