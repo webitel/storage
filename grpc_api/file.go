@@ -630,17 +630,19 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		Ids:        in.Id,
 		Removed:    model.NewBool(false),
 		UploadedBy: uploadedBy,
-		Channels:   []string{model.UploadFileChannelScreenRecording},
+		Channels:   []string{},
 	}
 
-	//switch in.GetChannel() {
-	//case storage.UploadFileChannel_ScreenSharingChannel:
-	//	search.Channels = []string{model.UploadFileChannelScreenShare}
-	//case storage.UploadFileChannel_ScreenshotChannel:
-	//	search.Channels = []string{model.UploadFileChannelScreenshot}
-	//default:
-	//	return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
-	//}
+	switch in.GetType() {
+	case storage.ScreenrecordingType_PDF:
+		search.Channels = []string{"pdf"}
+	case storage.ScreenrecordingType_SCREENSHOT:
+		search.Channels = []string{"screenshot"}
+	case storage.ScreenrecordingType_SCREENSHARING:
+		search.Channels = []string{"screenrecording"}
+	default:
+		return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
+	}
 
 	if in.UploadedAt != nil {
 		search.UploadedAt = &model.FilterBetween{

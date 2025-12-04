@@ -91,6 +91,7 @@ type FileBackendProfileStore interface {
 
 type FileStore interface {
 	GetAllPage(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, model.AppError)
+	GetScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, model.AppError)
 	Create(file *model.File) StoreChannel
 	GetFileWithProfile(domainId, id int64) (*model.FileWithProfile, model.AppError)
 	GetFileByUuidWithProfile(domainId int64, uuid string) (*model.FileWithProfile, model.AppError)
