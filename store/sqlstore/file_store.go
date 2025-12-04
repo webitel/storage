@@ -39,6 +39,7 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 		"To":           model.GetBetweenToTime(search.UploadedAt),
 		"Removed":      search.Removed,
 		"AgentIds":     pq.Array(search.AgentIds),
+		"MimeType":     search.MimeType,
 	}
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
@@ -55,6 +56,7 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 					where a.domain_id = :DomainId
 						and a.id = any (:AgentIds::int[])))
 				)
+				and (:MimeType::varchar isnull or mime_type like :MimeType::varchar || '%')
 		`,
 		model.File{}, f)
 

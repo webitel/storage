@@ -314,7 +314,6 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 	if err != nil && err != io.EOF {
 		wlog.Error(fmt.Sprintf("DownloadFile \"%s\" error: %s", f.Name, err.Error()))
 	}
-
 	return nil
 }
 
@@ -631,17 +630,17 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		Ids:        in.Id,
 		Removed:    model.NewBool(false),
 		UploadedBy: uploadedBy,
-		Channels:   []string{channelType(in.GetChannel())},
+		Channels:   []string{model.UploadFileChannelScreenRecording},
 	}
 
-	switch in.GetChannel() {
-	case storage.UploadFileChannel_ScreenSharingChannel:
-		search.Channels = []string{model.UploadFileChannelScreenShare}
-	case storage.UploadFileChannel_ScreenshotChannel:
-		search.Channels = []string{model.UploadFileChannelScreenshot}
-	default:
-		return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
-	}
+	//switch in.GetChannel() {
+	//case storage.UploadFileChannel_ScreenSharingChannel:
+	//	search.Channels = []string{model.UploadFileChannelScreenShare}
+	//case storage.UploadFileChannel_ScreenshotChannel:
+	//	search.Channels = []string{model.UploadFileChannelScreenshot}
+	//default:
+	//	return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
+	//}
 
 	if in.UploadedAt != nil {
 		search.UploadedAt = &model.FilterBetween{
@@ -689,18 +688,18 @@ func (api *file) SearchScreenRecordingsByAgent(ctx context.Context, in *storage.
 		},
 		Ids:      in.Id,
 		Removed:  model.NewBool(false),
-		Channels: []string{channelType(in.GetChannel())},
+		Channels: []string{model.UploadFileChannelScreenRecording},
 		AgentIds: []int{int(in.GetAgentId())},
 	}
 
-	switch in.GetChannel() {
-	case storage.UploadFileChannel_ScreenSharingChannel:
-		search.Channels = []string{model.UploadFileChannelScreenShare}
-	case storage.UploadFileChannel_ScreenshotChannel:
-		search.Channels = []string{model.UploadFileChannelScreenshot}
-	default:
-		return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
-	}
+	//switch in.GetChannel() {
+	//case storage.UploadFileChannel_ScreenSharingChannel:
+	//	search.Channels = []string{model.UploadFileChannelScreenShare}
+	//case storage.UploadFileChannel_ScreenshotChannel:
+	//	search.Channels = []string{model.UploadFileChannelScreenshot}
+	//default:
+	//	return nil, model.NewBadRequestError("grpc.screen_file", "bad channel")
+	//}
 
 	if in.UploadedAt != nil {
 		search.UploadedAt = &model.FilterBetween{
@@ -779,10 +778,8 @@ func (api *file) SearchFilesByCall(ctx context.Context, in *storage.SearchFilesB
 		Removed:        model.NewBool(false),
 		RetentionUntil: GetFilterBetween(in.GetRetentionUntil()),
 		UploadedAt:     GetFilterBetween(in.GetUploadedAt()),
-	}
-
-	for _, v := range in.GetChannel() {
-		search.Channels = append(search.Channels, channelType(v))
+		Channels:       []string{model.UploadFileChannelCall},
+		MimeType:       &model.ImageMimePrefix,
 	}
 
 	files, endOfData, err := api.ctrl.SearchCallFiles(ctx, session, in.GetCallId(), search)
@@ -856,10 +853,10 @@ func channelType(channel storage.UploadFileChannel) string {
 		return model.UploadFileChannelMedia
 	case storage.UploadFileChannel_LogChannel:
 		return model.UploadFileChannelLog
-	case storage.UploadFileChannel_ScreenSharingChannel:
-		return model.UploadFileChannelScreenShare
-	case storage.UploadFileChannel_ScreenshotChannel:
-		return model.UploadFileChannelScreenshot
+	case storage.UploadFileChannel_ScreenRecordingChannel:
+		return model.UploadFileChannelScreenRecording
+	//case storage.UploadFileChannel_ScreenshotChannel:
+	//	return model.UploadFileChannelScreenshot
 
 	default:
 		return model.UploadFileChannelChat
@@ -877,10 +874,10 @@ func channelTypeGrpc(channel string) storage.UploadFileChannel {
 		return storage.UploadFileChannel_MediaChannel
 	case model.UploadFileChannelLog:
 		return storage.UploadFileChannel_LogChannel
-	case model.UploadFileChannelScreenshot:
-		return storage.UploadFileChannel_ScreenshotChannel
-	case model.UploadFileChannelScreenShare:
-		return storage.UploadFileChannel_ScreenSharingChannel
+	//case model.UploadFileChannelScreenshot:
+	//	return storage.UploadFileChannel_ScreenshotChannel
+	case model.UploadFileChannelScreenRecording:
+		return storage.UploadFileChannel_ScreenRecordingChannel
 	default:
 		return storage.UploadFileChannel_UnknownChannel
 
