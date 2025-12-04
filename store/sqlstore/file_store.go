@@ -82,8 +82,6 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 			mimeFilters = append(mimeFilters, m)
 		}
 	}
-
-	// Тепер у SQL передаємо array каналів та відповідних mime
 	f := map[string]interface{}{
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
