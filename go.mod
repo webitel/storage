@@ -8,6 +8,7 @@ require (
 	cloud.google.com/go/texttospeech v1.11.0
 	github.com/BoRuDar/configuration/v4 v4.2.2
 	github.com/aws/aws-sdk-go v1.55.8
+	github.com/dutchcoders/go-clamd v0.0.0-20170520113014-b970184f4d9e
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/handlers v1.5.1
@@ -41,7 +42,7 @@ require (
 	google.golang.org/genproto v0.0.0-20250303144028-a0af3efb3deb
 	google.golang.org/genproto/googleapis/api v0.0.0-20250519155744-55703ea1f237
 	google.golang.org/grpc v1.72.2
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -60,7 +61,6 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250121191232-2f005788dc42 // indirect
-	github.com/dutchcoders/go-clamd v0.0.0-20170520113014-b970184f4d9e // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect

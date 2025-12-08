@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 )
@@ -69,7 +70,7 @@ func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_m
 	if !session.HasAction(PermissionControlAgentScreen) {
 		return nil, false, errNoActionSearchScreenRecordings
 	}
-	return c.app.SearchFiles(ctx, session.Domain(0), search)
+	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search)
 }
 
 func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_manager.Session, userId int64, ids []int64) model.AppError {

@@ -67,6 +67,59 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 	return files, nil
 }
 
+func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, model.AppError) {
+	var files []*model.File
+
+	channelMimes := map[string]string{
+		"pdf":             "application/pdf",
+		"screenshot":      "image/%",
+		"screenrecording": "video/%",
+	}
+
+	var mimeFilters []string
+	for _, ch := range search.Channels {
+		if m, ok := channelMimes[ch]; ok {
+			mimeFilters = append(mimeFilters, m)
+		}
+	}
+	f := map[string]interface{}{
+		"DomainId":     domainId,
+		"Ids":          pq.Array(search.Ids),
+		"ReferenceIds": pq.Array(search.ReferenceIds),
+		"Channels":     pq.Array(search.Channels),
+		"MimeTypes":    pq.Array(mimeFilters),
+		"UserId":       pq.Array(search.UploadedBy),
+		"From":         model.GetBetweenFromTime(search.UploadedAt),
+		"To":           model.GetBetweenToTime(search.UploadedAt),
+		"Removed":      search.Removed,
+		"AgentIds":     pq.Array(search.AgentIds),
+	}
+
+	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
+		`domain_id = :DomainId
+		and ( :From::timestamptz isnull or uploaded_at >= :From::timestamptz )
+		and ( :To::timestamptz isnull or uploaded_at <= :To::timestamptz )
+		and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
+		and (:Ids::int[] isnull or id = any(:Ids))
+		and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)
+		and (:Channels::varchar[] isnull or channel = any(:Channels::varchar[]))
+		and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
+		and (:AgentIds::int[] isnull or uploaded_by_id = any(array(select a.user_id
+			from call_center.cc_agent a
+			where a.domain_id = :DomainId
+				and a.id = any (:AgentIds::int[])))
+		)
+		and (:MimeTypes::varchar[] isnull or mime_type like any(:MimeTypes::varchar[]))
+	`,
+		model.File{}, f)
+
+	if err != nil {
+		return nil, model.NewCustomCodeError("store.sql_file.get_all.finding.app_error", err.Error(), extractCodeFromErr(err))
+	}
+
+	return files, nil
+}
+
 func (self SqlFileStore) Create(file *model.File) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
 		id, err := self.GetMaster().SelectInt(`
