@@ -76,22 +76,23 @@ func (a *App) GeneratePreSignedResourceSignatureBulk(id, domainId int64, resourc
 		base = fmt.Sprintf("%s/%d/%s?&domain_id=%d&expires=%d", resource, id, action, domainId,
 			expire)
 	}
+	
 	uri, err := url.Parse(base)
 	if err != nil {
 		return "", model.NewBadRequestError("app.presigned.generate_pre_signed_signature_bulk.parse.error", err.Error())
 	}
+
 	existingParams := uri.Query()
 	for key, val := range queryParams {
 		existingParams.Add(key, val)
 	}
 	uri.RawQuery = existingParams.Encode()
+
 	signature, appErr := a.GenerateSignature([]byte(uri.String()))
 	if appErr != nil {
 		return "", appErr
 	}
-	//existingParams.Add("signature", signature)
-	//uri.RawQuery = existingParams.Encode()
-	//fmt.Println(uri.String())
+
 	return uri.String() + "&signature=" + signature, nil
 
 }
