@@ -3,18 +3,20 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"sync/atomic"
+	"time"
+
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"net/http"
-	"sync/atomic"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+	"github.com/webitel/storage/broker/rabbit"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -84,6 +86,8 @@ type App struct {
 	//--------- AMQP -----------
 	rabbitConn      *rabbitmq.Connection
 	rabbitPublisher rabbitmq.Publisher
+
+	RabbitConsumer rabbitmq.Consumer
 
 	// ---- Logger ------
 	wtelLogger      *wlogger.Logger
@@ -243,6 +247,11 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 
+	// ------- Listeners init -------
+	if err := app.initListeners(); err != nil {
+		return nil, err
+	}
+
 	return app, outErr
 }
 
@@ -287,6 +296,18 @@ func (app *App) initWatchers(config *model.Config) error {
 	app.watcherManager.AddWatcher(model.PermissionScopeFiles, watcher)
 	return nil
 }
+
+func (app *App) initListeners() error {
+	consumer, err := rabbit.SetupMultiEventConsumer(app.rabbitConn, wlogadapter.NewWlogLogger(app.Log), app.Store)
+	if err != nil {
+		return errors.Wrap(err, "app.listener.setup_multi_event_consumer")
+	}
+
+	app.RabbitConsumer = consumer
+
+	return nil
+}
+
 
 func formFileTriggerModel(item *model.File) (*model.FileAMQPMessage, error) {
 	m := &model.FileAMQPMessage{
@@ -427,6 +448,10 @@ func (app *App) Shutdown() {
 
 	if app.cluster != nil {
 		app.cluster.Stop()
+	}
+
+	if app.RabbitConsumer != nil {
+		app.RabbitConsumer.Shutdown(app.ctx)
 	}
 
 	if app.rabbitConn != nil {

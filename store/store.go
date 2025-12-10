@@ -184,6 +184,7 @@ type FilePoliciesStore interface {
 	// AllByDomainId internal
 	AllByDomainId(ctx context.Context, domainId int64) ([]model.FilePolicy, model.AppError)
 	SetRetentionDay(ctx context.Context, domainId int64, policy *model.FilePolicy, applyToNullChannel bool) (int64, model.AppError)
+	CreateDefaultPolicies(ctx context.Context, domainId int64) model.AppError
 }
 
 type SystemSettingsStore interface {

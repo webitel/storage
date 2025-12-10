@@ -4,7 +4,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+
 	"github.com/webitel/storage/apis"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/grpc_api"
@@ -56,6 +58,8 @@ func main() {
 	if err = a.StartGrpcServer(); err != nil {
 		panic(err.Error())
 	}
+
+	a.RabbitConsumer.Start(context.Background())
 
 	setDebug()
 	// wait for kill signal before attempting to gracefully shutdown
