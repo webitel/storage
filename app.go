@@ -4,7 +4,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/webitel/storage/apis"
@@ -59,7 +58,10 @@ func main() {
 		panic(err.Error())
 	}
 
-	a.RabbitConsumer.Start(context.Background())
+	if err = a.StartRabbitListeners(); err != nil {
+		wlog.Critical(err.Error())
+		return
+	}
 
 	setDebug()
 	// wait for kill signal before attempting to gracefully shutdown

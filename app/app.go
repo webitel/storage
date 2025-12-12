@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+	"github.com/webitel/storage/broker/handler"
 	"github.com/webitel/storage/broker/rabbit"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
@@ -87,7 +88,7 @@ type App struct {
 	rabbitConn      *rabbitmq.Connection
 	rabbitPublisher rabbitmq.Publisher
 
-	RabbitConsumer rabbitmq.Consumer
+	rabbitConsumer *rabbit.MultiEventConsumer
 
 	// ---- Logger ------
 	wtelLogger      *wlogger.Logger
@@ -298,16 +299,24 @@ func (app *App) initWatchers(config *model.Config) error {
 }
 
 func (app *App) initListeners() error {
-	consumer, err := rabbit.SetupMultiEventConsumer(app.rabbitConn, wlogadapter.NewWlogLogger(app.Log), app.Store)
+	domainsCreatedEventHandler := handler.NewEventDomainCreatedHandler(app.Store.FilePolicies()) 
+	eventConsumer := rabbit.NewMultiEventConsumer(wlogadapter.NewWlogLogger(app.Log))
+
+	rabbit.HandleFunc(eventConsumer, domainsCreatedEventHandler)
+
+	err := eventConsumer.SetupRabbitConsumer(app.rabbitConn)
 	if err != nil {
 		return errors.Wrap(err, "app.listener.setup_multi_event_consumer")
 	}
 
-	app.RabbitConsumer = consumer
+	app.rabbitConsumer = eventConsumer
 
 	return nil
 }
 
+func (app *App) StartRabbitListeners() error {
+	return app.rabbitConsumer.Start(app.ctx)
+}
 
 func formFileTriggerModel(item *model.File) (*model.FileAMQPMessage, error) {
 	m := &model.FileAMQPMessage{
@@ -450,8 +459,8 @@ func (app *App) Shutdown() {
 		app.cluster.Stop()
 	}
 
-	if app.RabbitConsumer != nil {
-		app.RabbitConsumer.Shutdown(app.ctx)
+	if app.rabbitConsumer != nil {
+		app.rabbitConsumer.Close(app.ctx)
 	}
 
 	if app.rabbitConn != nil {

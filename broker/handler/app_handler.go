@@ -9,6 +9,7 @@ import (
 
 type AppEventHandler[T any] interface {
 	Handle(ctx context.Context, event T) error
+	Event() string
 } 
 
 func NewAdapter[T any](handler AppEventHandler[T]) func (ctx context.Context, msg amqp.Delivery) error {
