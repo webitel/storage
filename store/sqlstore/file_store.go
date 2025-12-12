@@ -86,7 +86,6 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
 		"ReferenceIds": pq.Array(search.ReferenceIds),
-		"Channels":     pq.Array(search.Channels),
 		"MimeTypes":    pq.Array(mimeFilters),
 		"UserId":       pq.Array(search.UploadedBy),
 		"From":         model.GetBetweenFromTime(search.UploadedAt),
@@ -102,7 +101,6 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
 		and (:Ids::int[] isnull or id = any(:Ids))
 		and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)
-		and (:Channels::varchar[] isnull or channel = any(:Channels::varchar[]))
 		and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
 		and (:AgentIds::int[] isnull or uploaded_by_id = any(array(select a.user_id
 			from call_center.cc_agent a
