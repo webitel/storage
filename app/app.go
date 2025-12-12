@@ -3,18 +3,21 @@ package app
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"sync/atomic"
+	"time"
+
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"go.opentelemetry.io/otel/sdk/resource"
-	"net/http"
-	"sync/atomic"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+	"github.com/webitel/storage/broker/handler"
+	"github.com/webitel/storage/broker/rabbit"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
@@ -84,6 +87,8 @@ type App struct {
 	//--------- AMQP -----------
 	rabbitConn      *rabbitmq.Connection
 	rabbitPublisher rabbitmq.Publisher
+
+	rabbitConsumer *rabbit.MultiEventConsumer
 
 	// ---- Logger ------
 	wtelLogger      *wlogger.Logger
@@ -243,6 +248,11 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 
+	// ------- Listeners init -------
+	if err := app.initListeners(); err != nil {
+		return nil, err
+	}
+
 	return app, outErr
 }
 
@@ -286,6 +296,26 @@ func (app *App) initWatchers(config *model.Config) error {
 
 	app.watcherManager.AddWatcher(model.PermissionScopeFiles, watcher)
 	return nil
+}
+
+func (app *App) initListeners() error {
+	domainsCreatedEventHandler := handler.NewEventDomainCreatedHandler(app.Store.FilePolicies()) 
+	eventConsumer := rabbit.NewMultiEventConsumer(wlogadapter.NewWlogLogger(app.Log))
+
+	rabbit.HandleFunc(eventConsumer, domainsCreatedEventHandler)
+
+	err := eventConsumer.SetupRabbitConsumer(app.rabbitConn)
+	if err != nil {
+		return errors.Wrap(err, "app.listener.setup_multi_event_consumer")
+	}
+
+	app.rabbitConsumer = eventConsumer
+
+	return nil
+}
+
+func (app *App) StartRabbitListeners() error {
+	return app.rabbitConsumer.Start(app.ctx)
 }
 
 func formFileTriggerModel(item *model.File) (*model.FileAMQPMessage, error) {
@@ -427,6 +457,10 @@ func (app *App) Shutdown() {
 
 	if app.cluster != nil {
 		app.cluster.Stop()
+	}
+
+	if app.rabbitConsumer != nil {
+		app.rabbitConsumer.Close(app.ctx)
 	}
 
 	if app.rabbitConn != nil {

@@ -5,6 +5,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/webitel/storage/apis"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/grpc_api"
@@ -55,6 +56,11 @@ func main() {
 
 	if err = a.StartGrpcServer(); err != nil {
 		panic(err.Error())
+	}
+
+	if err = a.StartRabbitListeners(); err != nil {
+		wlog.Critical(err.Error())
+		return
 	}
 
 	setDebug()
