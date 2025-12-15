@@ -299,7 +299,7 @@ func (app *App) initWatchers(config *model.Config) error {
 }
 
 func (app *App) initListeners() error {
-	domainsCreatedEventHandler := handler.NewEventDomainCreatedHandler(app.Store.FilePolicies()) 
+	domainsCreatedEventHandler := handler.NewEventDomainCreatedHandler(app.Store.FilePolicies())
 	eventConsumer := rabbit.NewMultiEventConsumer(wlogadapter.NewWlogLogger(app.Log))
 
 	rabbit.HandleFunc(eventConsumer, domainsCreatedEventHandler)
@@ -358,6 +358,8 @@ func (app *App) makeLoggerPublisher(conn *rabbitmq.Connection) error {
 }
 
 func (app *App) initRabbitMQ() error {
+	count := 0
+loop:
 	cfg, err := rabbitmq.NewConfig(
 		app.Config().MessageBroker.URL,
 		rabbitmq.WithConnectTimeout(10*time.Second),
@@ -371,7 +373,13 @@ func (app *App) initRabbitMQ() error {
 		wlogadapter.NewWlogLogger(app.Log),
 	)
 	if err != nil {
-		return fmt.Errorf("rabbitmq conn error: %w", err)
+		count++
+		if count > 10 {
+			return fmt.Errorf("rabbitmq conn error: %w", err)
+		}
+		app.Log.Error(err.Error(), wlog.Err(err))
+		time.Sleep(5 * time.Second)
+		goto loop
 	}
 	app.rabbitConn = conn
 
