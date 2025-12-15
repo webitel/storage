@@ -73,6 +73,10 @@ func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_m
 	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search)
 }
 
+const (
+	DeleteFileChannelScreenRecording = "screenrecording"
+)
+
 func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_manager.Session, userId int64, ids []int64) model.AppError {
 	if !session.HasAction(PermissionControlAgentScreen) {
 		return errNoActionSearchScreenRecordings
@@ -90,7 +94,7 @@ func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_m
 		},
 		Ids:        ids,
 		UploadedBy: []int64{userId},
-		Channels:   []string{model.UploadFileChannelScreenRecording},
+		Channels:   []string{DeleteFileChannelScreenRecording},
 	}
 
 	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
@@ -127,7 +131,7 @@ func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session 
 		},
 		Ids:      ids,
 		AgentIds: []int{agentId},
-		Channels: []string{model.UploadFileChannelScreenRecording},
+		Channels: []string{DeleteFileChannelScreenRecording},
 	}
 
 	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
