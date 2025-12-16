@@ -15,7 +15,8 @@ insert into storage.file_policies(
         speed_upload,
         channels,
         retention_days,
-        max_upload_size
+        max_upload_size,
+        description
     )
 select ad.dc,
     now(),
@@ -29,7 +30,8 @@ select ad.dc,
     p.speed_upload,
     p.channels,
     p.retention_days,
-    p.max_upload_size
+    p.max_upload_size,
+    ''
 from available_domains ad
     cross join (
         values (
@@ -47,7 +49,7 @@ from available_domains ad
 				'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/*'],
                 1024,
                 512,
-                array ['email'],
+                array ['mail'],
                 365,
                 10485760
             ),
