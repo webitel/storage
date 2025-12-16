@@ -134,16 +134,6 @@ func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session 
 		Channels: []string{DeleteFileChannelScreenRecording},
 	}
 
-	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
-	if err != nil {
-		return err
-	}
-
-	ids = make([]int64, 0, len(res))
-	for _, v := range res {
-		ids = append(ids, v.Id)
-	}
-
 	if len(ids) == 0 {
 		return nil
 	}
