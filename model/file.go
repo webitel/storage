@@ -23,6 +23,7 @@ type SearchFile struct {
 	Removed        *bool
 	AgentIds       []int
 	MimeType       *string
+	CallId         *string
 }
 
 type CustomFileProperties struct {

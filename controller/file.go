@@ -151,6 +151,6 @@ func (c *Controller) SearchCallFiles(ctx context.Context, session *auth_manager.
 		// TODO RBAC ?
 	}
 
-	search.ReferenceIds = []string{callId}
+	search.CallId = &callId
 	return c.app.SearchFiles(ctx, session.Domain(0), search)
 }
