@@ -32,6 +32,7 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 	f := map[string]interface{}{
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
+		"CallId":       search.CallId,
 		"ReferenceIds": pq.Array(search.ReferenceIds),
 		"Channels":     pq.Array(search.Channels),
 		"UserId":       pq.Array(search.UploadedBy),
@@ -57,6 +58,8 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 						and a.id = any (:AgentIds::int[])))
 				)
 				and (:MimeType::varchar isnull or mime_type like :MimeType::varchar || '%')
+				and (:CallId::varchar isnull or (uuid = (select coalesce(c.parent_id, c.id)::varchar
+				from call_center.cc_calls_history c where c.id = :CallId::uuid and c.domain_id = :DomainId::int8)))
 		`,
 		model.File{}, f)
 
