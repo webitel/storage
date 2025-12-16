@@ -300,7 +300,8 @@ func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domain
 			    speed_upload,
 			    channels,
 			    retention_days,
-			    max_upload_size
+			    max_upload_size,
+				description
 			)
 			select
 			    :DomainId::bigint,   
@@ -315,7 +316,8 @@ func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domain
 			    p.speed_upload,
 			    p.channels,
 			    p.retention_days,
-			    p.max_upload_size
+			    p.max_upload_size,
+				''
 			from (
 			    values
 			        (
@@ -332,7 +334,7 @@ func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domain
 			            array['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/*']::text[],
 			            1024,
 			            512,
-			            array['email']::text[],
+			            array['mail']::text[],
 			            365,
 			            10485760
 			        ),
