@@ -92,6 +92,7 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		"To":           model.GetBetweenToTime(search.UploadedAt),
 		"Removed":      search.Removed,
 		"AgentIds":     pq.Array(search.AgentIds),
+		"Channel":      "screenrecording",
 	}
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
@@ -102,6 +103,7 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		and (:Ids::int[] isnull or id = any(:Ids))
 		and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)
 		and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
+        and (:Channel::varchar isnull or channel = :Channel::varchar)
 		and (:AgentIds::int[] isnull or uploaded_by_id = any(array(select a.user_id
 			from call_center.cc_agent a
 			where a.domain_id = :DomainId
