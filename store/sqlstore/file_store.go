@@ -58,8 +58,17 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 						and a.id = any (:AgentIds::int[])))
 				)
 				and (:MimeType::varchar isnull or mime_type like :MimeType::varchar || '%')
-				and (:CallId::varchar isnull or (uuid = (select coalesce(c.parent_id, c.id)::varchar
-				from call_center.cc_calls_history c where c.id = :CallId::uuid and c.domain_id = :DomainId::int8)))
+				and (:CallId::varchar isnull or (uuid = (select x.id
+                                           from (select coalesce(c.parent_id, c.id)::varchar id
+                                                 from call_center.cc_calls c
+                                                 where c.id = :CallId::uuid
+                                                   and c.domain_id = :DomainId::int8
+                                                 union all
+                                                 select coalesce(c.parent_id, c.id)::varchar id
+                                                 from call_center.cc_calls_history c
+                                                 where c.id = :CallId::uuid
+                                                   and c.domain_id = :DomainId::int8) x
+                                           limit 1)))
 		`,
 		model.File{}, f)
 
