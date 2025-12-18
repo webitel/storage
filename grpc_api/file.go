@@ -826,6 +826,7 @@ func toGrpcFile(src *model.File) *storage.File {
 
 	if src.ViewName != nil {
 		f.ViewName = *src.ViewName
+		f.Name = f.ViewName // WTEL-8400
 	}
 
 	if src.SHA256Sum != nil {
