@@ -658,7 +658,16 @@ func (api *file) SearchScreenRecordings(ctx context.Context, in *storage.SearchS
 		}
 	}
 
-	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search)
+	var screenrecordingChannel string
+
+	switch in.Channel {
+	case storage.ScreenrecordingChannel_CALL:
+		screenrecordingChannel = "call"
+	case storage.ScreenrecordingChannel_SCREENRECORDING:
+		screenrecordingChannel = "screenrecording"
+	}
+
+	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search, screenrecordingChannel)
 	if err != nil {
 		return nil, err
 	}
@@ -719,7 +728,16 @@ func (api *file) SearchScreenRecordingsByAgent(ctx context.Context, in *storage.
 		}
 	}
 
-	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search)
+	var screenrecordingChannel string
+
+	switch in.Channel {
+	case storage.ScreenrecordingChannel_CALL:
+		screenrecordingChannel = "call"
+	case storage.ScreenrecordingChannel_SCREENRECORDING:
+		screenrecordingChannel = "screenrecording"
+	}
+
+	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search, screenrecordingChannel)
 	if err != nil {
 		return nil, err
 	}

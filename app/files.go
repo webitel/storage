@@ -25,8 +25,8 @@ func (app *App) SearchFiles(ctx context.Context, domainId int64, search *model.S
 	return res, search.EndOfList(), nil
 }
 
-func (app *App) SearchScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
-	res, err := app.Store.File().GetScreenRecordings(ctx, domainId, search)
+func (app *App) SearchScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile, screenrecordingChannel string) ([]*model.File, bool, model.AppError) {
+	res, err := app.Store.File().GetScreenRecordings(ctx, domainId, search, screenrecordingChannel)
 	if err != nil {
 		return nil, false, err
 	}

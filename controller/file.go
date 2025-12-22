@@ -66,11 +66,11 @@ const (
 	PermissionControlAgentScreen = "control_agent_screen"
 )
 
-func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_manager.Session, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
+func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_manager.Session, search *model.SearchFile, screenrecordingChannel string) ([]*model.File, bool, model.AppError) {
 	if !session.HasAction(PermissionControlAgentScreen) {
 		return nil, false, errNoActionSearchScreenRecordings
 	}
-	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search)
+	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search, screenrecordingChannel)
 }
 
 const (

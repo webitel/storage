@@ -35,6 +35,7 @@ const (
 	CallService_EavesdropCall_FullMethodName         = "/engine.CallService/EavesdropCall"
 	CallService_ConfirmPush_FullMethodName           = "/engine.CallService/ConfirmPush"
 	CallService_SetVariablesCall_FullMethodName      = "/engine.CallService/SetVariablesCall"
+	CallService_SetVariablesCallNA_FullMethodName    = "/engine.CallService/SetVariablesCallNA"
 	CallService_CreateCallAnnotation_FullMethodName  = "/engine.CallService/CreateCallAnnotation"
 	CallService_UpdateCallAnnotation_FullMethodName  = "/engine.CallService/UpdateCallAnnotation"
 	CallService_DeleteCallAnnotation_FullMethodName  = "/engine.CallService/DeleteCallAnnotation"
@@ -65,6 +66,7 @@ type CallServiceClient interface {
 	// Call item
 	ConfirmPush(ctx context.Context, in *ConfirmPushRequest, opts ...grpc.CallOption) (*ConfirmPushResponse, error)
 	SetVariablesCall(ctx context.Context, in *SetVariablesCallRequest, opts ...grpc.CallOption) (*SetVariablesCallResponse, error)
+	SetVariablesCallNA(ctx context.Context, in *SetVariablesCallRequestNA, opts ...grpc.CallOption) (*SetVariablesCallResponse, error)
 	CreateCallAnnotation(ctx context.Context, in *CreateCallAnnotationRequest, opts ...grpc.CallOption) (*CallAnnotation, error)
 	UpdateCallAnnotation(ctx context.Context, in *UpdateCallAnnotationRequest, opts ...grpc.CallOption) (*CallAnnotation, error)
 	DeleteCallAnnotation(ctx context.Context, in *DeleteCallAnnotationRequest, opts ...grpc.CallOption) (*CallAnnotation, error)
@@ -223,6 +225,15 @@ func (c *callServiceClient) SetVariablesCall(ctx context.Context, in *SetVariabl
 	return out, nil
 }
 
+func (c *callServiceClient) SetVariablesCallNA(ctx context.Context, in *SetVariablesCallRequestNA, opts ...grpc.CallOption) (*SetVariablesCallResponse, error) {
+	out := new(SetVariablesCallResponse)
+	err := c.cc.Invoke(ctx, CallService_SetVariablesCallNA_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *callServiceClient) CreateCallAnnotation(ctx context.Context, in *CreateCallAnnotationRequest, opts ...grpc.CallOption) (*CallAnnotation, error) {
 	out := new(CallAnnotation)
 	err := c.cc.Invoke(ctx, CallService_CreateCallAnnotation_FullMethodName, in, out, opts...)
@@ -283,6 +294,7 @@ type CallServiceServer interface {
 	// Call item
 	ConfirmPush(context.Context, *ConfirmPushRequest) (*ConfirmPushResponse, error)
 	SetVariablesCall(context.Context, *SetVariablesCallRequest) (*SetVariablesCallResponse, error)
+	SetVariablesCallNA(context.Context, *SetVariablesCallRequestNA) (*SetVariablesCallResponse, error)
 	CreateCallAnnotation(context.Context, *CreateCallAnnotationRequest) (*CallAnnotation, error)
 	UpdateCallAnnotation(context.Context, *UpdateCallAnnotationRequest) (*CallAnnotation, error)
 	DeleteCallAnnotation(context.Context, *DeleteCallAnnotationRequest) (*CallAnnotation, error)
@@ -341,6 +353,9 @@ func (UnimplementedCallServiceServer) ConfirmPush(context.Context, *ConfirmPushR
 }
 func (UnimplementedCallServiceServer) SetVariablesCall(context.Context, *SetVariablesCallRequest) (*SetVariablesCallResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetVariablesCall not implemented")
+}
+func (UnimplementedCallServiceServer) SetVariablesCallNA(context.Context, *SetVariablesCallRequestNA) (*SetVariablesCallResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetVariablesCallNA not implemented")
 }
 func (UnimplementedCallServiceServer) CreateCallAnnotation(context.Context, *CreateCallAnnotationRequest) (*CallAnnotation, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCallAnnotation not implemented")
@@ -655,6 +670,24 @@ func _CallService_SetVariablesCall_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CallService_SetVariablesCallNA_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetVariablesCallRequestNA)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CallServiceServer).SetVariablesCallNA(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CallService_SetVariablesCallNA_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CallServiceServer).SetVariablesCallNA(ctx, req.(*SetVariablesCallRequestNA))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CallService_CreateCallAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateCallAnnotationRequest)
 	if err := dec(in); err != nil {
@@ -797,6 +830,10 @@ var CallService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetVariablesCall",
 			Handler:    _CallService_SetVariablesCall_Handler,
+		},
+		{
+			MethodName: "SetVariablesCallNA",
+			Handler:    _CallService_SetVariablesCallNA_Handler,
 		},
 		{
 			MethodName: "CreateCallAnnotation",

@@ -79,7 +79,7 @@ func (self *SqlFileStore) GetAllPage(ctx context.Context, domainId int64, search
 	return files, nil
 }
 
-func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile) ([]*model.File, model.AppError) {
+func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int64, search *model.SearchFile, screenrecordingChannel string) ([]*model.File, model.AppError) {
 	var files []*model.File
 
 	channelMimes := map[string]string{
@@ -94,6 +94,7 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 			mimeFilters = append(mimeFilters, m)
 		}
 	}
+
 	f := map[string]interface{}{
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
@@ -104,7 +105,7 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		"To":           model.GetBetweenToTime(search.UploadedAt),
 		"Removed":      search.Removed,
 		"AgentIds":     pq.Array(search.AgentIds),
-		"Channel":      "screenrecording",
+		"Channel":      screenrecordingChannel,
 	}
 
 	err := self.ListQueryCtx(ctx, &files, search.ListRequest,
