@@ -3,6 +3,8 @@ package grpc_api
 import (
 	"context"
 	"fmt"
+	"io"
+
 	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 	"google.golang.org/grpc"
@@ -201,6 +203,9 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 				Chunk: buf[:n],
 			},
 		})
+		if err == io.EOF {
+			_, err = s.Recv()
+		}
 		if err != nil {
 			println(err)
 		}
