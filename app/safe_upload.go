@@ -82,6 +82,10 @@ func (s *SafeUpload) SetError(err error) {
 	s.destruct()
 }
 
+func (s *SafeUpload) Err() error {
+	return s.err
+}
+
 func (s *SafeUpload) Write(src []byte) error {
 	if s.err != nil {
 		return s.err
@@ -93,8 +97,10 @@ func (s *SafeUpload) Write(src []byte) error {
 	return err
 }
 
-func (s *SafeUpload) run() {
+func (s *SafeUpload) run(r chan struct{}) {
 	wlog.Debug(fmt.Sprintf("start safe upload id=%s, name=%s", s.id, s.request.Name))
+	close(r)
+
 	var err model.AppError
 	if s.profileId != nil {
 		err = s.app.SyncUploadToProfile(s.reader, *s.profileId, s.request)
@@ -113,6 +119,7 @@ func (s *SafeUpload) run() {
 		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
 	}
 	close(s.uploaded)
+	s.writer.Close()
 }
 
 func addSafeUploadProcess(s *SafeUpload) {
@@ -209,7 +216,9 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpl
 		return nil, err
 	}
 
-	go s.run()
+	start := make(chan struct{})
+	go s.run(start)
+	<-start
 
 	return s, nil
 }

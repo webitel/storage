@@ -151,11 +151,12 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 					DomainId: 1,
 					Name:     stats.Name(),
 					//MimeType: "image/png",
-					MimeType:          "video/mp3",
+					MimeType:          "application/json",
 					Uuid:              "blabla",
 					StreamResponse:    false,
 					ProfileId:         220,
 					GenerateThumbnail: true,
+					Channel:           storage.UploadFileChannel_ChatChannel,
 					//Properties: &storage.CustomFileProperties{
 					//	StartTime: 1,
 					//	EndTime:   2,
@@ -200,6 +201,9 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 				Chunk: buf[:n],
 			},
 		})
+		if err != nil {
+			println(err)
+		}
 		check(err)
 	}
 	err = s.CloseSend()
