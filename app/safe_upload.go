@@ -97,9 +97,8 @@ func (s *SafeUpload) Write(src []byte) error {
 	return err
 }
 
-func (s *SafeUpload) run(r chan struct{}) {
+func (s *SafeUpload) run() {
 	wlog.Debug(fmt.Sprintf("start safe upload id=%s, name=%s", s.id, s.request.Name))
-	close(r)
 
 	var err model.AppError
 	if s.profileId != nil {
@@ -216,9 +215,7 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpl
 		return nil, err
 	}
 
-	start := make(chan struct{})
-	go s.run(start)
-	<-start
+	go s.run()
 
 	return s, nil
 }
