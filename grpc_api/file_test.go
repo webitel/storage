@@ -3,6 +3,8 @@ package grpc_api
 import (
 	"context"
 	"fmt"
+	"io"
+
 	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
 	"google.golang.org/grpc"
@@ -151,11 +153,12 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 					DomainId: 1,
 					Name:     stats.Name(),
 					//MimeType: "image/png",
-					MimeType:          "video/mp3",
+					MimeType:          "application/json",
 					Uuid:              "blabla",
 					StreamResponse:    false,
 					ProfileId:         220,
 					GenerateThumbnail: true,
+					Channel:           storage.UploadFileChannel_ChatChannel,
 					//Properties: &storage.CustomFileProperties{
 					//	StartTime: 1,
 					//	EndTime:   2,
@@ -200,6 +203,12 @@ func sendFile(uploadId *string, fileLoc string) (newUploadId *string) {
 				Chunk: buf[:n],
 			},
 		})
+		if err == io.EOF {
+			_, err = s.Recv()
+		}
+		if err != nil {
+			println(err)
+		}
 		check(err)
 	}
 	err = s.CloseSend()

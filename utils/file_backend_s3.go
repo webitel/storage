@@ -137,8 +137,15 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppErro
 
 		var aerr awserr.Error
 		if errors.As(err, &aerr) {
-			if aerr.OrigErr() != nil {
-				return 0, model.NewInternalError("utils.file.s3.writing.origin", aerr.OrigErr().Error())
+			originErr := aerr.OrigErr()
+			if originErr != nil {
+				switch originErr.(type) {
+				case model.AppError:
+					return 0, originErr.(model.AppError)
+				default:
+					return 0, model.NewInternalError("utils.file.s3.writing.origin", aerr.OrigErr().Error())
+				}
+
 			}
 
 			return 0, model.NewInternalError("utils.file.s3.writing", aerr.Error())

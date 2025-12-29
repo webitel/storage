@@ -260,6 +260,7 @@ func (r *PolicyReader) Read(buf []byte) (n int, err error) {
 
 	if r.maxSize > 0 && r.bytesCount > r.maxSize {
 		err = model.PolicyErrorMaxLimit
+		n = 0
 		return
 	}
 

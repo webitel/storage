@@ -511,7 +511,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		}
 	}
 
-	policyErr := model.IsFilePolicyError(gErr)
+	policyErr := model.IsFilePolicyError(su.Err())
 	if gErr != nil && gErr != io.EOF && !policyErr {
 		su.Sleep()
 		wlog.Error(gErr.Error())
@@ -519,7 +519,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 	} else {
 		su.CloseWrite()
 		if policyErr {
-			return gErr
+			return su.Err()
 		}
 	}
 
