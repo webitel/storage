@@ -42,8 +42,8 @@ func putRecordCallFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	fileRequest.DomainId = int64(domainId)
 	fileRequest.Uuid = r.URL.Query().Get("id")
-	fileRequest.Name = r.URL.Query().Get("name")
-	fileRequest.ViewName = &fileRequest.Name
+	fileRequest.ViewName = model.NewString(r.URL.Query().Get("name"))
+	fileRequest.Name = fmt.Sprintf("%s_%s", fileRequest.Uuid, *fileRequest.ViewName)
 	fileRequest.MimeType = r.Header.Get("Content-Type")
 	fileRequest.Channel = model.NewString(model.UploadFileChannelCall)
 
