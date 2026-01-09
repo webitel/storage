@@ -22,5 +22,5 @@ plugins:
 inputs:
 #  - directory: "../protos/storage"
   - git_repo: "https://github.com/webitel/protos"
-    branch: "main"
+    branch: "v25.12"
     subdir: storage
