@@ -8,7 +8,6 @@ require (
 	cloud.google.com/go/texttospeech v1.11.0
 	github.com/BoRuDar/configuration/v4 v4.2.2
 	github.com/aws/aws-sdk-go v1.55.8
-	github.com/dutchcoders/go-clamd v0.0.0-20170520113014-b970184f4d9e
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/handlers v1.5.1
