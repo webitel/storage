@@ -207,7 +207,10 @@ endScan:
 	// Завантаження основного файлу
 	sf, err := app.syncUpload(store, reader, file, profileId)
 	if err != nil {
+		fmt.Println("err ", err.Error())
 		return err
+	} else {
+		fmt.Println("OK")
 	}
 	file.Size = sf.Size
 
