@@ -129,7 +129,6 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppErro
 	}
 
 	res, err := self.uploader.Upload(params)
-	fmt.Println(err)
 	if err != nil {
 		var apperr model.AppError
 		if errors.As(err, &apperr) {

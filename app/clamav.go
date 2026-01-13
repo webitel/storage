@@ -2,7 +2,7 @@ package app
 
 import (
 	"fmt"
-	"github.com/dutchcoders/go-clamd"
+	"github.com/webitel/storage/app/clamd"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 )
