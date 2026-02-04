@@ -321,8 +321,12 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	var err model.AppError
 	var publicUrl string
 
-	if in.Url == "" || in.DomainId == 0 || in.Name == "" {
+	if in.Url == "" || in.DomainId == 0 {
 		return nil, errors.New("bad request")
+	}
+
+	if in.Name == "" {
+		in.Name = "unknown"
 	}
 
 	res, httpErr := api.curl.Get(in.GetUrl())
