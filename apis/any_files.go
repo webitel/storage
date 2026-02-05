@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	// so we use this beta one
-
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 )
@@ -177,7 +175,7 @@ func streamAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//key := fmt.Sprintf("%s/stream?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
+	// key := fmt.Sprintf("%s/stream?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
 
 	// region VALIDATION
 	validationString := createValidationKey(*r.URL)
@@ -270,7 +268,7 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	q := r.URL.Query()
 	uuid := q.Get("uuid")
 
-	//key := fmt.Sprintf("%s/download?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
+	// key := fmt.Sprintf("%s/download?domain_id=%s&uuid=%s&expires=%d", model.AnyFileRouteName, c.Params.Domain, uuid, c.Params.Expires)
 
 	var file utils.File
 	var backend utils.FileBackend
@@ -281,8 +279,8 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	validationString := createValidationKey(*r.URL)
 	// dynamic parameters validation
 	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
-		//c.SetSessionErrSignature()
-		//return
+		c.SetSessionErrSignature()
+		return
 	}
 	// endregion
 	domainId, _ = strconv.Atoi(c.Params.Domain)
@@ -340,7 +338,7 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", model.EncodeURIComponent("code.png")))
 		io.Copy(w, buf)
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(buf.Bytes())))
-		//w.WriteHeader(200)
+		// w.WriteHeader(200)
 
 		return
 
