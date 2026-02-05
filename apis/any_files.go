@@ -281,8 +281,8 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	validationString := createValidationKey(*r.URL)
 	// dynamic parameters validation
 	if !c.App.ValidateSignature(model.AnyFileRouteName+validationString, c.Params.Signature) {
-		//c.SetSessionErrSignature()
-		//return
+		c.SetSessionErrSignature()
+		return
 	}
 	// endregion
 	domainId, _ = strconv.Atoi(c.Params.Domain)
