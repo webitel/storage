@@ -110,7 +110,7 @@ func wrapGrpcErr(err model.AppError) error {
 
 	}
 
-	return status.Error(code, err.GetDetailedError())
+	return status.Error(code, err.ToJson())
 }
 
 func NewGrpcServer(settings model.ServerSettings) *GrpcServer {
