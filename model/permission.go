@@ -9,4 +9,5 @@ const (
 	PermissionScopeImportTemplate   = "import_template"
 	PermissionScopeFilePolicy       = "files_policy"
 	PermissionScopeFiles            = "files" //"file_policies"
+	PermissionScreenRecordings      = "screen_recordings"
 )
