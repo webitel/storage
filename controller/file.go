@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+
 	"github.com/webitel/storage/model"
 )
 
@@ -49,7 +50,7 @@ func (c *Controller) RestoreFiles(ctx context.Context, session *auth_manager.Ses
 // SearchFile TODO PERMISSION (OBAC or RBAC)
 func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Session, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
 	permission := session.GetPermission(model.PermissionScopeFiles)
-	//if !permission.CanRead() {
+	// if !permission.CanRead() {
 	return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	//}
 
@@ -60,7 +61,10 @@ func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Sessi
 	return c.app.SearchFiles(ctx, session.Domain(0), search)
 }
 
-var errNoActionSearchScreenRecordings = model.NewForbiddenError("files.search.screen", "You don't have access to control_agent_screen action")
+var (
+	errNoActionSearchScreenRecordings     = model.NewForbiddenError("files.search.screen", "You don't have access to control_agent_screen action")
+	errNoPermissionSearchScreenRecordings = model.NewForbiddenError("files.search.screen", "You don't have access to permission")
+)
 
 const (
 	PermissionControlAgentScreen = "control_agent_screen"
@@ -70,6 +74,12 @@ func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_m
 	if !session.HasAction(PermissionControlAgentScreen) {
 		return nil, false, errNoActionSearchScreenRecordings
 	}
+
+	permissionScreen := session.GetPermission(model.PermissionScreenRecordings)
+	if !permissionScreen.CanRead() {
+		return nil, false, errNoPermissionSearchScreenRecordings
+	}
+
 	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search, screenrecordingChannel)
 }
 
