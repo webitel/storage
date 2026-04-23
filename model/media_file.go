@@ -16,7 +16,7 @@ type SearchMediaFile struct {
 }
 
 func (MediaFile) DefaultOrder() string {
-	return "id"
+	return "-created_at"
 }
 
 func (a MediaFile) AllowFields() []string {
