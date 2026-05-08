@@ -61,7 +61,7 @@ jobs:
         src=deploy/systemd/${{ vars.SERVICE_NAME }}.service dst=/etc/systemd/system/${{ vars.SERVICE_NAME }}.service type=config
         
 
-      package-depends: 
+      package-depends: ffmpeg
       scripts: |
         
 
