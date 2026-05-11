@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/lib/pq"
+
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/store"
 )
@@ -253,14 +254,16 @@ func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int
 
 	const query = `
 		update storage.files
-		set retention_until = uploaded_at + (:RetentionDays || 'days')::interval
+		set retention_until = case when :RetentionDays > 0
+			then uploaded_at + (:RetentionDays || 'days')::interval
+			else null
+		end
 		where domain_id = :DomainId
 		and (
 			channel = any(:Channels::varchar [])
-			or (:ApplyToNullChannel and channel is null)  
+			or (:ApplyToNullChannel and channel is null)
 		)
-		and mime_type ilike any(:Mime::varchar [])
-	`
+		and mime_type ilike any(:Mime::varchar [])`
 
 	args := map[string]any{
 		"DomainId":           domainId,
@@ -284,7 +287,7 @@ func (s *SqlFilePoliciesStore) SetRetentionDay(ctx context.Context, domainId int
 }
 
 // CreateDefaultPolicies creates default file policies for a domain if they do not already exist.
-func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domainId int64) model.AppError{
+func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domainId int64) model.AppError {
 	var (
 		query = `
 			insert into storage.file_policies(
@@ -304,11 +307,11 @@ func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domain
 				description
 			)
 			select
-			    :DomainId::bigint,   
+			    :DomainId::bigint,
 			    now(),
 			    now(),
-			    null,              
-			    null,              
+			    null,
+			    null,
 			    p.name,
 			    false,
 			    p.mime_types,

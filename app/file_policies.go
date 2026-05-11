@@ -85,8 +85,8 @@ func (app *App) ApplyFilePolicy(ctx context.Context, domainId int64, id int32, a
 		return 0, err
 	}
 
-	if policy.RetentionDays <= 0 {
-		return 0, model.NewBadRequestError("file_policy.apply.valid.retention_days", "retention_days ")
+	if policy.RetentionDays < 0 {
+		return 0, model.NewBadRequestError("file_policy.apply.valid.retention_days", "retention_days must be an integer greater than or equal to 0")
 	}
 
 	return app.Store.FilePolicies().SetRetentionDay(ctx, domainId, policy, applyToNullChannel)
