@@ -98,7 +98,8 @@ func (FilePolicy) DefaultOrder() string {
 }
 
 func (FilePolicy) AllowFields() []string {
-	return []string{"id", "created_at", "created_by", "updated_at", "updated_by", "position", "max_upload_size",
+	return []string{
+		"id", "created_at", "created_by", "updated_at", "updated_by", "position", "max_upload_size",
 		"name", "description", "enabled", "mime_types", "channels", "speed_download", "speed_upload", "retention_days", "encrypt",
 	}
 }
@@ -116,6 +117,18 @@ func (c *FilePolicy) IsValid() AppError {
 		c.MimeTypes[k] = strings.Trim(v, " ")
 	}
 	return nil
+}
+
+func (c *FilePolicy) Copy() *FilePolicy {
+	if c == nil {
+		return nil
+	}
+
+	res := *c
+	res.MimeTypes = append(StringArray(nil), c.MimeTypes...)
+	res.Channels = append(StringArray(nil), c.Channels...)
+
+	return &res
 }
 
 func IsFilePolicyError(err error) bool {

@@ -33,9 +33,17 @@ func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, 
 		return nil, err
 	}
 
+	var (
+		clearRetention bool
+		target         *model.FilePolicy
+	)
+
+	if clearRetention = oldPolicy.Enabled && !policy.Enabled; clearRetention {
+		target = oldPolicy.Copy()
+	}
+
 	oldPolicy.UpdatedBy = policy.UpdatedBy
 	oldPolicy.UpdatedAt = policy.UpdatedAt
-
 	oldPolicy.Enabled = policy.Enabled
 	oldPolicy.Name = policy.Name
 	oldPolicy.Description = policy.Description
@@ -47,8 +55,19 @@ func (app *App) UpdateFilePolicy(ctx context.Context, domainId int64, id int32, 
 	oldPolicy.MaxUploadSize = policy.MaxUploadSize
 	oldPolicy.Encrypt = policy.Encrypt
 
-	return app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
+	updatedPolicy, err := app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
+	if err != nil {
+		return nil, err
+	}
 
+	if clearRetention {
+		target.RetentionDays = 0
+		if _, err = app.Store.FilePolicies().SetRetentionDay(ctx, domainId, target, false); err != nil {
+			return nil, err
+		}
+	}
+
+	return updatedPolicy, nil
 }
 
 func (app *App) PatchFilePolicy(ctx context.Context, domainId int64, id int32, patch *model.FilePolicyPath) (*model.FilePolicy, model.AppError) {
@@ -56,14 +75,33 @@ func (app *App) PatchFilePolicy(ctx context.Context, domainId int64, id int32, p
 	if err != nil {
 		return nil, err
 	}
+	var (
+		clearRetention bool
+		target         *model.FilePolicy
+	)
+
+	if clearRetention = oldPolicy.Enabled && patch.Enabled != nil && !*patch.Enabled; clearRetention {
+		target = oldPolicy.Copy()
+	}
 
 	oldPolicy.Patch(patch)
-
 	if err = oldPolicy.IsValid(); err != nil {
 		return nil, err
 	}
 
-	return app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
+	updatedPolicy, err := app.Store.FilePolicies().Update(ctx, domainId, oldPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	if clearRetention {
+		target.RetentionDays = 0
+		if _, err = app.Store.FilePolicies().SetRetentionDay(ctx, domainId, target, false); err != nil {
+			return nil, err
+		}
+	}
+
+	return updatedPolicy, nil
 }
 
 func (app *App) DeleteFilePolicy(ctx context.Context, domainId int64, id int32) (*model.FilePolicy, model.AppError) {
