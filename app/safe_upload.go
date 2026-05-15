@@ -3,14 +3,15 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/storage/utils"
-	"github.com/webitel/wlog"
 	"io"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
+	"github.com/webitel/wlog"
 )
 
 var safeUploadProcess *utils.Cache = utils.NewLru(4000)
@@ -143,6 +144,17 @@ func (s *SafeUpload) SetProgress(v bool) {
 	s.Progress = v
 }
 
+// PatchMimeType amends the MIME type on the in-flight upload.
+// Only non-empty values overwrite; other fields are not patchable here
+func (s *SafeUpload) PatchMimeType(mimeType string) {
+	if mimeType == "" {
+		return
+	}
+	s.mx.Lock()
+	s.request.MimeType = mimeType
+	s.mx.Unlock()
+}
+
 func (s *SafeUpload) cancelSleep() {
 	s.mx.Lock()
 	if s.cancelSleepChan != nil {
@@ -210,6 +222,7 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpl
 		request:   req,
 		writer:    w,
 	}
+	req.SetMutex(&s.mx)
 	s.reader, err = app.FilePolicyForUpload(req.DomainId, &req.BaseFile, r)
 	if err != nil {
 		return nil, err

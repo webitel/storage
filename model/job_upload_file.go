@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"sync"
 )
 
 const (
@@ -32,6 +33,16 @@ type JobUploadFile struct {
 	Thumbnail *Thumbnail `db:"thumbnail" json:"thumbnail"`
 
 	GenerateThumbnail bool `db:"-"`
+
+	mu *sync.RWMutex `db:"-" json:"-"`
+}
+
+func (self *JobUploadFile) SetMutex(mu *sync.RWMutex) {
+	self.mu = mu
+}
+
+func (self *JobUploadFile) Mutex() *sync.RWMutex {
+	return self.mu
 }
 
 type JobUploadFileWithProfile struct {
@@ -52,6 +63,10 @@ func (f *JobUploadFile) GetSize() int64 {
 }
 
 func (f *JobUploadFile) GetMimeType() string {
+	if f.mu != nil {
+		f.mu.RLock()
+		defer f.mu.RUnlock()
+	}
 	return f.MimeType
 }
 

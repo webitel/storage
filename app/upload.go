@@ -4,16 +4,17 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"time"
+
 	"github.com/hashicorp/golang-lru/v2/expirable"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
 	"golang.org/x/sync/singleflight"
-	"io"
-	"os"
-	"path"
-	"time"
 )
 
 var (
@@ -231,11 +232,12 @@ endScan:
 
 // setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
 func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan model.AppError, model.AppError) {
-	if !utils.IsSupportThumbnail(file.MimeType) {
+	mimeType := file.GetMimeType()
+	if !utils.IsSupportThumbnail(mimeType) {
 		return src, nil, nil, nil
 	}
 
-	thumbnail, err := utils.NewThumbnail(file.MimeType, app.thumbnailSettings.DefaultScale)
+	thumbnail, err := utils.NewThumbnail(mimeType, app.thumbnailSettings.DefaultScale)
 	if err != nil {
 		return nil, nil, nil, model.NewInternalError("ThumbnailError", err.Error())
 	}
@@ -275,7 +277,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 			Size:           file.Size,
 			Name:           file.Name,
 			ViewName:       file.ViewName,
-			MimeType:       file.MimeType,
+			MimeType:       file.GetMimeType(),
 			Properties:     file.Properties,
 			Instance:       app.GetInstanceId(),
 			Channel:        file.Channel,

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/h2non/filetype"
 	"github.com/webitel/storage/app"
 
 	"github.com/webitel/storage/controller"
@@ -497,6 +498,16 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 
 		if len(chunk.Chunk) == 0 {
 			break
+		}
+
+		if su.Size() == 0 {
+			n := len(chunk.Chunk)
+			if n > 512 {
+				n = 512
+			}
+			if kind, kErr := filetype.Match(chunk.Chunk[:n]); kErr == nil && kind != filetype.Unknown {
+				su.PatchMimeType(kind.MIME.Value)
+			}
 		}
 
 		gErr = su.Write(chunk.Chunk)
