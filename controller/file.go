@@ -62,8 +62,8 @@ func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Sessi
 }
 
 var (
-	errNoActionSearchScreenRecordings     = model.NewForbiddenError("files.search.screen", "You don't have access to control_agent_screen action")
-	errNoPermissionSearchScreenRecordings = model.NewForbiddenError("files.search.screen", "You don't have access to permission")
+	errNoActionSearchScreenRecordings = model.NewForbiddenError("files.search.screen", "You don't have access to control_agent_screen action")
+	errNoPermissionScreenRecordings   = model.NewForbiddenError("files.search.screen", "You don't have access to permission")
 )
 
 const (
@@ -77,7 +77,7 @@ func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_m
 
 	permissionScreen := session.GetPermission(model.PermissionScreenRecordings)
 	if !permissionScreen.CanRead() {
-		return nil, false, errNoPermissionSearchScreenRecordings
+		return nil, false, errNoPermissionScreenRecordings
 	}
 
 	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search, screenrecordingChannel)
@@ -90,6 +90,11 @@ const (
 func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_manager.Session, userId int64, ids []int64) model.AppError {
 	if !session.HasAction(PermissionControlAgentScreen) {
 		return errNoActionSearchScreenRecordings
+	}
+
+	permissionScreen := session.GetPermission(model.PermissionScreenRecordings)
+	if !permissionScreen.CanDelete() {
+		return errNoPermissionScreenRecordings
 	}
 
 	if len(ids) == 0 {
@@ -127,6 +132,11 @@ func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_m
 func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session *auth_manager.Session, agentId int, ids []int64) model.AppError {
 	if !session.HasAction(PermissionControlAgentScreen) {
 		return errNoActionSearchScreenRecordings
+	}
+
+	permissionScreen := session.GetPermission(model.PermissionScreenRecordings)
+	if !permissionScreen.CanDelete() {
+		return errNoPermissionScreenRecordings
 	}
 
 	if len(ids) == 0 {
