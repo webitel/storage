@@ -1,64 +1,69 @@
 #!/bin/bash
-#
-# Generic Debian prerm for Webitel Go services.
-#
-# Managed centrally in webitel/reusable-configs and synced verbatim into each
-# service repo at deploy/debian/prerm.sh — DO NOT edit per-repo.
-#
-# Stops (and, on full removal, disables) every systemd unit shipped by the
-# package. Units are discovered at runtime, so this works for single- and
-# multi-unit packages alike.
 
 set -e
 
-have_systemctl() {
-    command -v systemctl >/dev/null 2>&1
-}
+SERVICE_NAME="webitel-storage"
 
-# systemd unit files shipped by THIS package, as basenames.
-package_units() {
-    dpkg-query -L "$DPKG_MAINTSCRIPT_PACKAGE" 2>/dev/null \
-        | grep -E '/systemd/system/[^/]+\.service$' \
-        | sed 's:.*/::'
-}
+stop_service() {
+    if [ -x "/bin/systemctl" ]; then
+        if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+            echo "Stopping $SERVICE_NAME service..."
+            systemctl stop "$SERVICE_NAME" || true
 
-stop_units() {
-    have_systemctl || return 0
+            # Wait for service to stop completely
+            local timeout=10
+            local count=0
+            while systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null && [ $count -lt $timeout ]; do
+                sleep 1
+                count=$((count + 1))
+            done
 
-    local unit
-    for unit in $(package_units); do
-        if systemctl is-active --quiet "$unit" 2>/dev/null; then
-            echo "Stopping $unit..."
-            # systemctl stop is synchronous and enforces the unit's
-            # TimeoutStopSec (escalating to SIGKILL) on its own.
-            systemctl stop "$unit" || true
+            if systemctl is-active --quiet "$SERVICE_NAME" 2>/dev/null; then
+                echo "Warning: Service $SERVICE_NAME did not stop gracefully within ${timeout}s" >&2
+
+                # Force kill if still running
+                systemctl kill --signal=SIGKILL "$SERVICE_NAME" || true
+            else
+                echo "Service $SERVICE_NAME stopped successfully."
+            fi
         fi
-    done
+    fi
 }
 
-disable_units() {
-    have_systemctl || return 0
+disable_service() {
+    if [ -x "/bin/systemctl" ]; then
+        if systemctl is-enabled --quiet "$SERVICE_NAME" 2>/dev/null; then
+            echo "Disabling $SERVICE_NAME service..."
 
-    local unit
-    for unit in $(package_units); do
-        if systemctl is-enabled --quiet "$unit" 2>/dev/null; then
-            echo "Disabling $unit..."
-            systemctl disable "$unit" || true
+            systemctl disable "$SERVICE_NAME" || true
+            systemctl daemon-reload
         fi
-    done
+    fi
 }
 
 case "$1" in
     remove)
-        echo "Removing $DPKG_MAINTSCRIPT_PACKAGE..."
-        stop_units
-        disable_units
+        echo "Preparing to remove $SERVICE_NAME..."
+
+        stop_service
+        disable_service
+
+        echo "Service $SERVICE_NAME has been stopped and disabled."
         ;;
 
-    deconfigure|failed-upgrade)
-        # Stop but keep the unit enabled.
-        stop_units
+    deconfigure)
+        echo "Deconfiguring $PACKAGE_NAME due to dependency issues..."
+
+        # Stop service but don't disable it
+        stop_service
         ;;
+
+    failed-upgrade)
+        echo "Upgrade failed, stopping service..."
+
+        stop_service
+        ;;
+
 esac
 
 exit 0
