@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -34,15 +33,7 @@ type JobUploadFile struct {
 
 	GenerateThumbnail bool `db:"-"`
 
-	mu *sync.RWMutex `db:"-" json:"-"`
-}
-
-func (self *JobUploadFile) SetMutex(mu *sync.RWMutex) {
-	self.mu = mu
-}
-
-func (self *JobUploadFile) Mutex() *sync.RWMutex {
-	return self.mu
+	mu sync.RWMutex `db:"-" json:"-"`
 }
 
 type JobUploadFileWithProfile struct {
@@ -51,11 +42,11 @@ type JobUploadFileWithProfile struct {
 	ProfileUpdatedAt *int64 `json:"profile_updated_at" db:"profile_updated_at"`
 }
 
-func (self *JobUploadFile) PreSave() {
-	if self.CreatedAt == 0 {
-		self.CreatedAt = GetMillis()
+func (f *JobUploadFile) PreSave() {
+	if f.CreatedAt == 0 {
+		f.CreatedAt = GetMillis()
 	}
-	self.UpdatedAt = GetMillis()
+	f.UpdatedAt = GetMillis()
 }
 
 func (f *JobUploadFile) GetSize() int64 {
@@ -63,36 +54,36 @@ func (f *JobUploadFile) GetSize() int64 {
 }
 
 func (f *JobUploadFile) GetMimeType() string {
-	if f.mu != nil {
-		f.mu.RLock()
-		defer f.mu.RUnlock()
-	}
+	f.mu.RLock()
+	defer f.mu.RUnlock()
 	return f.MimeType
 }
 
-func (self *JobUploadFile) GetStoreName() string {
-	return fmt.Sprintf("%s_%s", self.Uuid, self.Name)
+func (f *JobUploadFile) SetMimeType(mimeType string) {
+	f.mu.Lock()
+	f.MimeType = mimeType
+	f.mu.Unlock()
 }
 
-func (self *JobUploadFile) GetViewName() string {
-	if self.ViewName != nil {
-		return *self.ViewName
+func (f *JobUploadFile) GetViewName() string {
+	if f.ViewName != nil {
+		return *f.ViewName
 	}
 
-	return self.Name
+	return f.Name
 }
 
-func (self *JobUploadFile) GetChannel() *string {
-	return self.Channel
+func (f *JobUploadFile) GetChannel() *string {
+	return f.Channel
 }
 
 // TODO
-func (self *JobUploadFile) GetPropertyString(name string) string {
+func (f *JobUploadFile) GetPropertyString(name string) string {
 	return ""
 }
-func (self *JobUploadFile) SetPropertyString(name, value string) {
-	self.BaseFile.SetPropertyString(name, value)
+func (f *JobUploadFile) SetPropertyString(name, value string) {
+	f.BaseFile.SetPropertyString(name, value)
 }
-func (self *JobUploadFile) Domain() int64 {
-	return self.DomainId
+func (f *JobUploadFile) Domain() int64 {
+	return f.DomainId
 }

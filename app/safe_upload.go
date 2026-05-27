@@ -150,9 +150,7 @@ func (s *SafeUpload) PatchMimeType(mimeType string) {
 	if mimeType == "" {
 		return
 	}
-	s.mx.Lock()
-	s.request.MimeType = mimeType
-	s.mx.Unlock()
+	s.request.SetMimeType(mimeType)
 }
 
 func (s *SafeUpload) cancelSleep() {
@@ -222,7 +220,6 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpl
 		request:   req,
 		writer:    w,
 	}
-	req.SetMutex(&s.mx)
 	s.reader, err = app.FilePolicyForUpload(req.DomainId, &req.BaseFile, r)
 	if err != nil {
 		return nil, err
