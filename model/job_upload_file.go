@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -63,6 +64,10 @@ func (f *JobUploadFile) SetMimeType(mimeType string) {
 	f.mu.Lock()
 	f.MimeType = mimeType
 	f.mu.Unlock()
+}
+
+func (f *JobUploadFile) GetStoreName() string {
+	return fmt.Sprintf("%s_%s", f.Uuid, f.Name)
 }
 
 func (f *JobUploadFile) GetViewName() string {
