@@ -39,7 +39,7 @@ jobs:
     needs: [ prepare ]
     uses: webitel/reusable-workflows/.github/workflows/golang-build.yml@v2
     with:
-      binary-name: storage
+      binary-name: webitel-storage
       ldflags: >
         -s -w
         -X github.com/webitel/storage/model.BuildNumber=${{ github.run_number }}
