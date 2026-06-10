@@ -53,6 +53,7 @@ jobs:
       package-contents: |
         src=deploy/systemd/webitel-storage.service dst=/etc/systemd/system/webitel-storage.service type=config
         src=deploy/debian/postinst.d/ dst=/usr/lib/webitel-storage/deb/postinst.d/
+        src=.env.example dst=/etc/default/webitel-storage type=config
         
 
       scripts: |
