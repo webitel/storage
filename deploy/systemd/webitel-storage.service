@@ -8,7 +8,7 @@ Restart=always
 LimitNOFILE=65536
 TimeoutStartSec=0
 Environment="GOOGLE_APPLICATION_CREDENTIALS=/opt/webitel/application_default_credentials.json"
-ExecStart=/usr/local/bin/storage \
+ExecStart=/usr/local/bin/webitel-storage \
     -translations_directory /usr/share/webitel/storage/i18n \
     -consul 127.0.0.1:8500 \
     -grpc_addr 127.0.0.1 \
