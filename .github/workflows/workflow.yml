@@ -59,11 +59,16 @@ jobs:
       package-name: webitel-storage
       package-description: ${{ github.event.repository.description }}
       package-contents: |
-        src=deploy/systemd/${{ vars.SERVICE_NAME }}.service dst=/etc/systemd/system/${{ vars.SERVICE_NAME }}.service type=config
+        src=deploy/systemd/webitel-storage.service dst=/etc/systemd/system/webitel-storage.service type=config
+        src=deploy/debian/postinst.d/ dst=/usr/lib/webitel-storage/deb/postinst.d/
+        src=.env.example dst=/etc/default/webitel-storage type=config
         
 
       package-depends: ffmpeg
       scripts: |
+        postinstall: deploy/debian/postinst.sh
+        preremove: deploy/debian/prerm.sh
+        postremove: deploy/debian/postrm.sh
         
 
   deploy:
