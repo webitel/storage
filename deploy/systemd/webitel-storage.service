@@ -8,7 +8,7 @@ Restart=always
 LimitNOFILE=65536
 TimeoutStartSec=0
 Environment="GOOGLE_APPLICATION_CREDENTIALS=/opt/webitel/application_default_credentials.json"
-ExecStart=/usr/local/bin/storage \
+ExecStart=/usr/local/bin/webitel-storage \
     -translations_directory /usr/share/webitel/storage/i18n \
     -consul 127.0.0.1:8500 \
     -grpc_addr 127.0.0.1 \
@@ -20,6 +20,7 @@ ExecStart=/usr/local/bin/storage \
     -file_store_type local \
     -file_store_expire_day 0 \
     -file_store_props "{\"directory\": \"/opt/storage/recordings\", \"path_pattern\": \"$DOMAIN/$Y/$M/$D/$H\"}" \
+    -message_broker_url="amqp://user:pass@127.0.0.1:5672?heartbeat=10" \
     -data_source "postgres://opensips:webitel@127.0.0.1:5432/webitel?application_name=storage&sslmode=disable"
 
 [Install]
