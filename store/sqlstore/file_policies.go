@@ -325,7 +325,7 @@ func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domain
 			    values
 			        (
 			            'media_storage',
-			            array['image/jpeg','image/png','video/mp4','audio/mpeg','audio/wav']::text[],
+			            array['image/jpeg','image/png','video/mp4','audio/mpeg','audio/wav', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']::text[],
 			            2048,
 			            1024,
 			            array['chat']::text[],
@@ -334,7 +334,7 @@ func (s *SqlFilePoliciesStore) CreateDefaultPolicies(ctx context.Context, domain
 			        ),
 			        (
 			            'email_attachment',
-			            array['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/*']::text[],
+			            array['application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document','image/*', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']::text[],
 			            1024,
 			            512,
 			            array['mail']::text[],

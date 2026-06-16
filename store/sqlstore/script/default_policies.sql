@@ -36,7 +36,7 @@ from available_domains ad
     cross join (
         values (
                 'media_storage',
-                array ['image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg', 'audio/wav'],
+                array ['image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg', 'audio/wav', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
                 2048,
                 1024,
                 array ['chat'],
@@ -45,8 +45,8 @@ from available_domains ad
             ),
             (
                 'email_attachment',
-                array ['application/pdf', 'application/msword', 
-				'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/*'],
+                array ['application/pdf', 'application/msword',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/*', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
                 1024,
                 512,
                 array ['mail'],
