@@ -14,6 +14,9 @@ for dir in /opt/storage /opt/storage/data /opt/storage/recordings; do
     [ -d "$dir" ] || install -d -o webitel -g webitel -m 0750 "$dir"
 done
 
+I18N_DIR=/usr/share/webitel/storage/i18n
+[ -d "$I18N_DIR" ] || install -d -o webitel -g webitel -m 0755 "$I18N_DIR"
+
 KEY=/opt/storage/key.pem
 if [ ! -f "$KEY" ]; then
     echo "Generating storage signing key: $KEY"
