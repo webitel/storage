@@ -1,27 +1,72 @@
 [Unit]
-Description=Storage Startup process
-After=network.target
+Description=Webitel Storage
+After=network.target consul.service rabbitmq-server.service postgresql.service
+StartLimitIntervalSec=60
+StartLimitBurst=3
 
 [Service]
 Type=simple
-Restart=always
-LimitNOFILE=65536
+User=webitel
+Group=webitel
+LogsDirectory=webitel
+CacheDirectory=webitel-storage
+
+EnvironmentFile=/etc/default/webitel-storage
+EnvironmentFile=-/etc/default/webitel-otel
+EnvironmentFile=-/etc/default/webitel
+ExecStart=/usr/local/bin/webitel-storage
+
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+KillSignal=SIGTERM
 TimeoutStartSec=0
-Environment="GOOGLE_APPLICATION_CREDENTIALS=/opt/webitel/application_default_credentials.json"
-ExecStart=/usr/local/bin/webitel-storage \
-    -translations_directory /usr/share/webitel/storage/i18n \
-    -consul 127.0.0.1:8500 \
-    -grpc_addr 127.0.0.1 \
-    -internal_address 127.0.0.1:10021 \
-    -public_address 127.0.0.1:10023 \
-    -presigned_cert /opt/storage/key.pem \
-    -media_directory /opt/storage/data \
-    -public_host https://example.org \
-    -file_store_type local \
-    -file_store_expire_day 0 \
-    -file_store_props "{\"directory\": \"/opt/storage/recordings\", \"path_pattern\": \"$DOMAIN/$Y/$M/$D/$H\"}" \
-    -message_broker_url="amqp://user:pass@127.0.0.1:5672?heartbeat=10" \
-    -data_source "postgres://opensips:webitel@127.0.0.1:5432/webitel?application_name=storage&sslmode=disable"
+TimeoutStopSec=30
+LimitNOFILE=64000
+LimitNPROC=4096
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=webitel-storage
+
+# Filesystem isolation
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoExecPaths=/
+ExecPaths=/usr/local/bin/webitel-storage
+ExecPaths=/usr/bin/ffmpeg
+ReadWritePaths=/opt/storage
+
+# Process isolation
+PrivateDevices=yes
+PrivateUsers=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+ProcSubset=pid
+NoNewPrivileges=yes
+PrivateMounts=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+ProtectClock=yes
+ProtectHostname=yes
+SystemCallArchitectures=native
+UMask=0077
+
+# Capabilities & syscalls
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged
+SystemCallFilter=~@resources
+SystemCallFilter=~@obsolete
+SystemCallErrorNumber=EPERM
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
