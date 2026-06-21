@@ -9,6 +9,7 @@ Type=simple
 User=webitel
 Group=webitel
 LogsDirectory=webitel
+CacheDirectory=webitel-storage
 
 EnvironmentFile=/etc/default/webitel-storage
 EnvironmentFile=-/etc/default/webitel-otel
@@ -36,8 +37,6 @@ NoExecPaths=/
 ExecPaths=/usr/local/bin/webitel-storage
 ExecPaths=/usr/bin/ffmpeg
 ReadWritePaths=/opt/storage
-ReadWritePaths=/opt/recordings
-ReadWritePaths=/var/lib/webitel/storage-temp
 
 # Process isolation
 PrivateDevices=yes
