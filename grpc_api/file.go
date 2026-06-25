@@ -1,12 +1,17 @@
 package grpc_api
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/h2non/filetype"
 
 	"github.com/webitel/storage/app"
 
@@ -340,7 +345,6 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	fileRequest.DomainId = in.GetDomainId()
 	fileRequest.Name = model.NewId() + "_" + in.GetName()
 	fileRequest.ViewName = model.NewString(in.GetName())
-	fileRequest.MimeType = res.Header.Get("Content-Type")
 	fileRequest.Uuid = in.GetUuid()
 	fileRequest.Size = res.ContentLength
 	fileRequest.Channel = model.NewString(channelType(in.Channel))
@@ -350,11 +354,13 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 		fileRequest.Uuid = model.NewId() // bad request ?
 	}
 
-	if fileRequest.MimeType == "application/octet-stream" && in.Mime != "" {
-		fileRequest.MimeType = in.Mime
+	body, mimeType, mimeErr := resolveUrlUploadMime(res, in.Mime)
+	if mimeErr != nil {
+		return nil, mimeErr
 	}
+	fileRequest.MimeType = mimeType
 
-	if err = api.ctrl.UploadFileStream(res.Body, &fileRequest); err != nil {
+	if err = api.ctrl.UploadFileStream(body, &fileRequest); err != nil {
 		return nil, err
 	}
 
@@ -377,6 +383,45 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	}
 
 	return result, nil
+}
+
+// Remote Content-Type is unreliable (e.g. S3 returns "image" instead of "image/jpeg"),
+// so on invalid header we sniff the actual bytes and only trust clientHint as a last resort.
+func resolveUrlUploadMime(res *http.Response, clientHint string) (io.ReadCloser, string, model.AppError) {
+	if clientHint != "" {
+		if parsedHint, _, err := mime.ParseMediaType(clientHint); err == nil {
+			clientHint = parsedHint
+		} else {
+			clientHint = ""
+		}
+	}
+
+	parsed, _, parseErr := mime.ParseMediaType(res.Header.Get("Content-Type"))
+	if parseErr == nil && strings.Contains(parsed, "/") && parsed != "application/octet-stream" {
+		return res.Body, parsed, nil
+	}
+
+	head := make([]byte, 512)
+	n, readErr := io.ReadFull(res.Body, head)
+	if readErr != nil && readErr != io.EOF && readErr != io.ErrUnexpectedEOF {
+		return nil, "", model.NewInternalError("grpc.upload_file_url.read_head", readErr.Error())
+	}
+	head = head[:n]
+	body := io.NopCloser(io.MultiReader(bytes.NewReader(head), res.Body))
+
+	kind, _ := filetype.Match(head)
+	switch {
+	case kind != filetype.Unknown:
+		detected := kind.MIME.Value
+		if clientHint != "" && clientHint != detected {
+			return nil, "", model.PolicyErrorExtSuspicious
+		}
+		return body, detected, nil
+	case clientHint != "":
+		return body, clientHint, nil
+	default:
+		return nil, "", model.PolicyErrorExtUnknown
+	}
 }
 
 func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest) (*storage.DeleteFilesResponse, error) {
