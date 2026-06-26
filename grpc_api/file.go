@@ -831,6 +831,20 @@ func (api *file) DeleteScreenRecordingsByAgent(ctx context.Context, in *storage.
 	return &storage.DeleteFilesResponse{}, nil
 }
 
+func (api *file) DeleteVideocallFiles(ctx context.Context, in *storage.DeleteVideocallFilesRequest) (*storage.DeleteFilesResponse, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.ctrl.DeleteVideocallFiles(ctx, session, in.GetCallId(), in.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storage.DeleteFilesResponse{}, nil
+}
+
 func (api *file) SearchFilesByCall(ctx context.Context, in *storage.SearchFilesByCallRequest) (*storage.ListFile, error) {
 	session, err := api.ctrl.GetSessionFromCtx(ctx)
 	if err != nil {
