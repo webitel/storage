@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"strings"
 
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
 
@@ -61,23 +62,21 @@ func (c *Controller) SearchFile(ctx context.Context, session *auth_manager.Sessi
 	return c.app.SearchFiles(ctx, session.Domain(0), search)
 }
 
-var (
-	errNoActionSearchScreenRecordings     = model.NewForbiddenError("files.search.screen", "You don't have access to control_agent_screen action")
-	errNoPermissionSearchScreenRecordings = model.NewForbiddenError("files.search.screen", "You don't have access to permission")
+const (
+	ScreenrecordingChannelCall = "call"
 )
 
-const (
-	PermissionControlAgentScreen = "control_agent_screen"
-)
+func screenRecordingsObjclass(screenrecordingChannel string) string {
+	if screenrecordingChannel == ScreenrecordingChannelCall {
+		return model.PermissionVideocallFiles
+	}
+	return model.PermissionScreenRecordings
+}
 
 func (c *Controller) SearchScreenRecordings(ctx context.Context, session *auth_manager.Session, search *model.SearchFile, screenrecordingChannel string) ([]*model.File, bool, model.AppError) {
-	if !session.HasAction(PermissionControlAgentScreen) {
-		return nil, false, errNoActionSearchScreenRecordings
-	}
-
-	permissionScreen := session.GetPermission(model.PermissionScreenRecordings)
-	if !permissionScreen.CanRead() {
-		return nil, false, errNoPermissionSearchScreenRecordings
+	permission := session.GetPermission(screenRecordingsObjclass(screenrecordingChannel))
+	if !permission.CanRead() {
+		return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
 	}
 
 	return c.app.SearchScreenRecordings(ctx, session.Domain(0), search, screenrecordingChannel)
@@ -88,8 +87,9 @@ const (
 )
 
 func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_manager.Session, userId int64, ids []int64) model.AppError {
-	if !session.HasAction(PermissionControlAgentScreen) {
-		return errNoActionSearchScreenRecordings
+	permission := session.GetPermission(model.PermissionScreenRecordings)
+	if !permission.CanDelete() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
 	}
 
 	if len(ids) == 0 {
@@ -125,8 +125,9 @@ func (c *Controller) DeleteScreenRecordings(ctx context.Context, session *auth_m
 }
 
 func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session *auth_manager.Session, agentId int, ids []int64) model.AppError {
-	if !session.HasAction(PermissionControlAgentScreen) {
-		return errNoActionSearchScreenRecordings
+	permission := session.GetPermission(model.PermissionScreenRecordings)
+	if !permission.CanDelete() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
 	}
 
 	if len(ids) == 0 {
@@ -152,7 +153,12 @@ func (c *Controller) DeleteScreenRecordingsByAgent(ctx context.Context, session 
 }
 
 func (c *Controller) SearchCallFiles(ctx context.Context, session *auth_manager.Session, callId string, search *model.SearchFile) ([]*model.File, bool, model.AppError) {
-	if !session.HasAction(auth_manager.PermissionRecordFile) {
+	if isVideocallFileSearch(search) {
+		permission := session.GetPermission(model.PermissionVideocallFiles)
+		if !permission.CanRead() {
+			return nil, false, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+		}
+	} else if !session.HasAction(auth_manager.PermissionRecordFile) {
 		permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
 		if !permission.CanRead() {
 			return nil, false, model.NewForbiddenError("call.recordings.access.forbidden", "Not allow")
@@ -163,4 +169,62 @@ func (c *Controller) SearchCallFiles(ctx context.Context, session *auth_manager.
 
 	search.CallId = &callId
 	return c.app.SearchFiles(ctx, session.Domain(0), search)
+}
+
+func (c *Controller) DeleteVideocallFiles(ctx context.Context, session *auth_manager.Session, callId string, ids []int64) model.AppError {
+	permission := session.GetPermission(model.PermissionVideocallFiles)
+	if !permission.CanDelete() {
+		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
+	}
+
+	if len(ids) == 0 {
+		return model.NewBadRequestError("files.delete.videocall", "id is empty")
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Fields:  []string{"id", "mime_type", "channel"},
+			Page:    0,
+			PerPage: 1000, // TODO
+		},
+		Ids:      ids,
+		CallId:   &callId,
+		Channels: []string{model.UploadFileChannelCall},
+	}
+
+	res, _, err := c.app.SearchFiles(ctx, session.Domain(0), search)
+	if err != nil {
+		return err
+	}
+
+	videocallIds := make([]int64, 0, len(res))
+	for _, f := range res {
+		if f.Channel != nil && *f.Channel == model.UploadFileChannelCall &&
+			(strings.HasPrefix(f.MimeType, model.ImageMimePrefix) || strings.HasPrefix(f.MimeType, "application/pdf")) {
+			videocallIds = append(videocallIds, f.Id)
+		}
+	}
+
+	if len(videocallIds) == 0 {
+		return nil
+	}
+
+	return c.app.RemoveFilesByChannels(ctx, session.Domain(0), videocallIds, []string{model.UploadFileChannelCall})
+}
+
+func isVideocallFileSearch(search *model.SearchFile) bool {
+	if search.MimeType == nil {
+		return false
+	}
+	isVideocallMime := strings.HasPrefix(*search.MimeType, model.ImageMimePrefix) ||
+		strings.HasPrefix(*search.MimeType, "application/pdf")
+	if !isVideocallMime {
+		return false
+	}
+	for _, ch := range search.Channels {
+		if ch == model.UploadFileChannelCall {
+			return true
+		}
+	}
+	return false
 }

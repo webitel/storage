@@ -10,4 +10,5 @@ const (
 	PermissionScopeFilePolicy       = "files_policy"
 	PermissionScopeFiles            = "files" //"file_policies"
 	PermissionScreenRecordings      = "screen_recordings"
+	PermissionVideocallFiles        = "videocall_files"
 )
