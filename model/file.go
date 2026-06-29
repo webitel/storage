@@ -156,7 +156,7 @@ func (f *BaseFile) StringMalware() string {
 		desc = *f.Malware.Desc
 	}
 
-	return fmt.Sprintf("true (%s/%s)", f.Malware.Status, desc)
+	return fmt.Sprintf("%v (%s/%s)", f.Malware.Found, f.Malware.Status, desc)
 }
 
 func (f *BaseFile) IsQuarantine() bool {
@@ -171,7 +171,6 @@ func (f *BaseFile) SetPolicyId(id int) {
 }
 
 func (f *BaseFile) GetChannel() *string {
-
 	return f.Channel
 }
 
@@ -226,7 +225,8 @@ func (f File) DefaultOrder() string {
 }
 
 func (f File) AllowFields() []string {
-	return []string{"id", "name", "view_name", "size", "mime_type", "reference_id", "profile", "uploaded_at",
+	return []string{
+		"id", "name", "view_name", "size", "mime_type", "reference_id", "profile", "uploaded_at",
 		"sha256sum", "channel", "thumbnail", "retention_until", "domain_id", "uploaded_by",
 	}
 }

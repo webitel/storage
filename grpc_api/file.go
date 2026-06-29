@@ -13,17 +13,15 @@ import (
 
 	"github.com/h2non/filetype"
 
-	"github.com/webitel/storage/app"
+	"github.com/webitel/wlog"
 
+	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/gen/storage"
 	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
 )
 
-var (
-	ErrCancel = errors.New("cancel")
-)
+var ErrCancel = errors.New("cancel")
 
 type file struct {
 	ctrl       *controller.Controller
@@ -32,7 +30,7 @@ type file struct {
 	storage.UnsafeFileServiceServer
 }
 
-func NewFileApi(proxy string, ph string, api *controller.Controller) *file {
+func NewFileApi(proxy, ph string, api *controller.Controller) *file {
 	c := &file{
 		ctrl:       api,
 		publicHost: ph,
@@ -129,7 +127,6 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		} else {
 			writer.Close()
 		}
-
 	}(pipeWriter)
 
 	var err model.AppError
@@ -178,7 +175,7 @@ func getMalware(in *model.MalwareScan) *storage.FileMalwareScan {
 	}
 	if in.Desc != nil {
 		malware.Description = *in.Desc
-		malware.Found = true
+		malware.Found = in.Found
 	}
 
 	return malware
@@ -274,7 +271,6 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 		err = stream.Send(&storage.StreamFile{
 			Data: d,
 		})
-
 		if err != nil {
 			return err
 		}
@@ -599,7 +595,8 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 	return in.Send(&storage.SafeUploadFileResponse{
 		Data: &storage.SafeUploadFileResponse_Metadata_{
 			Metadata: metadata,
-		}})
+		},
+	})
 }
 
 func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest) (*storage.ListFile, error) {
@@ -641,7 +638,6 @@ func (api *file) SearchFiles(ctx context.Context, in *storage.SearchFilesRequest
 	}
 
 	list, endOfData, err = api.ctrl.SearchFile(ctx, session, search)
-
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +810,6 @@ func (api *file) DeleteScreenRecordings(ctx context.Context, in *storage.DeleteS
 	}
 
 	return &storage.DeleteFilesResponse{}, nil
-
 }
 
 func (api *file) DeleteScreenRecordingsByAgent(ctx context.Context, in *storage.DeleteScreenRecordingsByAgentRequest) (*storage.DeleteFilesResponse, error) {
@@ -941,7 +936,7 @@ func channelType(channel storage.UploadFileChannel) string {
 		return model.UploadFileChannelLog
 	case storage.UploadFileChannel_ScreenRecordingChannel:
 		return model.UploadFileChannelScreenRecording
-	//case storage.UploadFileChannel_ScreenshotChannel:
+	// case storage.UploadFileChannel_ScreenshotChannel:
 	//	return model.UploadFileChannelScreenshot
 
 	default:
@@ -960,7 +955,7 @@ func channelTypeGrpc(channel string) storage.UploadFileChannel {
 		return storage.UploadFileChannel_MediaChannel
 	case model.UploadFileChannelLog:
 		return storage.UploadFileChannel_LogChannel
-	//case model.UploadFileChannelScreenshot:
+	// case model.UploadFileChannelScreenshot:
 	//	return storage.UploadFileChannel_ScreenshotChannel
 	case model.UploadFileChannelScreenRecording:
 		return storage.UploadFileChannel_ScreenRecordingChannel
