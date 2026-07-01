@@ -430,7 +430,7 @@ func (api *file) DeleteFiles(ctx context.Context, in *storage.DeleteFilesRequest
 		return nil, err
 	}
 
-	err = api.ctrl.DeleteFiles(session, in.Id)
+	err = api.ctrl.DeleteFiles(ctx, session, in.Id)
 	if err != nil {
 		return nil, err
 	}

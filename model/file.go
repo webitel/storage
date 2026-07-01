@@ -10,6 +10,7 @@ var (
 	ImageMimePrefix = "image/"
 	VideoMimePrefix = "video/"
 	AudioMimePrefix = "audio/"
+	PdfMimePrefix   = "application/pdf"
 )
 
 type SearchFile struct {
