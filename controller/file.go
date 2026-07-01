@@ -9,17 +9,78 @@ import (
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) DeleteFiles(session *auth_manager.Session, ids []int64) model.AppError {
-	permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
-	if !permission.CanRead() {
-		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+func fileDeleteObjclass(f *model.File) string {
+	if f.Channel != nil {
+		switch *f.Channel {
+		case model.UploadFileChannelScreenRecording:
+			return model.PermissionScreenRecordings
+		case model.UploadFileChannelCall:
+			if isVideocallMime(f.MimeType) {
+				return model.PermissionVideocallFiles
+			}
+		}
 	}
 
-	if !permission.CanDelete() {
-		return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
+	return model.PERMISSION_SCOPE_RECORD_FILE
+}
+
+func isVideocallMime(mime string) bool {
+	return strings.HasPrefix(mime, model.ImageMimePrefix) || strings.HasPrefix(mime, model.PdfMimePrefix)
+}
+
+// ensureFilesDeletable enforces the delete permission of the object class that governs each file
+func (c *Controller) ensureFilesDeletable(session *auth_manager.Session, files []*model.File) model.AppError {
+	checked := make(map[string]struct{}, 3)
+
+	for _, f := range files {
+		obj := fileDeleteObjclass(f)
+		if _, ok := checked[obj]; ok {
+			continue
+		}
+		checked[obj] = struct{}{}
+
+		permission := session.GetPermission(obj)
+		if obj == model.PERMISSION_SCOPE_RECORD_FILE && !permission.CanRead() {
+			return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
+		}
+
+		if !permission.CanDelete() {
+			return c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
+		}
 	}
 
-	return c.app.RemoveFiles(session.Domain(0), ids)
+	return nil
+}
+
+func (c *Controller) DeleteFiles(ctx context.Context, session *auth_manager.Session, ids []int64) model.AppError {
+	if len(ids) == 0 {
+		return model.NewBadRequestError("files.delete", "id is empty")
+	}
+
+	files, _, err := c.app.SearchFiles(ctx, session.Domain(0), &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Fields:  []string{"id", "mime_type", "channel"},
+			PerPage: len(ids),
+		},
+		Ids: ids,
+	})
+	if err != nil {
+		return err
+	}
+
+	if err := c.ensureFilesDeletable(session, files); err != nil {
+		return err
+	}
+
+	deleteIds := make([]int64, 0, len(files))
+	for _, f := range files {
+		deleteIds = append(deleteIds, f.Id)
+	}
+	if len(deleteIds) == 0 {
+		return nil
+	}
+
+	return c.app.RemoveFiles(session.Domain(0), deleteIds)
 }
 
 func (c *Controller) DeleteQuarantineFiles(session *auth_manager.Session, ids []int64) model.AppError {
