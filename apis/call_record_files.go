@@ -221,7 +221,8 @@ func allowTimeLimited(ctx context.Context, c *Context, createdAt int64) bool {
 }
 
 func checkCallRecordPermission(c *Context, r *http.Request) (bool, model.AppError) {
-	if !c.Session.HasAction(auth_manager.PermissionRecordFile) {
+	if !c.Session.HasAction(auth_manager.PermissionRecordFile) &&
+		!c.Session.HasAction(auth_manager.PermissionTimeLimitedRecordFile) {
 		session := c.Session
 		permission := session.GetPermission(model.PERMISSION_SCOPE_RECORD_FILE)
 		if !permission.CanRead() {
