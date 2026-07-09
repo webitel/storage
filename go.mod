@@ -27,6 +27,7 @@ require (
 	github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30
 	github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3
 	github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8
+	github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf84692
 	github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/otel v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1ee94622655d
@@ -34,9 +35,9 @@ require (
 	github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0
-	golang.org/x/crypto v0.38.0
+	golang.org/x/crypto v0.47.0
 	golang.org/x/image v0.12.0
-	golang.org/x/sync v0.14.0
+	golang.org/x/sync v0.19.0
 	google.golang.org/api v0.233.0
 	google.golang.org/genproto v0.0.0-20250303144028-a0af3efb3deb
 	google.golang.org/genproto/googleapis/api v0.0.0-20250519155744-55703ea1f237
@@ -64,6 +65,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -119,11 +121,12 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250519155744-55703ea1f237 // indirect

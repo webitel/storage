@@ -8,7 +8,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/h2non/filetype"
@@ -30,23 +29,12 @@ type file struct {
 	storage.UnsafeFileServiceServer
 }
 
-func NewFileApi(proxy, ph string, api *controller.Controller) *file {
-	c := &file{
+func NewFileApi(client *http.Client, ph string, api *controller.Controller) *file {
+	return &file{
 		ctrl:       api,
+		curl:       client,
 		publicHost: ph,
 	}
-	if proxy != "" {
-		proxyUrl, err := url.Parse(proxy)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		c.curl = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyUrl)}}
-	} else {
-		c.curl = http.DefaultClient
-	}
-
-	return c
 }
 
 func CustomPropertiesFromProto(in *storage.CustomFileProperties) *model.CustomFileProperties {

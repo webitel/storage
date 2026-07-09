@@ -4,18 +4,25 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync/atomic"
 	"time"
 
-	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
-	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
-	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
-	"go.opentelemetry.io/otel/sdk/resource"
-
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+
 	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+	"github.com/webitel/webitel-go-kit/infra/httpproxy"
+	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
+	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
+	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
+	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
+	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
+	"github.com/webitel/wlog"
+
 	"github.com/webitel/storage/broker/handler"
 	"github.com/webitel/storage/broker/rabbit"
 	"github.com/webitel/storage/interfaces"
@@ -23,10 +30,6 @@ import (
 	"github.com/webitel/storage/store"
 	"github.com/webitel/storage/store/sqlstore"
 	"github.com/webitel/storage/utils"
-	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
-	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
-	"github.com/webitel/wlog"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
 	// -------------------- plugin(s) -------------------- //
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/otlp"
@@ -59,11 +62,15 @@ type App struct {
 
 	Store store.Store
 
+	ProxyManager     *httpproxy.Manager
+	proxyWatchStop   context.CancelFunc
+	uploadFileClient *http.Client
+
 	Log        *wlog.Logger
 	configFile string
 	config     atomic.Value
 	newStore   func() store.Store
-	//Jobs       *jobs.JobServer
+	// Jobs       *jobs.JobServer
 
 	sessionManager auth_manager.AuthManager
 	Uploader       interfaces.UploadRecordingsFilesInterface
@@ -170,6 +177,27 @@ func New(options ...string) (outApp *App, outErr error) {
 	wlog.RedirectStdLog(app.Log)
 	wlog.InitGlobalLogger(app.Log)
 
+	// Bind http.DefaultTransport to the proxy manager before any outbound
+	// client is built, so every default-transport call site follows the
+	// watched proxy settings without a restart.
+	app.ProxyManager = httpproxy.NewManager(httpproxy.WithLogger(newSlogLogger(app.Log)))
+	if err := app.ProxyManager.HookDefaultTransport(); err != nil {
+		return nil, err
+	}
+
+	watchCtx, watchCancel := context.WithCancel(app.ctx)
+	app.proxyWatchStop = watchCancel
+
+	go func() {
+		// WatchFile logs its own setup failures; empty path keeps
+		// environment-based settings.
+		_ = app.ProxyManager.WatchFile(watchCtx, config.ProxyConfigFile)
+	}()
+
+	if outErr = app.initUploadFileClient(config); outErr != nil {
+		return nil, outErr
+	}
+
 	if preSign, err := presign.NewPreSigned(app.Config().PreSignedCertificateLocation); err != nil {
 		return nil, errors.Wrapf(err, "unable to load certificate file")
 	} else {
@@ -254,6 +282,29 @@ func New(options ...string) (outApp *App, outErr error) {
 	}
 
 	return app, outErr
+}
+
+// initUploadFileClient builds the HTTP client used by the UploadFileUrl API.
+// The legacy proxy_upload setting, when set, keeps the previous static-proxy
+// behavior and takes precedence over the dynamic proxy manager.
+func (app *App) initUploadFileClient(config *model.Config) error {
+	if config.ProxyUploadUrl == "" {
+		// No timeout: parity with http.DefaultClient, the URL may point to a
+		// file of arbitrary size.
+		app.uploadFileClient = app.ProxyManager.Client(0)
+		return nil
+	}
+	proxyURL, err := url.Parse(config.ProxyUploadUrl)
+	if err != nil {
+		return errors.Wrapf(err, "unable to parse proxy_upload url")
+	}
+	app.uploadFileClient = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
+
+	return nil
+}
+
+func (app *App) UploadFileClient() *http.Client {
+	return app.uploadFileClient
 }
 
 // in DB directory.wbt_class `files` object is called `record_file`
@@ -448,12 +499,17 @@ func (app *App) initLocalFileStores() model.AppError {
 
 	return nil
 }
+
 func (app *App) UseDefaultStore() bool {
 	return app.DefaultFileStore != nil
 }
 
 func (app *App) Shutdown() {
 	wlog.Info("Stopping Server...")
+
+	if app.proxyWatchStop != nil {
+		app.proxyWatchStop()
+	}
 
 	if app.Srv.Server != nil {
 		app.Srv.Server.Close()
