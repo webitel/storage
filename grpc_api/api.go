@@ -28,7 +28,7 @@ func Init(a *app.App, server *grpc.Server) {
 	api.backendProfiles = NewBackendProfileApi(ctrl)
 	api.cognitiveProfile = NewCognitiveProfileApi(ctrl)
 	api.media = NewMediaApi(ctrl, a)
-	api.file = NewFileApi(a.Config().ProxyUploadUrl, a.Config().ServiceSettings.PublicHost, ctrl)
+	api.file = NewFileApi(a.UploadFileClient(), a.Config().ServiceSettings.PublicHost, ctrl)
 	api.fileTranscript = NewFileTranscriptApi(ctrl)
 	api.importTemplate = NewImportTemplateApi(ctrl)
 	api.filePolicies = NewFilePoliciesApi(ctrl)
