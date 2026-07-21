@@ -43,8 +43,8 @@ func Google(params TTSParams) (io.ReadCloser, *string, *int, error) {
 		// Select the type of audio file you want returned.
 		AudioConfig: &texttospeechpb.AudioConfig{
 			AudioEncoding: texttospeechpb.AudioEncoding_LINEAR16,
-			SpeakingRate:  1,
-			Pitch:         1,
+			//SpeakingRate:  1,
+			//Pitch:         1,
 			//VolumeGainDb:     0,
 			SampleRateHertz: 8000,
 			//EffectsProfileId: nil,
