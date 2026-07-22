@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/webitel/storage/model"
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 	"github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
-	"strconv"
-	"time"
 )
 
 type WatcherObserver interface {
@@ -178,6 +179,10 @@ func getDomainID(args map[string]any) (int64, error) {
 func classifyTriggerObject(obj any) (string, error) {
 	switch v := obj.(type) {
 	case *model.File:
+		if *v.GetChannel() == model.UploadFileChannelCall {
+			return model.UploadFileChannelCall, nil
+		}
+
 		if v.Channel != nil {
 			return fmt.Sprintf("%s_files", *v.Channel), nil
 		}

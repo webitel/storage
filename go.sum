@@ -357,6 +357,8 @@ github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3 h1:CGi0a21x
 github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3/go.mod h1:15PVfPhimD18i+1ARcWq5ZZ8P5ugjpriGIT1+5/bDEw=
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8 h1:3++AqBWhwSUuhOSNcrSOpW8UdFaUn/CsXm++zzichCI=
 github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8/go.mod h1:xLS6bkOYzvYv0dYXUkd5yvYOtujUrXf9lS0gd4qAGO4=
+github.com/webitel/webitel-go-kit v0.0.23-0.20260722105243-203af541f8ab h1:vNPRiVG9M3RFa+7+qj2yDw2VKd1BQXf9r3V/tzwJ3AA=
+github.com/webitel/webitel-go-kit v0.0.23-0.20260722105243-203af541f8ab/go.mod h1:fd+quFgNKGovcOXt73pgfT9tDbO6v9toSKZENOQ/lB4=
 github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf84692 h1:3D3EXyPbZSEgtVUQ0k6GY7reZooJ8o7AaNm2Z66diuc=
 github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf84692/go.mod h1:lT5enykvkI6K5Y+OKs8vKwNeUuPDBGlGO16msti72Fg=
 github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d h1:iKhk7+ocx0mAHp56CobtIj2/Ut4Ssg9gPN/OKnQLYaY=
@@ -367,6 +369,8 @@ github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1e
 github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1ee94622655d/go.mod h1:+5O2h7XTCT02QNWM7Z3DHWCDT6Eccy5FjGKQFukfngU=
 github.com/webitel/webitel-go-kit/pkg/watcher v0.0.0-20250605113615-1ee94622655d h1:b/qksLw4hr5rPuu1dgvVQ3AiC6Xb+y+yjqWx5GWaZZ0=
 github.com/webitel/webitel-go-kit/pkg/watcher v0.0.0-20250605113615-1ee94622655d/go.mod h1:Qff7/0GgVvVkq8drvRhl5oEdm2gBRkAJjYwvH1VkSS8=
+github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab h1:1B1GKv5o1FS1agw590ZZLXnkrvEPOCgUPx+Aukic5mM=
+github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab/go.mod h1:Qff7/0GgVvVkq8drvRhl5oEdm2gBRkAJjYwvH1VkSS8=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7 h1:Qi/ustGBfh13I6aZ/ljul679SPJmHbZzFn9h43eloLg=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7/go.mod h1:mXyM8hL9tEBLM4K+Uw8QLuGLo6/eX+5Lvv1ks2Y4us8=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=

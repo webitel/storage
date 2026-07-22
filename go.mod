@@ -31,7 +31,7 @@ require (
 	github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/otel v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1ee94622655d
-	github.com/webitel/webitel-go-kit/pkg/watcher v0.0.0-20250605113615-1ee94622655d
+	github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab
 	github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0
@@ -95,6 +95,7 @@ require (
 	github.com/poy/onpar v1.1.2 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/webitel/webitel-go-kit v0.0.23-0.20260722105243-203af541f8ab // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect

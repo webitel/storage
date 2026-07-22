@@ -343,6 +343,7 @@ func (app *App) initWatchers(config *model.Config) error {
 		watcher.Attach(watcherkit.EventTypeUpdate, mq)
 		watcher.Attach(watcherkit.EventTypeDelete, mq)
 		watcher.Attach(watcherkit.EventTypeResolutionTime, mq)
+		watcher.Attach(watcherkit.EventTypeRecordCall, mq)
 	}
 
 	app.watcherManager.AddWatcher(model.PermissionScopeFiles, watcher)
@@ -535,6 +536,8 @@ func (app *App) Shutdown() {
 		app.otelShutdownFunc(app.ctx)
 	}
 }
+
+func (a *App) WatcherManager() watcherkit.Manager { return a.watcherManager }
 
 func (a *App) Handle404(w http.ResponseWriter, r *http.Request) {
 	err := model.NewNotFoundError("api.context.404.app_error", r.URL.String())
