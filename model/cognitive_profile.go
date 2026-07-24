@@ -91,9 +91,12 @@ func (f *CognitiveProfile) Patch(path *CognitiveProfilePath) {
 	}
 
 	if path.Properties != nil {
-		if oldAccessKey, newAccessKey := f.Properties.GetString(CognitiveProfileKeyField), path.Properties.GetString(CognitiveProfileKeyField); newAccessKey == "" {
-			f.Properties[CognitiveProfileKeyField] = oldAccessKey
+		if path.Properties.GetString(CognitiveProfileKeyField) == "" {
+			if oldKey, ok := f.Properties[CognitiveProfileKeyField]; ok {
+				(*path.Properties)[CognitiveProfileKeyField] = oldKey
+			}
 		}
+
 		f.Properties = *path.Properties
 	}
 
