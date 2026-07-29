@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -16,8 +17,6 @@ import (
 	"time"
 
 	"github.com/webitel/storage/model"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -25,9 +24,7 @@ const (
 	HookName   = "Webitel STT"
 )
 
-var (
-	ErrNotFound = errors.New("Not found files")
-)
+var ErrNotFound = errors.New("Not found files")
 
 type client struct {
 	id        int
@@ -52,9 +49,9 @@ type transcriptRequest struct {
 		WordLevelTimestampsEnabled bool   `json:"wordLevelTimestampsEnabled"`
 		ProfanityFilterMode        string `json:"profanityFilterMode"`
 	} `json:"properties"`
-	Locale           string                 `json:"locale"`
-	DisplayName      string                 `json:"displayName"`
-	CustomProperties map[string]interface{} `json:"customProperties"`
+	Locale           string         `json:"locale"`
+	DisplayName      string         `json:"displayName"`
+	CustomProperties map[string]any `json:"customProperties"`
 }
 
 type File struct {
@@ -104,9 +101,9 @@ type Task struct {
 			Message string `json:"message"`
 		} `json:"error"`
 	} `json:"properties"`
-	CustomProperties map[string]interface{} `json:"customProperties"`
-	Code             *string                `json:"code"`
-	Message          *string                `json:"message"`
+	CustomProperties map[string]any `json:"customProperties"`
+	Code             *string        `json:"code"`
+	Message          *string        `json:"message"`
 }
 
 func NewClient(config Config) (*client, error) {
@@ -121,7 +118,7 @@ func NewClient(config Config) (*client, error) {
 		signature: hex.EncodeToString(h.Sum(nil)),
 	}
 
-	//c.getWebHook()
+	// c.getWebHook()
 
 	return c, nil
 }
@@ -169,7 +166,7 @@ func (c *client) Transcript(ctx context.Context, id int64, fileUri, locale strin
 	return res, nil
 }
 
-func (c *client) Callback(req map[string]interface{}) error {
+func (c *client) Callback(req map[string]any) error {
 	panic("TODO")
 }
 
@@ -177,8 +174,7 @@ func (t Task) Finished() bool {
 	return t.Status == "Succeeded" || t.Status == "Failed"
 }
 
-func (c *client) TranscriptJob(fileId int64, fileUrl string, locale string) (*Task, error) {
-
+func (c *client) TranscriptJob(fileId int64, fileUrl, locale string) (*Task, error) {
 	tr := &transcriptRequest{
 		ContentUrls: []string{fileUrl},
 		Properties: struct {
@@ -190,7 +186,7 @@ func (c *client) TranscriptJob(fileId int64, fileUrl string, locale string) (*Ta
 		},
 		Locale:      locale,
 		DisplayName: fmt.Sprintf("Transcription using default model for %s", locale),
-		CustomProperties: map[string]interface{}{
+		CustomProperties: map[string]any{
 			"FileId": fileId,
 		},
 	}
@@ -326,20 +322,19 @@ func (c *client) GetFiles(t *Task) ([]*File, error) {
 }
 
 func (c *client) WaitFoSuccess(ctx context.Context, t *Task) (ok bool, err error) {
-
 	for {
 		select {
 		case <-ctx.Done():
-			return
+			return ok, err
 		case <-time.After(time.Second * 10):
 			if ok, err = c.Finished(t); ok || err != nil {
-				return
+				return ok, err
 			}
 		}
 	}
 }
 
-func (c *client) getWebHook() (interface{}, error) {
+func (c *client) getWebHook() (any, error) {
 	var data []byte
 
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/speechtotext/v3.0/webhooks", c.host), nil)
@@ -388,7 +383,6 @@ func (c *client) getWebHook() (interface{}, error) {
 }
 
 func (c *client) testHook(h Hook) error {
-
 	req, err := http.NewRequest("POST", h.Links.Test, nil)
 	if err != nil {
 		return err
@@ -446,7 +440,7 @@ func (c *client) registerWebHook(uri string) (*Hook, error) {
 func getTranscript(data []byte) ([]model.TranscriptPhrase, []model.TranscriptChannel) {
 	var n Transcript
 	if err := json.Unmarshal(data, &n); err != nil {
-		//TODO error
+		// TODO error
 		return nil, nil
 	}
 

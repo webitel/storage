@@ -20,7 +20,6 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pborman/uuid v1.2.1
-	github.com/pkg/errors v0.9.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine/pkg/discovery v0.0.0-20250925094226-59b6a9641d79
@@ -31,7 +30,7 @@ require (
 	github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/otel v0.0.0-20250605113615-1ee94622655d
 	github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1ee94622655d
-	github.com/webitel/webitel-go-kit/pkg/watcher v0.0.0-20250605113615-1ee94622655d
+	github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab
 	github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7
 	go.opentelemetry.io/otel v1.36.0
 	go.opentelemetry.io/otel/sdk v1.36.0
@@ -91,6 +90,7 @@ require (
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/poy/onpar v1.1.2 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect

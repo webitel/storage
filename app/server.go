@@ -2,19 +2,20 @@ package app
 
 import (
 	"fmt"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
-	"github.com/webitel/storage/store"
-	"github.com/webitel/wlog"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+
+	"github.com/webitel/wlog"
+
+	"github.com/webitel/storage/store"
 )
 
 type Server struct {
-
 	// RootRouter is the starting point for all HTTP requests to the server.
 	RootRouter *mux.Router
 
@@ -29,15 +30,14 @@ type Server struct {
 	didFinishListen chan struct{}
 }
 
-type RecoveryLogger struct {
-}
+type RecoveryLogger struct{}
 
 type CorsWrapper struct {
 	router *mux.Router
 }
 
 func (cw *CorsWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//TODO
+	// TODO
 	if r.Header.Get("Origin") == "" {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 	} else {
@@ -60,7 +60,7 @@ func (cw *CorsWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cw.router.ServeHTTP(w, r)
 }
 
-func (rl *RecoveryLogger) Println(i ...interface{}) {
+func (rl *RecoveryLogger) Println(i ...any) {
 	wlog.Error("Please check the std error output for the stack trace")
 	wlog.Error(fmt.Sprint(i))
 }
@@ -78,8 +78,7 @@ func (a *App) StartServer() error {
 	addr := a.Config().ServiceSettings.ListenAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		errors.Wrapf(err, "Error starting server, err:%v", err)
-		return err
+		return fmt.Errorf("error starting server: %w", err)
 	}
 
 	a.Srv.ListenAddr = listener.Addr().(*net.TCPAddr)
@@ -113,8 +112,7 @@ func (a *App) StartInternalServer() error {
 	addr := a.Config().ServiceSettings.ListenInternalAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		errors.Wrapf(err, "Error starting server, err:%v", err)
-		return err
+		return fmt.Errorf("error starting server: %w", err)
 	}
 
 	a.InternalSrv.ListenAddr = listener.Addr().(*net.TCPAddr)

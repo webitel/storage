@@ -172,6 +172,10 @@ func (f *BaseFile) SetPolicyId(id int) {
 }
 
 func (f *BaseFile) GetChannel() *string {
+	if f.Channel == nil {
+		return new(string)
+	}
+
 	return f.Channel
 }
 
