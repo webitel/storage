@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -199,7 +198,7 @@ func New(options ...string) (outApp *App, outErr error) {
 	}
 
 	if preSign, err := presign.NewPreSigned(app.Config().PreSignedCertificateLocation); err != nil {
-		return nil, errors.Wrapf(err, "unable to load certificate file")
+		return nil, fmt.Errorf("unable to load certificate file: %w", err)
 	} else {
 		app.preSigned = preSign
 	}
@@ -258,8 +257,7 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 
-	err := app.makeLoggerPublisher(app.rabbitConn)
-	if err != nil {
+	if err := app.makeLoggerPublisher(app.rabbitConn); err != nil {
 		return nil, err
 	}
 	//-------- Logger init -----------
@@ -296,7 +294,7 @@ func (app *App) initUploadFileClient(config *model.Config) error {
 	}
 	proxyURL, err := url.Parse(config.ProxyUploadUrl)
 	if err != nil {
-		return errors.Wrapf(err, "unable to parse proxy_upload url")
+		return fmt.Errorf("unable to parse proxy_upload url: %w", err)
 	}
 	app.uploadFileClient = &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
 
@@ -322,7 +320,7 @@ func (app *App) initWatchers(config *model.Config) error {
 	if config.LoggerWatcher.Enabled {
 		obs, err := NewLoggerObserver(app.wtelLogger, filesObj, defaultLogTimeout)
 		if err != nil {
-			return errors.Wrap(err, "app.upload.create_observer.app")
+			return fmt.Errorf("app.upload.create_observer.app: %w", err)
 		}
 		watcher.Attach(watcherkit.EventTypeCreate, obs)
 		watcher.Attach(watcherkit.EventTypeUpdate, obs)
@@ -337,7 +335,7 @@ func (app *App) initWatchers(config *model.Config) error {
 			app.Log,
 		)
 		if err != nil {
-			return errors.Wrap(err, "app.upload.create_mq_observer.app")
+			return fmt.Errorf("app.upload.create_mq_observer.app: %w", err)
 		}
 		watcher.Attach(watcherkit.EventTypeCreate, mq)
 		watcher.Attach(watcherkit.EventTypeUpdate, mq)
@@ -358,7 +356,7 @@ func (app *App) initListeners() error {
 
 	err := eventConsumer.SetupRabbitConsumer(app.rabbitConn)
 	if err != nil {
-		return errors.Wrap(err, "app.listener.setup_multi_event_consumer")
+		return fmt.Errorf("app.upload.setup_multi_event_consumer: %w", err)
 	}
 
 	app.rabbitConsumer = eventConsumer

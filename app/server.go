@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -79,8 +78,7 @@ func (a *App) StartServer() error {
 	addr := a.Config().ServiceSettings.ListenAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		errors.Wrapf(err, "Error starting server, err:%v", err)
-		return err
+		return fmt.Errorf("error starting server: %w", err)
 	}
 
 	a.Srv.ListenAddr = listener.Addr().(*net.TCPAddr)
@@ -114,8 +112,7 @@ func (a *App) StartInternalServer() error {
 	addr := a.Config().ServiceSettings.ListenInternalAddress
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		errors.Wrapf(err, "Error starting server, err:%v", err)
-		return err
+		return fmt.Errorf("error starting server: %w", err)
 	}
 
 	a.InternalSrv.ListenAddr = listener.Addr().(*net.TCPAddr)
