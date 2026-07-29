@@ -2,15 +2,17 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/storage/utils"
-	"github.com/webitel/wlog"
 	"io"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/webitel/wlog"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 )
 
 var safeUploadProcess *utils.Cache = utils.NewLru(4000)
