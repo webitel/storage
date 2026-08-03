@@ -33,7 +33,7 @@ type TTSParams struct {
 		FadeIn  int64
 		FadeOut int64
 	}
-	//google
+	// google
 	SpeakingRate     float64  `json:"-"`
 	Pitch            float64  `json:"-"`
 	VolumeGainDb     float64  `json:"-"`
