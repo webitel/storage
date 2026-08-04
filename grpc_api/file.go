@@ -371,6 +371,9 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 
 // Remote Content-Type is unreliable (e.g. S3 returns "image" instead of "image/jpeg"),
 // so on invalid header we sniff the actual bytes and only trust clientHint as a last resort.
+// Resolution is best-effort and never rejects the upload: whether the resolved
+// type is acceptable is decided by the file policy layer, which honors the
+// enabled/disabled state of domain policies.
 func resolveUrlUploadMime(res *http.Response, clientHint string) (io.ReadCloser, string, model.AppError) {
 	if clientHint != "" {
 		if parsedHint, _, err := mime.ParseMediaType(clientHint); err == nil {
@@ -396,15 +399,12 @@ func resolveUrlUploadMime(res *http.Response, clientHint string) (io.ReadCloser,
 	kind, _ := filetype.Match(head)
 	switch {
 	case kind != filetype.Unknown:
-		detected := kind.MIME.Value
-		if clientHint != "" && clientHint != detected {
-			return nil, "", model.PolicyErrorExtSuspicious
-		}
-		return body, detected, nil
+		// actual bytes win over the client-declared type
+		return body, kind.MIME.Value, nil
 	case clientHint != "":
 		return body, clientHint, nil
 	default:
-		return nil, "", model.PolicyErrorExtUnknown
+		return body, "application/octet-stream", nil
 	}
 }
 
