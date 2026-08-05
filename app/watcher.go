@@ -76,7 +76,7 @@ func (cao *TriggerObserver[T, V]) Update(et watcher.EventType, args map[string]a
 	routingKey := cao.getRoutingKeyByEventType("cases", objStr, et, domainId)
 	cao.logger.Debug(fmt.Sprintf("trying to publish message to %s", routingKey))
 
-	return cao.amqpPublisher.Publish(context.Background(), routingKey, data, amqp091.Table{})
+	return cao.amqpPublisher.Publish(context.Background(), cao.config.Exchange, routingKey, data, amqp091.Table{})
 }
 
 func (cao *TriggerObserver[T, V]) getRoutingKeyByEventType(

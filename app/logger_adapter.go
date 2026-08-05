@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	amqp "github.com/rabbitmq/amqp091-go"
+
 	broker "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 )
 
@@ -11,12 +11,8 @@ type LoggerAdapter struct {
 	publisher broker.Publisher
 }
 
-func (l *LoggerAdapter) Publish(ctx context.Context, routingKey string, body []byte, headers map[string]interface{}) error {
-	amqpHeaders := amqp.Table{}
-	for k, v := range headers {
-		amqpHeaders[k] = v
-	}
-	return l.publisher.Publish(ctx, routingKey, body, amqpHeaders)
+func (l *LoggerAdapter) Publish(ctx context.Context, exchange, routingKey string, body []byte) error {
+	return l.publisher.Publish(ctx, exchange, routingKey, body, nil)
 }
 
 // NewLoggerAdapter constructs a LoggerAdapter with the given Publisher.
