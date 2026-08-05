@@ -261,9 +261,7 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 	//-------- Logger init -----------
-	logger, err := wlogger.New(
-		wlogger.WithPublisher(NewLoggerAdapter(app.loggerPublisher)),
-	)
+	logger, err := wlogger.New(NewLoggerAdapter(app.loggerPublisher))
 	if err != nil {
 		return nil, err
 	}
@@ -392,12 +390,7 @@ func (app *App) makeLoggerPublisher(conn *rabbitmq.Connection) error {
 		return fmt.Errorf("logger publisher config error: %w", err)
 	}
 
-	publisher, err := rabbitmq.NewPublisher(
-		conn,
-		exchangeCfg,
-		pubCfg,
-		wlogadapter.NewWlogLogger(app.Log),
-	)
+	publisher, err := rabbitmq.NewPublisher(conn, pubCfg, wlogadapter.NewWlogLogger(app.Log))
 	if err != nil {
 		return fmt.Errorf("create logger publisher error: %w", err)
 	}
@@ -444,18 +437,13 @@ loop:
 	}
 
 	// Publisher config
-	pubCfg, err := rabbitmq.NewPublisherConfig()
+	pubCfg, err := rabbitmq.NewPublisherConfig(rabbitmq.WithConfirmation(false))
 	if err != nil {
 		return fmt.Errorf("rabbitmq publisher config error: %w", err)
 	}
 
 	// Create publisher
-	publisher, err := rabbitmq.NewPublisher(
-		conn,
-		exchangeCfg,
-		pubCfg,
-		wlogadapter.NewWlogLogger(app.Log),
-	)
+	publisher, err := rabbitmq.NewPublisher(conn, pubCfg, wlogadapter.NewWlogLogger(app.Log))
 	if err != nil {
 		return fmt.Errorf("rabbitmq publisher error: %w", err)
 	}

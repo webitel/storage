@@ -314,6 +314,8 @@ github.com/prometheus/procfs v0.0.8/go.mod h1:7Qr8sr6344vo1JqZ6HhLceV9o3AJ1Ff+Gx
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/rabbitmq/amqp091-go v1.10.0 h1:STpn5XsHlHGcecLmMFCtg7mqq0RnD+zFr4uzukfVhBw=
 github.com/rabbitmq/amqp091-go v1.10.0/go.mod h1:Hy4jKW5kQART1u+JkDTF9YYOQUHXqMuhrgxOEeS7G4o=
+github.com/rabbitmq/amqp091-go v1.13.0 h1:L8NA1WtF76C6KA3LAoufjfLgbist/If1UQYcsOjtxXA=
+github.com/rabbitmq/amqp091-go v1.13.0/go.mod h1:Hy4jKW5kQART1u+JkDTF9YYOQUHXqMuhrgxOEeS7G4o=
 github.com/robfig/cron v1.2.0 h1:ZjScXvvxeQ63Dbyxy76Fj3AT3Ut0aKsyd2/tl3DTMuQ=
 github.com/robfig/cron v1.2.0/go.mod h1:JGuDeoQd7Z6yL4zQhZ3OPEVHB7fL6Ka6skscFHfmt2k=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
@@ -361,10 +363,14 @@ github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf8
 github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf84692/go.mod h1:lT5enykvkI6K5Y+OKs8vKwNeUuPDBGlGO16msti72Fg=
 github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d h1:iKhk7+ocx0mAHp56CobtIj2/Ut4Ssg9gPN/OKnQLYaY=
 github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20250605113615-1ee94622655d/go.mod h1:yxlOlLlcLKAYumTnxUPxZa0dYZFYtAcsbJMihtAWdIY=
+github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20260803090450-fac61ca3df42 h1:VAVlkbjDem6MZV6GLPwlIr1XzJ6Q7HP3WpeMMQekJG8=
+github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20260803090450-fac61ca3df42/go.mod h1:yxlOlLlcLKAYumTnxUPxZa0dYZFYtAcsbJMihtAWdIY=
 github.com/webitel/webitel-go-kit/infra/otel v0.0.0-20250605113615-1ee94622655d h1:gxutB8/OKMZpFidgxOzQV9CHNFq17wlT9zLQJiqha8M=
 github.com/webitel/webitel-go-kit/infra/otel v0.0.0-20250605113615-1ee94622655d/go.mod h1:tbGmdVdDdUbfsI2wpOoMj7dlmgwaKQFmIoAbaWPS7j4=
 github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1ee94622655d h1:o1Kjrxe2xz1kWL5FjJCmPUzHcyG8GP2xK1mON8k6izQ=
 github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20250605113615-1ee94622655d/go.mod h1:+5O2h7XTCT02QNWM7Z3DHWCDT6Eccy5FjGKQFukfngU=
+github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20260805141401-a321786262f8 h1:yVXHtN0r/XSahAqDBH4wNv9aX3VB+Gcatsw8cPyFN0M=
+github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.0.0-20260805141401-a321786262f8/go.mod h1:bPIqEVkt3pJFB/KqfEOBlZV6SlOOC1wusg6BQYcD1Wk=
 github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab h1:1B1GKv5o1FS1agw590ZZLXnkrvEPOCgUPx+Aukic5mM=
 github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab/go.mod h1:Qff7/0GgVvVkq8drvRhl5oEdm2gBRkAJjYwvH1VkSS8=
 github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7 h1:Qi/ustGBfh13I6aZ/ljul679SPJmHbZzFn9h43eloLg=
