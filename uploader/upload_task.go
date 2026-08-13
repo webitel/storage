@@ -3,13 +3,14 @@ package uploader
 import (
 	"fmt"
 	"io"
+	"time"
 
-	"github.com/webitel/storage/utils"
 	"github.com/webitel/webitel-go-kit/pkg/watcher"
+	"github.com/webitel/wlog"
 
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
+	"github.com/webitel/storage/utils"
 )
 
 type UploadTask struct {
@@ -22,11 +23,9 @@ func (u *UploadTask) Name() string {
 	return u.job.Uuid
 }
 
-//TODO added max count attempts ?
-
+// TODO added max count attempts ?
 func (u *UploadTask) Execute() {
 	store, err := u.app.GetFileBackendStore(u.job.ProfileId, u.job.ProfileUpdatedAt)
-
 	if err != nil {
 		u.storeError(err)
 		return
@@ -70,6 +69,11 @@ func (u *UploadTask) Execute() {
 			u.storeError(err)
 		}
 		return
+	}
+
+	if f.RetentionUntil == nil && store.ExpireDay() > 0 {
+		t := time.Now().AddDate(0, 0, store.ExpireDay())
+		f.RetentionUntil = &t
 	}
 
 	u.log.Debug(fmt.Sprintf("store %s to %s %d bytes [encrypted=%v]", u.job.GetStoreName(), store.Name(), u.job.Size, f.IsEncrypted()))
