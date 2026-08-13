@@ -53,7 +53,7 @@ func (app *App) GetMediaFile(domainId int64, id int) (mf *model.MediaFile, err m
 	if mf != nil {
 		mf.Channel = model.NewString(model.UploadFileChannelMedia)
 	}
-	return
+	return mf, err
 }
 
 func (app *App) DeleteMediaFile(domainId int64, id int) (*model.MediaFile, model.AppError) {
@@ -82,15 +82,14 @@ func (app *App) GetMediaFileByName(name, domain string) (*model.MediaFile, model
 }
 
 func (app *App) RemoveMediaFileByName(name, domain string) (file *model.MediaFile, err model.AppError) {
-
 	file, err = app.GetMediaFileByName(name, domain)
 	if err != nil {
-		return
+		return file, err
 	}
 
 	err = app.MediaFileStore.Remove(file)
 	if err != nil {
-		return
+		return file, err
 	}
 
 	result := <-app.Store.MediaFile().DeleteById(file.Id)
