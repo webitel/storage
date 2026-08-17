@@ -4,16 +4,19 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/golang-lru/v2/expirable"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/storage/utils"
-	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
-	"github.com/webitel/wlog"
-	"golang.org/x/sync/singleflight"
 	"io"
 	"os"
 	"path"
 	"time"
+
+	"github.com/hashicorp/golang-lru/v2/expirable"
+	"golang.org/x/sync/singleflight"
+
+	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
+	"github.com/webitel/wlog"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 )
 
 var (
@@ -262,7 +265,6 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 
 // syncUpload здійснює запис файлу до файлового сховища
 func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.JobUploadFile, profileId *int) (*model.File, model.AppError) {
-
 	if file.CreatedAt == 0 {
 		file.CreatedAt = model.GetMillis()
 	}
@@ -303,6 +305,12 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 	f.Size = size
 	f.SHA256Sum = &sha
 
+	if f.RetentionUntil == nil && store.ExpireDay() > 0 {
+		t := time.Now().AddDate(0, 0, store.ExpireDay())
+		file.RetentionUntil = &t
+		f.RetentionUntil = &t
+	}
+
 	return f, nil
 }
 
@@ -317,7 +325,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 
 	wlog.Debug(fmt.Sprintf("stored %s in %s, %d bytes [encrypted=%v, SHA256=%v, clamd=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil, file.BaseFile.StringMalware()))
 
-	//TODO
+	// TODO
 	if file.Channel != nil && *file.Channel == model.UploadFileChannelCase {
 		if notifyErr := app.watcherManager.Notify(
 			model.PermissionScopeFiles,

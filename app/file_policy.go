@@ -3,20 +3,21 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/h2non/filetype"
-	"github.com/juju/ratelimit"
-	"github.com/webitel/storage/model"
-	"github.com/webitel/storage/utils"
-	"github.com/webitel/wlog"
-	"golang.org/x/sync/singleflight"
 	"io"
 	"strings"
 	"time"
+
+	"github.com/h2non/filetype"
+	"github.com/juju/ratelimit"
+	"golang.org/x/sync/singleflight"
+
+	"github.com/webitel/wlog"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/utils"
 )
 
-var (
-	policiesStoreGroup singleflight.Group
-)
+var policiesStoreGroup singleflight.Group
 
 type PolicyReader struct {
 	name       string
@@ -48,11 +49,9 @@ type PoliciesHub struct {
 	log      *wlog.Logger
 }
 
-var (
-	FilePolicyAllowAll = &FilePolicy{
-		mime: []string{"*"},
-	}
-)
+var FilePolicyAllowAll = &FilePolicy{
+	mime: []string{"*"},
+}
 
 type DomainFilePolicy struct {
 	app      *App
@@ -60,7 +59,7 @@ type DomainFilePolicy struct {
 }
 
 func (app *App) FilePolicyForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
-	//TODO for old files
+	// TODO for old files
 	if file.Channel == nil {
 		return src, nil
 	}
@@ -81,7 +80,6 @@ func (app *App) policiesHub(domainId int64) (*PoliciesHub, model.AppError) {
 }
 
 func (app *App) newPoliciesHub(domainId int64, policies []model.FilePolicy) *PoliciesHub {
-
 	h := PoliciesHub{
 		channels: make(map[string][]*FilePolicy),
 		id:       domainId,
@@ -120,7 +118,7 @@ func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, model.AppError) {
 		return h.(*PoliciesHub), nil
 	}
 
-	h, err, shared = policiesStoreGroup.Do(fmt.Sprintf("%d", domainId), func() (interface{}, error) {
+	h, err, shared = policiesStoreGroup.Do(fmt.Sprintf("%d", domainId), func() (any, error) {
 		h, err := app.policiesHub(domainId)
 		if err != nil {
 			return nil, err
@@ -254,14 +252,14 @@ func (ph *PoliciesHub) Policy(channel *string, mime string) (*FilePolicy, model.
 func (r *PolicyReader) Read(buf []byte) (n int, err error) {
 	n, err = r.r.Read(buf)
 	if n <= 0 {
-		return
+		return n, err
 	}
 	r.bytesCount += int64(n)
 
 	if r.maxSize > 0 && r.bytesCount > r.maxSize {
 		err = model.PolicyErrorMaxLimit
 		n = 0
-		return
+		return n, err
 	}
 
 	if r.mimeTyme == "" {
@@ -276,7 +274,7 @@ func (r *PolicyReader) Read(buf []byte) (n int, err error) {
 		r.bucket.Wait(int64(n))
 	}
 
-	return
+	return n, err
 }
 
 func (r *PolicyReader) Close() (err error) {
