@@ -3,12 +3,14 @@ package uploader
 import (
 	"fmt"
 	"io"
+	"time"
 
-	"github.com/webitel/storage/utils"
+	"github.com/webitel/webitel-go-kit/pkg/watcher"
+	"github.com/webitel/wlog"
 
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
+	"github.com/webitel/storage/utils"
 )
 
 type UploadTask struct {
@@ -21,11 +23,9 @@ func (u *UploadTask) Name() string {
 	return u.job.Uuid
 }
 
-//TODO added max count attempts ?
-
+// TODO added max count attempts ?
 func (u *UploadTask) Execute() {
 	store, err := u.app.GetFileBackendStore(u.job.ProfileId, u.job.ProfileUpdatedAt)
-
 	if err != nil {
 		u.storeError(err)
 		return
@@ -71,6 +71,11 @@ func (u *UploadTask) Execute() {
 		return
 	}
 
+	if f.RetentionUntil == nil && store.ExpireDay() > 0 {
+		t := time.Now().AddDate(0, 0, store.ExpireDay())
+		f.RetentionUntil = &t
+	}
+
 	u.log.Debug(fmt.Sprintf("store %s to %s %d bytes [encrypted=%v]", u.job.GetStoreName(), store.Name(), u.job.Size, f.IsEncrypted()))
 
 	result := <-u.app.Store.File().MoveFromJob(u.job.Id, u.job.ProfileId, f.Properties, f.RetentionUntil)
@@ -82,6 +87,10 @@ func (u *UploadTask) Execute() {
 
 	u.removeCacheFile()
 	u.log.Debug(fmt.Sprintf("finish upload task %d [%s]", u.job.Id, u.Name()))
+
+	if *u.job.GetChannel() == model.UploadFileChannelCall {
+		u.app.WatcherManager().Notify(model.PermissionScopeFiles, watcher.EventTypeRecordCall, app.NewFileWatcherData(f))
+	}
 }
 
 func (u *UploadTask) cancelUpload(err model.AppError) {
