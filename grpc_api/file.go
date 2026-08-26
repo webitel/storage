@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/h2non/filetype"
+	"github.com/pborman/uuid"
 
 	"github.com/webitel/wlog"
 
@@ -771,6 +772,76 @@ func (api *file) SearchScreenRecordingsByAgent(ctx context.Context, in *storage.
 	}
 
 	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search, screenrecordingChannel)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*storage.File, 0, len(output))
+	for _, v := range output {
+		items = append(items, toGrpcFile(v))
+	}
+
+	return &storage.ListFile{
+		Next:  !next,
+		Items: items,
+	}, nil
+}
+
+func (api *file) SearchScreenRecordingsByCall(ctx context.Context, in *storage.SearchScreenRecordingsByCallRequest) (*storage.ListFile, error) {
+	session, err := api.ctrl.GetSessionFromCtx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	callID := in.GetCallId()
+	if callID == "" {
+		return nil, model.NewBadRequestError("grpc.screen_file", "call_id is required")
+	}
+	if uuid.Parse(callID) == nil {
+		return nil, model.NewBadRequestError("grpc.screen_file", "call_id must be a valid UUID")
+	}
+
+	search := &model.SearchFile{
+		ListRequest: model.ListRequest{
+			Q:       in.GetQ(),
+			Page:    int(in.GetPage()),
+			PerPage: int(in.GetSize()),
+			Fields:  in.Fields,
+			Sort:    in.Sort,
+		},
+		Ids:          in.Id,
+		ReferenceIds: in.ReferenceId,
+		Removed:      model.NewBool(false),
+		Channels:     []string{},
+		CallId:       &callID,
+	}
+
+	switch in.GetType() {
+	case storage.ScreenrecordingType_PDF:
+		search.Channels = []string{"pdf"}
+	case storage.ScreenrecordingType_SCREENSHOT:
+		search.Channels = []string{"screenshot"}
+	case storage.ScreenrecordingType_SCREENSHARING:
+		search.Channels = []string{"screenrecording"}
+	default:
+		return nil, model.NewBadRequestError("grpc.screen_file", "bad type")
+	}
+
+	if in.UploadedAt != nil {
+		search.UploadedAt = &model.FilterBetween{
+			From: in.GetUploadedAt().GetFrom(),
+			To:   in.GetUploadedAt().GetTo(),
+		}
+	}
+
+	if in.RetentionUntil != nil {
+		search.RetentionUntil = &model.FilterBetween{
+			From: in.GetRetentionUntil().GetFrom(),
+			To:   in.GetRetentionUntil().GetTo(),
+		}
+	}
+
+	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search, "call")
 	if err != nil {
 		return nil, err
 	}
