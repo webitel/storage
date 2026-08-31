@@ -98,6 +98,7 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 	f := map[string]interface{}{
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
+		"CallId":       search.CallId,
 		"ReferenceIds": pq.Array(search.ReferenceIds),
 		"MimeTypes":    pq.Array(mimeFilters),
 		"UserId":       pq.Array(search.UploadedBy),
@@ -117,6 +118,17 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)
 		and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
         and (:Channel::varchar isnull or channel = :Channel::varchar)
+		and (:CallId::varchar isnull or (uuid = (select x.id
+                                           from (select coalesce(c.parent_id, c.id)::varchar id
+                                                 from call_center.cc_calls c
+                                                 where c.id = :CallId::uuid
+                                                   and c.domain_id = :DomainId::int8
+                                                 union all
+                                                 select coalesce(c.parent_id, c.id)::varchar id
+                                                 from call_center.cc_calls_history c
+                                                 where c.id = :CallId::uuid
+                                                   and c.domain_id = :DomainId::int8) x
+                                           limit 1)))
 		and (:AgentIds::int[] isnull or uploaded_by_id = any(array(select a.user_id
 			from call_center.cc_agent a
 			where a.domain_id = :DomainId

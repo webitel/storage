@@ -1,14 +1,15 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
-	"github.com/webitel/storage/model"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"syscall"
 
+	"github.com/webitel/storage/model"
 	"github.com/webitel/wlog"
 )
 
@@ -133,6 +134,9 @@ func (self *LocalFileBackend) RemoveFile(directory, name string) model.AppError 
 
 func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, model.AppError) {
 	if f, err := os.Open(filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, model.NewNotFoundError("api.file.reader.reading_local.not_found", err.Error())
+		}
 		return nil, model.NewInternalError("api.file.reader.reading_local.app_error", "Encountered an error opening a reader from local server file storage")
 	} else {
 

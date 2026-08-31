@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"path"
 	"strconv"
 	"strings"
@@ -219,6 +220,10 @@ func (self *S3FileBackend) Reader(file File, offset int64) (io.ReadCloser, model
 
 	out, err := self.svc.GetObject(params)
 	if err != nil {
+		var requestFailure awserr.RequestFailure
+		if errors.As(err, &requestFailure) && requestFailure.StatusCode() == http.StatusNotFound {
+			return nil, model.NewNotFoundError("utils.file.s3.reader.not_found", err.Error())
+		}
 		return nil, model.NewInternalError("utils.file.s3.reader.app_error", err.Error())
 	}
 
