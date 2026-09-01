@@ -5,7 +5,6 @@ import (
 	"io"
 	"time"
 
-	"github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
 
 	"github.com/webitel/storage/app"
@@ -87,10 +86,6 @@ func (u *UploadTask) Execute() {
 
 	u.removeCacheFile()
 	u.log.Debug(fmt.Sprintf("finish upload task %d [%s]", u.job.Id, u.Name()))
-
-	if *u.job.GetChannel() == model.UploadFileChannelCall {
-		u.app.WatcherManager().Notify(model.PermissionScopeFiles, watcher.EventTypeRecordCall, app.NewFileWatcherData(f))
-	}
 }
 
 func (u *UploadTask) cancelUpload(err model.AppError) {
