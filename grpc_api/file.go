@@ -841,7 +841,16 @@ func (api *file) SearchScreenRecordingsByCall(ctx context.Context, in *storage.S
 		}
 	}
 
-	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search, "call")
+	var screenrecordingChannel string
+
+	switch in.GetChannel() {
+	case storage.ScreenrecordingChannel_CALL:
+		screenrecordingChannel = "call"
+	case storage.ScreenrecordingChannel_SCREENRECORDING:
+		screenrecordingChannel = "screenrecording"
+	}
+
+	output, next, err := api.ctrl.SearchScreenRecordings(ctx, session, search, screenrecordingChannel)
 	if err != nil {
 		return nil, err
 	}
