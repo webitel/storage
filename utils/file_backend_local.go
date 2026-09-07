@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
-	"github.com/webitel/storage/model"
 	"io"
 	"os"
 	"path"
@@ -10,6 +10,8 @@ import (
 	"syscall"
 
 	"github.com/webitel/wlog"
+
+	"github.com/webitel/storage/model"
 )
 
 type LocalFileBackend struct {
@@ -51,11 +53,11 @@ func (self *LocalFileBackend) write(src io.Reader, file File, directory string, 
 		return 0, model.NewBadRequestError(ErrFileWriteExistsId, "name="+file.GetStoreName())
 	}
 
-	if err := os.MkdirAll(root, 0774); err != nil {
+	if err := os.MkdirAll(root, 0o774); err != nil {
 		return 0, model.NewInternalError("utils.file.locally.create_dir.app_error", err.Error())
 	}
 
-	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE, 0644)
+	fw, err := os.OpenFile(allPath, os.O_WRONLY|os.O_CREATE, 0o644)
 	if err != nil {
 		return 0, model.NewInternalError("utils.file.locally.writing.app_error", err.Error())
 	}
@@ -125,24 +127,52 @@ func (self *LocalFileBackend) CopyTo(file File, to func(string) string) model.Ap
 }
 
 func (self *LocalFileBackend) RemoveFile(directory, name string) model.AppError {
-	if err := os.Remove(path.Join(self.directory, directory, name)); err != nil {
-		return model.NewInternalError("utils.file.locally.removing.app_error", "Encountered an error opening a reader from local server file storage")
+	fullPath := path.Join(self.directory, directory, name)
+
+	if err := os.Remove(fullPath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return model.NewNotFoundError(
+				"utils.file.locally.removing.not_found",
+				fmt.Sprintf("file %q not found", fullPath),
+			)
+		}
+		return model.NewInternalError(
+			"utils.file.locally.removing.app_error",
+			fmt.Sprintf("failed to remove file %q: %v", fullPath, err),
+		)
 	}
 	return nil
 }
 
 func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, model.AppError) {
-	if f, err := os.Open(filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
-		return nil, model.NewInternalError("api.file.reader.reading_local.app_error", "Encountered an error opening a reader from local server file storage")
-	} else {
+	fullPath := filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())
 
-		if offset > 0 {
-			f.Seek(EstimateFirstBlockOffset(file, offset), io.SeekStart)
+	f, err := os.Open(fullPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, model.NewNotFoundError(
+				"api.file.reader.reading_local.not_found",
+				fmt.Sprintf("file %q not found", fullPath),
+			)
 		}
-
-		if file.IsEncrypted() {
-			return NewDecryptingReader(f, self.chipher, offset), nil
-		}
-		return f, nil
+		return nil, model.NewInternalError(
+			"api.file.reader.reading_local.app_error",
+			fmt.Sprintf("failed to open file %q: %v", fullPath, err),
+		)
 	}
+
+	if offset > 0 {
+		if _, err := f.Seek(EstimateFirstBlockOffset(file, offset), io.SeekStart); err != nil {
+			f.Close()
+			return nil, model.NewInternalError(
+				"api.file.reader.reading_local.seek_error",
+				fmt.Sprintf("failed to seek to offset %d in file %q: %v", offset, fullPath, err),
+			)
+		}
+	}
+
+	if file.IsEncrypted() {
+		return NewDecryptingReader(f, self.chipher, offset), nil
+	}
+	return f, nil
 }
