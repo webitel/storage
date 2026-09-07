@@ -161,12 +161,14 @@ func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, mo
 		)
 	}
 
-	if _, err := f.Seek(EstimateFirstBlockOffset(file, offset), io.SeekStart); err != nil {
-		f.Close()
-		return nil, model.NewInternalError(
-			"api.file.reader.reading_local.seek_error",
-			fmt.Sprintf("failed to seek to offset %d in file %q: %v", offset, fullPath, err),
-		)
+	if offset > 0 {
+		if _, err := f.Seek(EstimateFirstBlockOffset(file, offset), io.SeekStart); err != nil {
+			f.Close()
+			return nil, model.NewInternalError(
+				"api.file.reader.reading_local.seek_error",
+				fmt.Sprintf("failed to seek to offset %d in file %q: %v", offset, fullPath, err),
+			)
+		}
 	}
 
 	if file.IsEncrypted() {
