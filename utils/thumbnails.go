@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -20,10 +21,10 @@ type Thumbnail struct {
 	stdout   io.ReadCloser
 	cmd      *exec.Cmd
 	end      bool
-	UserData interface{}
+	UserData any
 }
 
-func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
+func NewThumbnail(mime, scale string) (*Thumbnail, error) {
 	if scale == "" {
 		scale = ThumbnailScale
 	}
@@ -34,7 +35,7 @@ func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
 	}
 
 	cmd := exec.Command("ffmpeg", cmdArgs...)
-	//cmd.Stderr = os.Stderr // bind log stream to stderr
+	cmd.Stderr = os.Stderr // bind log stream to stderr
 
 	stdin, _ := cmd.StdinPipe()   // Open stdin pipe
 	stdout, _ := cmd.StdoutPipe() // Open stout pipe
@@ -59,7 +60,7 @@ func (t *Thumbnail) Write(p []byte) (nn int, err error) {
 		return nn, nil
 	}
 
-	return
+	return nn, err
 }
 
 func (t *Thumbnail) Reader() io.Reader {
@@ -92,7 +93,7 @@ func (t *Thumbnail) Scale() string {
 	return t.scale
 }
 
-func mimeCmdArgs(mime string, scale string) []string {
+func mimeCmdArgs(mime, scale string) []string {
 	if strings.HasPrefix(mime, "image/") {
 		return []string{
 			"-i", "pipe:0",
