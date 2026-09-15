@@ -17,6 +17,7 @@ type SearchFile struct {
 	ListRequest
 	Ids            []int64
 	UploadedAt     *FilterBetween
+	StartAt        *FilterBetween
 	UploadedBy     []int64
 	ReferenceIds   []string // todo uuid rename
 	Channels       []string

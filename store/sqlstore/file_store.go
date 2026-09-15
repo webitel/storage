@@ -95,6 +95,16 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		}
 	}
 
+	var startFrom, startTo *int64
+	if search.StartAt != nil {
+		if search.StartAt.From != 0 {
+			startFrom = &search.StartAt.From
+		}
+		if search.StartAt.To != 0 {
+			startTo = &search.StartAt.To
+		}
+	}
+
 	f := map[string]interface{}{
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
@@ -104,6 +114,8 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		"UserId":       pq.Array(search.UploadedBy),
 		"From":         model.GetBetweenFromTime(search.UploadedAt),
 		"To":           model.GetBetweenToTime(search.UploadedAt),
+		"StartFrom":    startFrom,
+		"StartTo":      startTo,
 		"Removed":      search.Removed,
 		"AgentIds":     pq.Array(search.AgentIds),
 		"Channel":      screenrecordingChannel,
@@ -113,6 +125,16 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		`domain_id = :DomainId
 		and ( :From::timestamptz isnull or uploaded_at >= :From::timestamptz )
 		and ( :To::timestamptz isnull or uploaded_at <= :To::timestamptz )
+		and (
+			(:StartFrom::bigint isnull and :StartTo::bigint isnull)
+			or exists (
+				select 1
+				from storage.files f
+				where f.id = t.id
+					and (:StartFrom::bigint isnull or coalesce(nullif((f.custom_properties ->> 'start_time')::bigint, 0), f.created_at) >= :StartFrom::bigint)
+					and (:StartTo::bigint isnull or coalesce(nullif((f.custom_properties ->> 'start_time')::bigint, 0), f.created_at) <= :StartTo::bigint)
+			)
+		)
 		and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
 		and (:Ids::int[] isnull or id = any(:Ids))
 		and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)

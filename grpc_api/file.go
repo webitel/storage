@@ -834,6 +834,13 @@ func (api *file) SearchScreenRecordingsByCall(ctx context.Context, in *storage.S
 		}
 	}
 
+	if in.StartAt != nil {
+		search.StartAt = &model.FilterBetween{
+			From: in.GetStartAt().GetFrom(),
+			To:   in.GetStartAt().GetTo(),
+		}
+	}
+
 	if in.RetentionUntil != nil {
 		search.RetentionUntil = &model.FilterBetween{
 			From: in.GetRetentionUntil().GetFrom(),
