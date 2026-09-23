@@ -94,7 +94,8 @@ type App struct {
 	rabbitConn      *rabbitmq.Connection
 	rabbitPublisher rabbitmq.Publisher
 
-	rabbitConsumer *rabbit.MultiEventConsumer
+	rabbitConsumer      *rabbit.MultiEventConsumer
+	sysSettingsConsumer *rabbit.SystemSettingsConsumer
 
 	// ---- Logger ------
 	wtelLogger      *wlogger.Logger
@@ -358,11 +359,16 @@ func (app *App) initListeners() error {
 	}
 
 	app.rabbitConsumer = eventConsumer
+	app.sysSettingsConsumer = rabbit.NewSystemSettingsConsumer(app.rabbitConn, app.InvalidateCachedSystemSetting, wlogadapter.NewWlogLogger(app.Log))
 
 	return nil
 }
 
 func (app *App) StartRabbitListeners() error {
+	if err := app.sysSettingsConsumer.Start(app.ctx); err != nil {
+		return fmt.Errorf("app.start_rabbit_listeners.system_settings: %w", err)
+	}
+
 	return app.rabbitConsumer.Start(app.ctx)
 }
 
@@ -508,6 +514,10 @@ func (app *App) Shutdown() {
 
 	if app.cluster != nil {
 		app.cluster.Stop()
+	}
+
+	if app.sysSettingsConsumer != nil {
+		app.sysSettingsConsumer.Close()
 	}
 
 	if app.rabbitConsumer != nil {
