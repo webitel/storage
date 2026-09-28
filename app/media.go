@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"io"
 
 	"github.com/webitel/storage/model"
@@ -56,21 +57,19 @@ func (app *App) GetMediaFile(domainId int64, id int) (mf *model.MediaFile, err m
 	return mf, err
 }
 
-func (app *App) DeleteMediaFile(domainId int64, id int) (*model.MediaFile, model.AppError) {
-	file, err := app.Store.MediaFile().Get(domainId, id)
+// TODO: add reverse action in case if removing file from object store failed.
+// Think about adding retry mechanism based on RabbitMQ queues based on object store failure.
+func (app *App) DeleteMediaFile(ctx context.Context, r *model.DeleteMediaFileRequest) (*model.MediaFile, model.AppError) {
+	media, err := app.Store.MediaFile().DeleteReturning(ctx, r)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = app.MediaFileStore.Remove(file); err != nil {
+	if err = app.MediaFileStore.Remove(media); err != nil {
 		return nil, err
 	}
 
-	if err = app.Store.MediaFile().Delete(domainId, file.Id); err != nil {
-		return nil, err
-	}
-
-	return file, nil
+	return media, nil
 }
 
 func (app *App) GetMediaFileByName(name, domain string) (*model.MediaFile, model.AppError) {
