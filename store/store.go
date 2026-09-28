@@ -110,7 +110,8 @@ type MediaFileStore interface {
 	Create(file *model.MediaFile) (*model.MediaFile, model.AppError)
 	GetAllPage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, model.AppError)
 	Get(domainId int64, id int) (*model.MediaFile, model.AppError)
-	Delete(domainId, id int64) model.AppError
+	Delete(ctx context.Context, domainId, id int64) model.AppError
+	DeleteReturning(ctx context.Context, r *model.DeleteMediaFileRequest) (*model.MediaFile, model.AppError)
 
 	Save(file *model.MediaFile) StoreChannel
 	GetAllByDomain(domain string, offset, limit int) StoreChannel
