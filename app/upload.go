@@ -214,14 +214,18 @@ endScan:
 	}
 	file.Size = sf.Size
 
-	// Завершення обробки мініатюри, якщо вона існує
+	// Завершення обробки мініатюри, якщо вона існує.
+	// Генерація прев'ю не критична: якщо ffmpeg не зміг зняти кадр
+	// (напр. mp4 з moov-atom у кінці читається з непозиційованої піпи),
+	// логуємо й продовжуємо зберігати основний файл, а не валимо весь аплоад.
 	if ch != nil {
 		thumbnail.StopWriter()
-		if err := <-ch; err != nil {
-			return err
+		if tErr := <-ch; tErr != nil {
+			app.Log.Warn(fmt.Sprintf("could not generate thumbnail for file '%s': %s", file.Name, tErr.Error()))
+		} else if td, ok := thumbnail.UserData.(*model.Thumbnail); ok {
+			sf.Thumbnail = td
+			file.Thumbnail = sf.Thumbnail
 		}
-		sf.Thumbnail = thumbnail.UserData.(*model.Thumbnail)
-		file.Thumbnail = sf.Thumbnail
 	}
 
 	file.Id, err = app.storeFile(store, sf)

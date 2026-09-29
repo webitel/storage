@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os/exec"
 	"strings"
@@ -20,10 +22,11 @@ type Thumbnail struct {
 	stdout   io.ReadCloser
 	cmd      *exec.Cmd
 	end      bool
-	UserData interface{}
+	UserData any
+	errBuf   *bytes.Buffer
 }
 
-func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
+func NewThumbnail(mime, scale string) (*Thumbnail, error) {
 	if scale == "" {
 		scale = ThumbnailScale
 	}
@@ -34,7 +37,9 @@ func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
 	}
 
 	cmd := exec.Command("ffmpeg", cmdArgs...)
-	//cmd.Stderr = os.Stderr // bind log stream to stderr
+
+	var errBuf bytes.Buffer
+	cmd.Stderr = &errBuf
 
 	stdin, _ := cmd.StdinPipe()   // Open stdin pipe
 	stdout, _ := cmd.StdoutPipe() // Open stout pipe
@@ -45,6 +50,7 @@ func NewThumbnail(mime string, scale string) (*Thumbnail, error) {
 		stdin:  stdin,
 		stdout: stdout,
 		cmd:    cmd,
+		errBuf: &errBuf,
 	}, nil
 }
 
@@ -59,7 +65,7 @@ func (t *Thumbnail) Write(p []byte) (nn int, err error) {
 		return nn, nil
 	}
 
-	return
+	return nn, err
 }
 
 func (t *Thumbnail) Reader() io.Reader {
@@ -67,13 +73,13 @@ func (t *Thumbnail) Reader() io.Reader {
 }
 
 func (t *Thumbnail) Close() (err error) {
-	err = t.stdin.Close() // close the stdin, or ffmpeg will wait forever
-	if err != nil {
-		return err
-	}
+	_ = t.stdin.Close() // close the stdin, or ffmpeg will wait forever
 
 	err = t.cmd.Wait() // wait until ffmpeg finish
 	if err != nil {
+		if t.errBuf != nil && t.errBuf.Len() > 0 {
+			return fmt.Errorf("ffmpeg error: %v, details: %s", err, t.errBuf.String())
+		}
 		return err
 	}
 
@@ -92,7 +98,7 @@ func (t *Thumbnail) Scale() string {
 	return t.scale
 }
 
-func mimeCmdArgs(mime string, scale string) []string {
+func mimeCmdArgs(mime, scale string) []string {
 	if strings.HasPrefix(mime, "image/") {
 		return []string{
 			"-i", "pipe:0",
