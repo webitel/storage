@@ -59,10 +59,10 @@ type DomainFilePolicy struct {
 }
 
 func (app *App) FilePolicyForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
-	// TODO for old files
-	if file.Channel == nil {
+	if file.Channel == nil { // TODO for old files
 		return src, nil
 	}
+
 	return app.filePolicies.policyReaderForDownload(domainId, file, src)
 }
 
@@ -128,12 +128,11 @@ func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, model.AppError) {
 	})
 
 	if err != nil {
-		switch err.(type) {
-		case model.AppError:
-			return nil, err.(model.AppError)
-		default:
-			return nil, model.NewInternalError("app.file_policies.cached", err.Error())
+		if appErr, ok := err.(model.AppError); ok {
+			return nil, appErr
 		}
+
+		return nil, model.NewInternalError("app.file_policies.cached", err.Error())
 	}
 
 	if !shared {
@@ -144,12 +143,12 @@ func (app *App) cachedPolicyHub(domainId int64) (*PoliciesHub, model.AppError) {
 }
 
 func (ph *DomainFilePolicy) policyReaderForDownload(domainId int64, file *model.BaseFile, src io.ReadCloser) (io.ReadCloser, model.AppError) {
-	var policy *FilePolicy
-	v, err := ph.app.cachedPolicyHub(domainId)
+	hub, err := ph.app.cachedPolicyHub(domainId)
 	if err != nil {
 		return nil, err
 	}
-	policy, err = v.Policy(file.Channel, file.MimeType)
+
+	policy, err := hub.ReadPolicy(file.Channel, file.MimeType)
 	if err != nil {
 		return nil, err
 	}
@@ -228,22 +227,48 @@ func (ph *PoliciesHub) appendPolicy(channels []string, policy *FilePolicy) {
 	}
 }
 
+func (ph *PoliciesHub) ReadPolicy(channel *string, mime string) (*FilePolicy, model.AppError) {
+	if channel == nil {
+		return nil, model.PolicyErrorChannel
+	}
+
+	policies, exists := ph.channels[*channel]
+	if !exists {
+		return FilePolicyAllowAll, nil
+	}
+
+	if p := findPolicy(policies, mime); p != nil {
+		return p, nil
+	}
+
+	return FilePolicyAllowAll, nil
+}
+
+func findPolicy(policies []*FilePolicy, mime string) *FilePolicy {
+	for _, p := range policies {
+		for _, m := range p.mime {
+			if MatchPattern(m, mime) {
+				return p
+			}
+		}
+	}
+
+	return nil
+}
+
 func (ph *PoliciesHub) Policy(channel *string, mime string) (*FilePolicy, model.AppError) {
 	if channel == nil {
 		// TODO
 		return nil, model.PolicyErrorChannel
 	}
+
 	policies, ok := ph.channels[*channel]
 	if !ok {
 		return FilePolicyAllowAll, nil
 	}
 
-	for _, policy := range policies {
-		for _, m := range policy.mime {
-			if MatchPattern(m, mime) {
-				return policy, nil
-			}
-		}
+	if p := findPolicy(policies, mime); p != nil {
+		return p, nil
 	}
 
 	return nil, model.PolicyErrorForbidden

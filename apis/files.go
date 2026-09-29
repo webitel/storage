@@ -31,24 +31,19 @@ func (api *API) InitFile() {
 }
 
 func transcriptFile(c *Context, w http.ResponseWriter, r *http.Request) {
-	var id int
-	var err error
-
-	c.RequireId()
-
-	if c.Err != nil {
+	if c.RequireId(); c.Err != nil {
 		return
 	}
 
-	if id, err = strconv.Atoi(c.Params.Id); err != nil {
+	id, err := strconv.ParseInt(c.Params.Id, 10, 64)
+	if err != nil {
 		c.SetInvalidUrlParam("id")
 		return
 	}
 
 	//TODO
 	var tr *model.FileTranscript
-	if tr, c.Err = c.App.TranscriptFile(int64(id), model.TranscriptOptions{}); c.Err != nil {
-
+	if tr, c.Err = c.App.TranscriptFile(id, model.TranscriptOptions{}); c.Err != nil {
 		return
 	}
 
