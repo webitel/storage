@@ -35,6 +35,30 @@ func (self *LocalFileBackend) GetStoreDirectory(f File) string {
 }
 
 func (self *LocalFileBackend) TestConnection() model.AppError {
+	if err := os.MkdirAll(self.directory, 0o774); err != nil {
+		return model.NewInternalError("utils.file.locally.test_connection.create_dir.app_error", err.Error())
+	}
+
+	f, err := os.CreateTemp(self.directory, ".health-*")
+	if err != nil {
+		return model.NewInternalError("utils.file.locally.test_connection.create_temp.app_error", err.Error())
+	}
+	name := f.Name()
+	// LIFO guard calls: close is first, delete is second
+	defer os.Remove(name)
+	defer f.Close()
+
+	_, err = f.WriteString("test")
+	if err != nil {
+		return model.NewInternalError("utils.file.locally.test_connection.write.app_error", err.Error())
+	}
+	if err = f.Close(); err != nil {
+		return model.NewInternalError("utils.file.locally.test_connection.close.app_error", err.Error())
+	}
+	if err = os.Remove(name); err != nil {
+		return model.NewInternalError("utils.file.locally.test_connection.remove.app_error", err.Error())
+	}
+
 	return nil
 }
 
