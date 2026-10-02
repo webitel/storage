@@ -3,19 +3,25 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
 	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+	"github.com/webitel/webitel-go-kit/infra/health"
+	healthhttp "github.com/webitel/webitel-go-kit/infra/health/http"
+	"github.com/webitel/webitel-go-kit/infra/health/sdnotify"
 	"github.com/webitel/webitel-go-kit/infra/httpproxy"
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
+	otelhealth "github.com/webitel/webitel-go-kit/infra/otel/instrumentation/health"
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
@@ -68,7 +74,7 @@ type App struct {
 	Log        *wlog.Logger
 	configFile string
 	config     atomic.Value
-	newStore   func() store.Store
+	health     *health.Registry
 	// Jobs       *jobs.JobServer
 
 	sessionManager auth_manager.AuthManager
@@ -84,6 +90,7 @@ type App struct {
 
 	ctx              context.Context
 	otelShutdownFunc otelsdk.ShutdownFunc
+	otelHealth       metric.Registration
 
 	fileChipher utils.Chipher
 
@@ -176,10 +183,24 @@ func New(options ...string) (outApp *App, outErr error) {
 	wlog.RedirectStdLog(app.Log)
 	wlog.InitGlobalLogger(app.Log)
 
+	slogLog := slog.New(wlog.NewSlogHandler(app.Log))
+
+	// nil when NOTIFY_SOCKET is unset or HEALTH_ADDRESS is empty; WithTransport skips nil.
+	app.health = health.New(health.DefaultConfig(), slogLog,
+		health.WithTransport(sdnotify.New(
+			sdnotify.WithLogger(slogLog),
+			sdnotify.WithStartTimeout(time.Duration(config.Health.StartTimeout)*time.Second),
+		)),
+		health.WithTransport(healthhttp.NewServer(config.Health.Address, healthhttp.WithLogger(slogLog))),
+	)
+	if err := app.health.Start(app.ctx); err != nil {
+		return nil, fmt.Errorf("unable to start health registry: %w", err)
+	}
+
 	// Bind http.DefaultTransport to the proxy manager before any outbound
 	// client is built, so every default-transport call site follows the
 	// watched proxy settings without a restart.
-	app.ProxyManager = httpproxy.NewManager(httpproxy.WithLogger(newSlogLogger(app.Log)))
+	app.ProxyManager = httpproxy.NewManager(httpproxy.WithLogger(slogLog))
 	if err := app.ProxyManager.HookDefaultTransport(); err != nil {
 		return nil, err
 	}
@@ -225,13 +246,9 @@ func New(options ...string) (outApp *App, outErr error) {
 		app.Log.Info("use clamd")
 	}
 
-	if app.newStore == nil {
-		app.newStore = func() store.Store {
-			return store.NewLayeredStore(sqlstore.NewSqlSupplier(app.Config().SqlSettings))
-		}
-	}
+	sqlSupplier := sqlstore.NewSqlSupplier(app.Config().SqlSettings)
 
-	app.Srv.Store = app.newStore()
+	app.Srv.Store = store.NewLayeredStore(sqlSupplier)
 	app.Store = app.Srv.Store
 
 	app.GrpcServer = NewGrpcServer(app.Config().ServerSettings)
@@ -277,7 +294,29 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, err
 	}
 
+	// Critical is node-local only dependencies: a shared one drops the whole fleet at once.
+	app.health.Critical("media_file_store", utils.FileBackendHealthAdapter(app.MediaFileStore))
+	app.health.Critical("default_file_store", utils.FileBackendHealthAdapter(app.DefaultFileStore))
+	app.health.Critical("grpc", health.ListenerCheck(app.GrpcServer.lis))
+	app.health.Informational("postgres", sqlSupplier.Ping)
+	app.health.Informational("rabbitmq", app.pingRabbitMQ)
+
+	if config.Log.Otel {
+		var err error
+		if app.otelHealth, err = otelhealth.Start(app.health); err != nil {
+			return nil, fmt.Errorf("unable to register health metrics: %w", err)
+		}
+	}
+
 	return app, outErr
+}
+
+func (app *App) pingRabbitMQ(ctx context.Context) error {
+	// go-kit rabbitmq.Connection does not expose direct Ping.
+	// Channel returns the existing shared channel after connection/channel liveness
+	// checks; it does not open a new channel or touch the broker.
+	_, err := app.rabbitConn.Channel(ctx)
+	return err
 }
 
 // initUploadFileClient builds the HTTP client used by the UploadFileUrl API.
@@ -494,6 +533,17 @@ func (app *App) UseDefaultStore() bool {
 func (app *App) Shutdown() {
 	wlog.Info("Stopping Server...")
 
+	if app.health != nil {
+		ctx, cancel := context.WithTimeout(context.Background(),
+			time.Duration(app.Config().Health.StopTimeout)*time.Second)
+
+		if err := app.health.Shutdown(ctx); err != nil {
+			app.Log.Error(fmt.Sprintf("health shutdown: %s", err.Error()), wlog.Err(err))
+		}
+
+		cancel()
+	}
+
 	if app.proxyWatchStop != nil {
 		app.proxyWatchStop()
 	}
@@ -520,6 +570,12 @@ func (app *App) Shutdown() {
 
 	if app.otelShutdownFunc != nil {
 		app.otelShutdownFunc(app.ctx)
+	}
+
+	if app.otelHealth != nil {
+		if err := app.otelHealth.Unregister(); err != nil {
+			app.Log.Error(fmt.Sprintf("health metrics unregister: %s", err.Error()), wlog.Err(err))
+		}
 	}
 }
 

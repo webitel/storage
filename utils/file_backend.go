@@ -1,13 +1,16 @@
 package utils
 
 import (
+	"context"
 	"fmt"
-	"github.com/webitel/storage/model"
 	"io"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/webitel/storage/model"
+	"github.com/webitel/webitel-go-kit/infra/health"
 )
 
 const (
@@ -108,16 +111,17 @@ func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBa
 				expireDay: profile.ExpireDay,
 				chipher:   chipher,
 			},
-			name:           profile.Name,
-			pathPattern:    profile.Properties.GetString("path_pattern"),
-			bucket:         profile.Properties.GetString("bucket_name"),
-			accessKey:      profile.Properties.GetString("key_id"),
-			accessToken:    profile.Properties.GetString("access_key"),
-			endpoint:       profile.Properties.GetString("endpoint"),
-			region:         profile.Properties.GetString("region"),
-			forcePathStyle: profile.Properties.GetBool("force_path_style"),
+			name:                profile.Name,
+			pathPattern:         profile.Properties.GetString("path_pattern"),
+			bucket:              profile.Properties.GetString("bucket_name"),
+			accessKey:           profile.Properties.GetString("key_id"),
+			accessToken:         profile.Properties.GetString("access_key"),
+			endpoint:            profile.Properties.GetString("endpoint"),
+			region:              profile.Properties.GetString("region"),
+			forcePathStyle:      profile.Properties.GetBool("force_path_style"),
+			healthCheckDisabled: profile.Properties.GetBool("health_check_disabled"),
 		}
-		if err := d.TestConnection(); err != nil {
+		if err := d.Init(); err != nil {
 			return d, err
 		}
 		return d, nil
@@ -157,4 +161,15 @@ func parseStorePattern(pattern string, f File) string {
 		}
 		return s
 	})
+}
+
+// FileBackendHealthAdapter returns a health.Check function that wraps FileBackend.TestConnection()
+// It always returns nil for nil FileBackend.
+func FileBackendHealthAdapter(fb FileBackend) health.Check {
+	return func(_ context.Context) error {
+		if fb == nil {
+			return nil
+		}
+		return fb.TestConnection()
+	}
 }
