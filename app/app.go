@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/webitel/webitel-go-kit/infra/health/sdnotify"
 	"github.com/webitel/webitel-go-kit/infra/httpproxy"
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
+	otelhealth "github.com/webitel/webitel-go-kit/infra/otel/instrumentation/health"
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
@@ -88,6 +90,7 @@ type App struct {
 
 	ctx              context.Context
 	otelShutdownFunc otelsdk.ShutdownFunc
+	otelHealth       metric.Registration
 
 	fileChipher utils.Chipher
 
@@ -297,6 +300,13 @@ func New(options ...string) (outApp *App, outErr error) {
 	app.health.Critical("grpc", health.ListenerCheck(app.GrpcServer.lis))
 	app.health.Informational("postgres", sqlSupplier.Ping)
 	app.health.Informational("rabbitmq", app.pingRabbitMQ)
+
+	if config.Log.Otel {
+		var err error
+		if app.otelHealth, err = otelhealth.Start(app.health); err != nil {
+			return nil, fmt.Errorf("unable to register health metrics: %w", err)
+		}
+	}
 
 	return app, outErr
 }
@@ -560,6 +570,12 @@ func (app *App) Shutdown() {
 
 	if app.otelShutdownFunc != nil {
 		app.otelShutdownFunc(app.ctx)
+	}
+
+	if app.otelHealth != nil {
+		if err := app.otelHealth.Unregister(); err != nil {
+			app.Log.Error(fmt.Sprintf("health metrics unregister: %s", err.Error()), wlog.Err(err))
+		}
 	}
 }
 
