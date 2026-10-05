@@ -137,6 +137,8 @@ func downloadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	useThumbnail(file, r.URL.Query())
+
 	sendSize := file.Size
 	code := http.StatusOK
 
@@ -233,6 +235,14 @@ func streamAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 	io.CopyN(w, reader, sendSize)
 }
 
+// useThumbnail serves the stored thumbnail instead of the file. The flag is
+// covered by the link signature, so a holder cannot toggle it.
+func useThumbnail(file *model.File, q url.Values) {
+	if file.Thumbnail != nil && q.Get("fetch_thumbnail") == "true" {
+		file.BaseFile = file.Thumbnail.BaseFile
+	}
+}
+
 func createValidationKey(key url.URL) string {
 	existingParams := key.Query()
 	existingParams.Del("signature")
@@ -300,7 +310,11 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		fileId, _ := strconv.Atoi(uuid)
-		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
+		var f *model.File
+		if f, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId)); f != nil {
+			useThumbnail(f, q)
+			file = f
+		}
 	case "tts":
 		tts(c, w, r, true)
 		return

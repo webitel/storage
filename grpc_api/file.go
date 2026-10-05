@@ -51,6 +51,32 @@ func CustomPropertiesFromProto(in *storage.CustomFileProperties) *model.CustomFi
 	}
 }
 
+func customPropertiesToProto(in *model.CustomFileProperties) *storage.CustomFileProperties {
+	if in == nil {
+		return nil
+	}
+
+	return &storage.CustomFileProperties{
+		StartTime: int64(in.StartTime),
+		EndTime:   int64(in.EndTime),
+		Width:     int64(in.Width),
+		Height:    int64(in.Height),
+		Duration:  int64(in.Duration),
+	}
+}
+
+func thumbnailToProto(in *model.Thumbnail) *storage.Thumbnail {
+	if in == nil {
+		return nil
+	}
+
+	return &storage.Thumbnail{
+		MimeType: in.MimeType,
+		Size:     in.Size,
+		Scale:    in.Scale,
+	}
+}
+
 func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	var chunk *storage.UploadFileRequest_Chunk
 
@@ -182,12 +208,12 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 	}
 
 	if in.Metadata {
-		var f model.BaseFile
+		var f model.File
 		switch in.Source {
 		case "file":
 			f, err = api.ctrl.App().Store.File().Metadata(in.GetDomainId(), in.GetFileId())
 		default:
-			f, err = api.ctrl.App().Store.MediaFile().Metadata(in.GetDomainId(), in.GetFileId())
+			f.BaseFile, err = api.ctrl.App().Store.MediaFile().Metadata(in.GetDomainId(), in.GetFileId())
 		}
 
 		if err != nil {
@@ -195,10 +221,12 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 		}
 
 		response.Metadata = &storage.GenerateFileLinkResponse_Metadata{
-			Id:       in.GetFileId(),
-			Name:     f.GetViewName(),
-			MimeType: f.GetMimeType(),
-			Size:     f.GetSize(),
+			Id:         in.GetFileId(),
+			Name:       f.GetViewName(),
+			MimeType:   f.GetMimeType(),
+			Size:       f.GetSize(),
+			Properties: customPropertiesToProto(f.CustomProperties),
+			Thumbnail:  thumbnailToProto(f.Thumbnail),
 		}
 	}
 
@@ -250,13 +278,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 		if f.SHA256Sum != nil {
 			d.Metadata.Sha256Sum = *f.SHA256Sum
 		}
-		if f.Thumbnail != nil {
-			d.Metadata.Thumbnail = &storage.Thumbnail{
-				MimeType: f.Thumbnail.MimeType,
-				Size:     f.Thumbnail.Size,
-				Scale:    f.Thumbnail.Scale,
-			}
-		}
+		d.Metadata.Thumbnail = thumbnailToProto(f.Thumbnail)
 		err = stream.Send(&storage.StreamFile{
 			Data: d,
 		})
