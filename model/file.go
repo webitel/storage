@@ -33,6 +33,7 @@ type CustomFileProperties struct {
 	EndTime   int `json:"end_time,omitempty"`
 	Width     int `json:"width,omitempty"`
 	Height    int `json:"height,omitempty"`
+	Duration  int `json:"duration,omitempty"` // milliseconds
 }
 
 type BaseFile struct {

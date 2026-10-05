@@ -207,8 +207,21 @@ endScan:
 		reader = src
 	}
 
+	var probe *utils.MediaProbe
+	if file.GenerateThumbnail && utils.IsSupportMediaProbe(file.MimeType) {
+		var probeErr error
+		if probe, probeErr = utils.NewMediaProbe(); probeErr != nil {
+			wlog.Warn(fmt.Sprintf("media probe of '%s' not started: %s", file.Name, probeErr))
+		} else {
+			reader = io.TeeReader(reader, probe)
+		}
+	}
+
 	// Завантаження основного файлу
 	sf, err := app.syncUpload(store, reader, file, profileId)
+	if probe != nil {
+		app.applyMediaDuration(probe, file, sf)
+	}
 	if err != nil {
 		return err
 	}
@@ -232,6 +245,29 @@ endScan:
 	return nil
 }
 
+// applyMediaDuration is best effort: a file ffprobe cannot read is still stored,
+// just without a duration.
+func (app *App) applyMediaDuration(probe *utils.MediaProbe, file *model.JobUploadFile, sf *model.File) {
+	d, err := probe.Duration()
+	if err != nil {
+		wlog.Warn(fmt.Sprintf("media probe of '%s' failed: %s", file.Name, err))
+		return
+	}
+
+	if sf == nil {
+		return
+	}
+
+	// Copy: the thumbnail upload, still running, shares the original pointer.
+	var props model.CustomFileProperties
+	if sf.CustomProperties != nil {
+		props = *sf.CustomProperties
+	}
+	props.Duration = int(d.Milliseconds())
+	sf.CustomProperties = &props
+	file.CustomProperties = &props
+}
+
 // setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
 func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *model.JobUploadFile) (io.Reader, *utils.Thumbnail, chan model.AppError, model.AppError) {
 	if !utils.IsSupportThumbnail(file.MimeType) {
@@ -249,7 +285,7 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 	thumbnailFile.Name = "thumbnail_" + file.Name + ".png"
 	thumbnailFile.ViewName = &thumbnailFile.Name
 	thumbnailFile.MimeType = "image/png"
-	ch := make(chan model.AppError)
+	ch := make(chan model.AppError, 1)
 
 	go func() {
 		if f, e := app.syncUpload(store, thumbnail.Reader(), &thumbnailFile, nil); e != nil {
