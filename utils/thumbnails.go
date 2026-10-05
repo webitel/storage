@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os/exec"
 	"strings"
@@ -120,6 +122,40 @@ func mimeCmdArgs(mime string, scale string) []string {
 	}
 
 	return nil
+}
+
+// VideoThumbnailFromFile reads a seekable file, so it also handles videos
+// whose index sits at the end, which the pipe-based Thumbnail cannot.
+func VideoThumbnailFromFile(path, scale string) ([]byte, string, error) {
+	if scale == "" {
+		scale = ThumbnailScale
+	}
+	scale = "scale=" + scale
+
+	var stdout bytes.Buffer
+	stderr := limitedBuffer{limit: mediaProbeStderr}
+	cmd := exec.Command("ffmpeg",
+		"-v", "error",
+		"-i", path,
+		"-vframes", "1",
+		"-f", "image2pipe",
+		"-vcodec", "png",
+		"-pix_fmt", "rgba",
+		"-vf", scale,
+		"pipe:1",
+	)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, "", fmt.Errorf("ffmpeg: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+
+	if stdout.Len() == 0 {
+		return nil, "", errors.New("ffmpeg: no frame extracted")
+	}
+
+	return stdout.Bytes(), scale, nil
 }
 
 func IsSupportThumbnail(mimeType string) bool {
