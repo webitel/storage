@@ -331,6 +331,11 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 	return gorp.CustomScanner{}, false
 }
 
+// Ping reports whether the master connection is usable.
+func (ss *SqlSupplier) Ping(ctx context.Context) error {
+	return ss.master.Db.PingContext(ctx)
+}
+
 func (ss *SqlSupplier) GetMaster() *gorp.DbMap {
 	return ss.master
 }
