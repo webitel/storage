@@ -342,9 +342,9 @@ FROM storage.files f
 	return file, nil
 }
 
-func (s SqlFileStore) Metadata(domainId int64, id int64) (model.BaseFile, model.AppError) {
-	var m model.BaseFile
-	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size
+func (s SqlFileStore) Metadata(domainId int64, id int64) (model.File, model.AppError) {
+	var m model.File
+	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size, custom_properties, thumbnail
 from storage.files
 where domain_id = :DomainId and id = :Id`, map[string]any{
 		"DomainId": domainId,
@@ -352,7 +352,7 @@ where domain_id = :DomainId and id = :Id`, map[string]any{
 	})
 
 	if err != nil {
-		return model.BaseFile{}, model.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
+		return model.File{}, model.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return m, nil

@@ -1,12 +1,14 @@
 package app
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
@@ -193,7 +195,23 @@ endScan:
 		file.Malware = ms
 	}
 
-	if file.GenerateThumbnail {
+	var spool *spoolFile
+	if file.GenerateThumbnail && strings.HasPrefix(file.MimeType, model.VideoMimePrefix) {
+		// ffmpeg cannot seek a pipe, so a video with its index (moov) at the end
+		// yields no frame; the frame is taken from a spooled copy instead.
+		f, spoolErr := os.CreateTemp(app.Config().TempDir, "thumb-src-*")
+		if spoolErr != nil {
+			wlog.Warn(fmt.Sprintf("video thumbnail of '%s' skipped: %s", file.Name, spoolErr))
+			reader = src
+		} else {
+			spool = &spoolFile{f: f}
+			defer func() {
+				_ = f.Close()
+				_ = os.Remove(f.Name())
+			}()
+			reader = io.TeeReader(src, spool)
+		}
+	} else if file.GenerateThumbnail {
 		reader, thumbnail, ch, err = app.setupThumbnail(src, store, file)
 		if err != nil {
 			return err
@@ -207,8 +225,21 @@ endScan:
 		reader = src
 	}
 
+	var probe *utils.MediaProbe
+	if file.GenerateThumbnail && utils.IsSupportMediaProbe(file.MimeType) {
+		var probeErr error
+		if probe, probeErr = utils.NewMediaProbe(); probeErr != nil {
+			wlog.Warn(fmt.Sprintf("media probe of '%s' not started: %s", file.Name, probeErr))
+		} else {
+			reader = io.TeeReader(reader, probe)
+		}
+	}
+
 	// Завантаження основного файлу
 	sf, err := app.syncUpload(store, reader, file, profileId)
+	if probe != nil {
+		app.applyMediaDuration(probe, file, sf)
+	}
 	if err != nil {
 		return err
 	}
@@ -224,12 +255,90 @@ endScan:
 		file.Thumbnail = sf.Thumbnail
 	}
 
+	if spool != nil {
+		if sf.Thumbnail, err = app.videoThumbnail(store, spool, file); err != nil {
+			return err
+		}
+		file.Thumbnail = sf.Thumbnail
+	}
+
 	file.Id, err = app.storeFile(store, sf)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// applyMediaDuration is best effort: a file ffprobe cannot read is still stored,
+// just without a duration.
+func (app *App) applyMediaDuration(probe *utils.MediaProbe, file *model.JobUploadFile, sf *model.File) {
+	d, err := probe.Duration()
+	if err != nil {
+		wlog.Warn(fmt.Sprintf("media probe of '%s' failed: %s", file.Name, err))
+		return
+	}
+
+	if sf == nil {
+		return
+	}
+
+	// Copy: the thumbnail job shares the original pointer.
+	var props model.CustomFileProperties
+	if sf.CustomProperties != nil {
+		props = *sf.CustomProperties
+	}
+	props.Duration = int(d.Milliseconds())
+	sf.CustomProperties = &props
+	file.CustomProperties = &props
+}
+
+// videoThumbnail is best effort: an unreadable video is stored without a
+// thumbnail rather than with an empty one.
+func (app *App) videoThumbnail(store utils.FileBackend, spool *spoolFile, file *model.JobUploadFile) (*model.Thumbnail, model.AppError) {
+	if spool.err != nil {
+		wlog.Warn(fmt.Sprintf("video thumbnail of '%s' skipped: %s", file.Name, spool.err))
+		return nil, nil
+	}
+
+	png, scale, err := utils.VideoThumbnailFromFile(spool.f.Name(), app.thumbnailSettings.DefaultScale)
+	if err != nil {
+		wlog.Warn(fmt.Sprintf("video thumbnail of '%s' failed: %s", file.Name, err))
+		return nil, nil
+	}
+
+	thumbnailFile := thumbnailJob(file)
+
+	f, appErr := app.syncUpload(store, bytes.NewReader(png), &thumbnailFile, nil)
+	if appErr != nil {
+		return nil, appErr
+	}
+
+	return &model.Thumbnail{BaseFile: f.BaseFile, Scale: scale}, nil
+}
+
+// spoolFile never fails the upload it tees: a write error (e.g. a full temp
+// disk) only disables the thumbnail.
+type spoolFile struct {
+	f   *os.File
+	err error
+}
+
+func (s *spoolFile) Write(p []byte) (int, error) {
+	if s.err == nil {
+		_, s.err = s.f.Write(p)
+	}
+
+	return len(p), nil
+}
+
+func thumbnailJob(file *model.JobUploadFile) model.JobUploadFile {
+	thumbnailFile := *file
+	thumbnailFile.Name = "thumbnail_" + file.Name + ".png"
+	thumbnailFile.ViewName = &thumbnailFile.Name
+	thumbnailFile.MimeType = "image/png"
+
+	return thumbnailFile
 }
 
 // setupThumbnail налаштовує мініатюру для файлу, якщо це зображення або відео
@@ -245,11 +354,8 @@ func (app *App) setupThumbnail(src io.Reader, store utils.FileBackend, file *mod
 
 	reader := io.TeeReader(src, thumbnail)
 
-	thumbnailFile := *file
-	thumbnailFile.Name = "thumbnail_" + file.Name + ".png"
-	thumbnailFile.ViewName = &thumbnailFile.Name
-	thumbnailFile.MimeType = "image/png"
-	ch := make(chan model.AppError)
+	thumbnailFile := thumbnailJob(file)
+	ch := make(chan model.AppError, 1)
 
 	go func() {
 		if f, e := app.syncUpload(store, thumbnail.Reader(), &thumbnailFile, nil); e != nil {
