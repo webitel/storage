@@ -140,3 +140,38 @@ func TestMediaProbeStalledNeverBlocksUpload(t *testing.T) {
 		t.Fatalf("Duration err = %v, want timeout", err)
 	}
 }
+
+func TestProbeDurationFromFile(t *testing.T) {
+	requireFFmpeg(t)
+
+	for name, faststart := range map[string]bool{"moov at end": false, "faststart": true} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "v.mp4")
+			if err := os.WriteFile(path, makeVideo(t, "3", faststart), 0o600); err != nil {
+				t.Fatal(err)
+			}
+
+			d, err := ProbeDurationFromFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if d < 2900*time.Millisecond || d > 3100*time.Millisecond {
+				t.Fatalf("duration = %s, want ~3s", d)
+			}
+		})
+	}
+}
+
+func TestProbeDurationFromFileRejectsNonMedia(t *testing.T) {
+	requireFFmpeg(t)
+
+	path := filepath.Join(t.TempDir(), "x.mp4")
+	if err := os.WriteFile(path, []byte("<html>not a video</html>"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := ProbeDurationFromFile(path); err == nil {
+		t.Fatal("expected an error for non-media input")
+	}
+}

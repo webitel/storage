@@ -225,8 +225,10 @@ endScan:
 		reader = src
 	}
 
+	// A spooled video is probed from the file after upload; audio, or a video
+	// whose spool could not be created, is probed from the stream.
 	var probe *utils.MediaProbe
-	if file.GenerateThumbnail && utils.IsSupportMediaProbe(file.MimeType) {
+	if file.GenerateThumbnail && utils.IsSupportMediaProbe(file.MimeType) && spool == nil {
 		var probeErr error
 		if probe, probeErr = utils.NewMediaProbe(); probeErr != nil {
 			wlog.Warn(fmt.Sprintf("media probe of '%s' not started: %s", file.Name, probeErr))
@@ -238,7 +240,8 @@ endScan:
 	// Завантаження основного файлу
 	sf, err := app.syncUpload(store, reader, file, profileId)
 	if probe != nil {
-		app.applyMediaDuration(probe, file, sf)
+		d, probeErr := probe.Duration()
+		app.applyMediaDuration(file, sf, d, probeErr)
 	}
 	if err != nil {
 		return err
@@ -256,6 +259,11 @@ endScan:
 	}
 
 	if spool != nil {
+		if spool.err == nil {
+			d, probeErr := utils.ProbeDurationFromFile(spool.f.Name())
+			app.applyMediaDuration(file, sf, d, probeErr)
+		}
+
 		if sf.Thumbnail, err = app.videoThumbnail(store, spool, file); err != nil {
 			return err
 		}
@@ -272,8 +280,7 @@ endScan:
 
 // applyMediaDuration is best effort: a file ffprobe cannot read is still stored,
 // just without a duration.
-func (app *App) applyMediaDuration(probe *utils.MediaProbe, file *model.JobUploadFile, sf *model.File) {
-	d, err := probe.Duration()
+func (app *App) applyMediaDuration(file *model.JobUploadFile, sf *model.File, d time.Duration, err error) {
 	if err != nil {
 		wlog.Warn(fmt.Sprintf("media probe of '%s' failed: %s", file.Name, err))
 		return
