@@ -2,15 +2,20 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 const (
 	ThumbnailScale = "128:-1"
+
+	// One frame from a local file; a run this long means a malformed input.
+	videoThumbnailTimeout = time.Minute
 )
 
 type Thumbnail struct {
@@ -132,9 +137,12 @@ func VideoThumbnailFromFile(path, scale string) ([]byte, string, error) {
 	}
 	scale = "scale=" + scale
 
+	ctx, cancel := context.WithTimeout(context.Background(), videoThumbnailTimeout)
+	defer cancel()
+
 	var stdout bytes.Buffer
 	stderr := limitedBuffer{limit: mediaProbeStderr}
-	cmd := exec.Command("ffmpeg",
+	cmd := exec.CommandContext(ctx, "ffmpeg",
 		"-v", "error",
 		"-i", path,
 		"-vframes", "1",
@@ -148,6 +156,10 @@ func VideoThumbnailFromFile(path, scale string) ([]byte, string, error) {
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return nil, "", errors.New("ffmpeg: timed out")
+		}
+
 		return nil, "", fmt.Errorf("ffmpeg: %w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 

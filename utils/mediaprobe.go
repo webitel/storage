@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -118,7 +119,40 @@ func (p *MediaProbe) Duration() (time.Duration, error) {
 		return 0, errMediaProbeTimeout
 	}
 
-	out := strings.TrimSpace(p.stdout.String())
+	return parseDuration(p.stdout.String())
+}
+
+// ProbeDurationFromFile reads a seekable file, so unlike the piped MediaProbe it
+// never misses an index (moov) at the end of the file.
+func ProbeDurationFromFile(path string) (time.Duration, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), mediaProbeTimeout)
+	defer cancel()
+
+	var stdout bytes.Buffer
+	stderr := limitedBuffer{limit: mediaProbeStderr}
+
+	cmd := exec.CommandContext(ctx, "ffprobe",
+		"-v", "error",
+		"-show_entries", "format=duration",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		path,
+	)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		if ctx.Err() != nil {
+			return 0, errMediaProbeTimeout
+		}
+
+		return 0, fmt.Errorf("ffprobe: %w: %s", err, strings.TrimSpace(stderr.String()))
+	}
+
+	return parseDuration(stdout.String())
+}
+
+func parseDuration(raw string) (time.Duration, error) {
+	out := strings.TrimSpace(raw)
 
 	secs, err := strconv.ParseFloat(out, 64)
 	if err != nil || secs <= 0 {
