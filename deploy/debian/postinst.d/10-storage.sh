@@ -11,16 +11,16 @@
 # Create the directories only when missing, so we never change the ownership
 # of an existing deployment's data/recordings on upgrade.
 for dir in /opt/storage /opt/storage/data /opt/storage/recordings; do
-    [ -d "$dir" ] || install -d -o webitel -g webitel -m 0750 "$dir"
+    [ -d "$dir" ] || install -d -o "$USER_NAME" -g "$GROUP_NAME" -m 0750 "$dir"
 done
 
 I18N_DIR=/usr/share/webitel/storage/i18n
-[ -d "$I18N_DIR" ] || install -d -o webitel -g webitel -m 0755 "$I18N_DIR"
+[ -d "$I18N_DIR" ] || install -d -o "$USER_NAME" -g "$GROUP_NAME" -m 0755 "$I18N_DIR"
 
 KEY=/opt/storage/key.pem
 if [ ! -f "$KEY" ]; then
     echo "Generating storage signing key: $KEY"
     openssl genrsa -out "$KEY" 2048
-    chown webitel:webitel "$KEY"
+    chown "$USER_NAME:$GROUP_NAME" "$KEY"
     chmod 600 "$KEY"
 fi
