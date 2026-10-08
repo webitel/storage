@@ -9,16 +9,13 @@
 # Creates the storage working directories and the presigned-URL signing key.
 
 # Create the directories only when missing, so we never change the ownership
-# of an existing deployment's data/recordings on upgrade; only files of the
-# legacy "webitel" service account are handed over to $USER_NAME.
+# of an existing deployment's data/recordings on upgrade.
 for dir in /opt/storage /opt/storage/data /opt/storage/recordings; do
     [ -d "$dir" ] || install -d -o "$USER_NAME" -g "$GROUP_NAME" -m 0750 "$dir"
 done
 
 I18N_DIR=/usr/share/webitel/storage/i18n
 [ -d "$I18N_DIR" ] || install -d -o "$USER_NAME" -g "$GROUP_NAME" -m 0755 "$I18N_DIR"
-
-migrate_legacy_owner /opt/storage
 
 KEY=/opt/storage/key.pem
 if [ ! -f "$KEY" ]; then
