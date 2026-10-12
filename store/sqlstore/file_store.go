@@ -378,7 +378,7 @@ FROM storage.files f
 
 func (s SqlFileStore) Metadata(domainId int64, id int64) (model.File, model.AppError) {
 	var m model.File
-	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size, custom_properties, thumbnail
+	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size, custom_properties, thumbnail, channel
 from storage.files
 where domain_id = :DomainId and id = :Id`, map[string]any{
 		"DomainId": domainId,

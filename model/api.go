@@ -22,3 +22,5 @@ const (
 const (
 	AnyFileRouteName = "/any/file"
 )
+
+const PreSignRequireChannelParam = "require_channel"
