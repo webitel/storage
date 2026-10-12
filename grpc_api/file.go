@@ -197,7 +197,32 @@ func getMalware(in *model.MalwareScan) *storage.FileMalwareScan {
 }
 
 func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileLinkRequest) (*storage.GenerateFileLinkResponse, error) {
-	uri, err := api.ctrl.GeneratePreSignedResourceSignatureBulk(in.GetFileId(), in.GetDomainId(), model.AnyFileRouteName, in.GetAction(), in.GetSource(), in.GetQuery())
+	query := in.GetQuery()
+
+	var checked *model.File
+	if requireChannel := query[model.PreSignRequireChannelParam]; requireChannel != "" {
+		query = cloneQueryWithout(query, model.PreSignRequireChannelParam)
+
+		if in.GetSource() != "file" {
+			return nil, model.NewForbiddenError("grpc.file.generate_link.channel_forbidden", "file is not available in this channel")
+		}
+
+		meta, err := api.ctrl.App().Store.File().Metadata(in.GetDomainId(), in.GetFileId())
+		if err != nil {
+			if err.GetStatusCode() == http.StatusNotFound {
+				return nil, model.NewForbiddenError("grpc.file.generate_link.channel_forbidden", "file is not available in this channel")
+			}
+			return nil, err
+		}
+
+		if !channelMatches(meta.Channel, requireChannel) {
+			return nil, model.NewForbiddenError("grpc.file.generate_link.channel_forbidden", "file is not available in this channel")
+		}
+
+		checked = &meta
+	}
+
+	uri, err := api.ctrl.GeneratePreSignedResourceSignatureBulk(in.GetFileId(), in.GetDomainId(), model.AnyFileRouteName, in.GetAction(), in.GetSource(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -209,8 +234,10 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 
 	if in.Metadata {
 		var f model.File
-		switch in.Source {
-		case "file":
+		switch {
+		case in.Source == "file" && checked != nil:
+			f = *checked
+		case in.Source == "file":
 			f, err = api.ctrl.App().Store.File().Metadata(in.GetDomainId(), in.GetFileId())
 		default:
 			f.BaseFile, err = api.ctrl.App().Store.MediaFile().Metadata(in.GetDomainId(), in.GetFileId())
@@ -1019,6 +1046,27 @@ func toGrpcFile(src *model.File) *storage.File {
 	}
 
 	return f
+}
+
+func cloneQueryWithout(query map[string]string, key string) map[string]string {
+	if query == nil {
+		return nil
+	}
+	out := make(map[string]string, len(query))
+	for k, v := range query {
+		if k == key {
+			continue
+		}
+		out[k] = v
+	}
+	return out
+}
+
+func channelMatches(stored *string, required string) bool {
+	if stored == nil || *stored == "" {
+		return required == model.UploadFileChannelChat
+	}
+	return *stored == required
 }
 
 func channelType(channel storage.UploadFileChannel) string {
