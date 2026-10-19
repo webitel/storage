@@ -69,3 +69,16 @@ func (self *MediaFile) ToJson() string {
 func (self *MediaFile) Domain() int64 {
 	return self.DomainId
 }
+
+type DeleteMediaFileRequest struct {
+	DomainID int
+	ID       int
+	Force    bool
+}
+
+func NewDeleteMediaFileRequest(id int, force bool) *DeleteMediaFileRequest {
+	return &DeleteMediaFileRequest{
+		ID:    id,
+		Force: force,
+	}
+}

@@ -98,7 +98,7 @@ type FileStore interface {
 	MarkRemove(domainId int64, ids []int64) model.AppError
 	MarkRemoveQuarantine(domainId int64, ids []int64) model.AppError
 	MarkRemoveByChannels(ctx context.Context, domainId int64, ids []int64, channels []string) model.AppError
-	Metadata(domainId int64, id int64) (model.BaseFile, model.AppError)
+	Metadata(domainId int64, id int64) (model.File, model.AppError)
 
 	MoveFromJob(jobId int64, profileId *int, properties model.StringInterface, retentionUntil *time.Time) StoreChannel
 	CheckCallRecordPermissions(ctx context.Context, fileId int, currentUserId int64, domainId int64, groups []int) (bool, model.AppError)
@@ -110,7 +110,8 @@ type MediaFileStore interface {
 	Create(file *model.MediaFile) (*model.MediaFile, model.AppError)
 	GetAllPage(domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, model.AppError)
 	Get(domainId int64, id int) (*model.MediaFile, model.AppError)
-	Delete(domainId, id int64) model.AppError
+	Delete(ctx context.Context, domainId, id int64) model.AppError
+	DeleteReturning(ctx context.Context, r *model.DeleteMediaFileRequest) (*model.MediaFile, model.AppError)
 
 	Save(file *model.MediaFile) StoreChannel
 	GetAllByDomain(domain string, offset, limit int) StoreChannel

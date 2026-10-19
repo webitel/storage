@@ -2,6 +2,7 @@ package grpc_api
 
 import (
 	"context"
+
 	"github.com/webitel/storage/app"
 
 	"github.com/webitel/storage/controller"
@@ -87,9 +88,10 @@ func (api *media) DeleteMediaFile(ctx context.Context, in *storage.DeleteMediaFi
 	if err != nil {
 		return nil, err
 	}
-	var file *model.MediaFile
 
-	file, err = api.ctrl.DeleteMediaFile(session, in.GetDomainId(), int(in.GetId()))
+	deleteRequest := model.NewDeleteMediaFileRequest(int(in.GetId()), in.GetForce())
+
+	file, err := api.ctrl.DeleteMediaFile(ctx, session, deleteRequest)
 	if err != nil {
 		return nil, err
 	}
