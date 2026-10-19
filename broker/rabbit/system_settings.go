@@ -15,7 +15,6 @@ const (
 	EXCHANGE_EVENT string = "event"
 
 	systemSettingsRoutingKey    = model.SystemSettingsObjectName + ".#"
-	systemSettingsQueueExpires  = 10000
 	systemSettingsReconnectWait = 5 * time.Second
 )
 
@@ -23,7 +22,6 @@ var errSystemSettingsDeliveriesClosed = errors.New("system settings deliveries c
 
 type SystemSettingsConsumer struct {
 	conn    *rabbitmq.Connection
-	queue   string
 	handler func(e *model.SystemSettingEvent)
 	logger  rabbitmq.Logger
 	cancel  context.CancelFunc
@@ -33,7 +31,6 @@ type SystemSettingsConsumer struct {
 func NewSystemSettingsConsumer(conn *rabbitmq.Connection, handler func(e *model.SystemSettingEvent), logger rabbitmq.Logger) *SystemSettingsConsumer {
 	return &SystemSettingsConsumer{
 		conn:    conn,
-		queue:   fmt.Sprintf("storage.system_settings.%s", model.NewId()[0:10]),
 		handler: handler,
 		logger:  logger,
 		done:    make(chan struct{}),
@@ -73,28 +70,25 @@ func (c *SystemSettingsConsumer) consume(ctx context.Context) error {
 		return fmt.Errorf("declare exchange %q: %w", EXCHANGE_EVENT, err)
 	}
 
-	_, err = ch.QueueDeclare(c.queue, true, false, false, false, amqp.Table{
-		"x-queue-type": "quorum",
-		"x-expires":    systemSettingsQueueExpires,
-	})
-	if err != nil {
-		return fmt.Errorf("declare queue %q: %w", c.queue, err)
+	queue := fmt.Sprintf("storage.system_settings.%s", model.NewId()[0:10])
+	if _, err = ch.QueueDeclare(queue, false, true, true, false, nil); err != nil {
+		return fmt.Errorf("declare queue %q: %w", queue, err)
 	}
 
-	if err = ch.QueueBind(c.queue, systemSettingsRoutingKey, EXCHANGE_EVENT, false, nil); err != nil {
-		return fmt.Errorf("bind queue %q: %w", c.queue, err)
+	if err = ch.QueueBind(queue, systemSettingsRoutingKey, EXCHANGE_EVENT, false, nil); err != nil {
+		return fmt.Errorf("bind queue %q: %w", queue, err)
 	}
 
-	msgs, err := ch.Consume(c.queue, c.queue, false, false, false, false, nil)
+	msgs, err := ch.Consume(queue, queue, false, false, false, false, nil)
 	if err != nil {
-		return fmt.Errorf("consume queue %q: %w", c.queue, err)
+		return fmt.Errorf("consume queue %q: %w", queue, err)
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			if err = ch.Cancel(c.queue, false); err != nil && !errors.Is(err, amqp.ErrClosed) {
-				return fmt.Errorf("cancel consumer %q: %w", c.queue, err)
+			if err = ch.Cancel(queue, false); err != nil && !errors.Is(err, amqp.ErrClosed) {
+				return fmt.Errorf("cancel consumer %q: %w", queue, err)
 			}
 			return nil
 		case msg, ok := <-msgs:
