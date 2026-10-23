@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path"
 	"strings"
@@ -341,6 +342,11 @@ func (s *spoolFile) Write(p []byte) (int, error) {
 
 func thumbnailJob(file *model.JobUploadFile) model.JobUploadFile {
 	thumbnailFile := *file
+	thumbnailFile.Properties = maps.Clone(file.Properties)
+
+	delete(thumbnailFile.Properties, "location")
+	delete(thumbnailFile.Properties, "directory")
+
 	thumbnailFile.Name = "thumbnail_" + file.Name + ".png"
 	thumbnailFile.ViewName = &thumbnailFile.Name
 	thumbnailFile.MimeType = "image/png"
