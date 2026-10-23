@@ -23,7 +23,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.13.0
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine/pkg/discovery v0.0.0-20250925094226-59b6a9641d79
-	github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30
+	github.com/webitel/engine/pkg/presign v0.0.0-20260814110632-b0085804d1f0
 	github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3
 	github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8
 	github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf84692
@@ -34,9 +34,9 @@ require (
 	github.com/webitel/wlog v0.0.0-20250325101442-de4f125c1ec7
 	go.opentelemetry.io/otel v1.44.0
 	go.opentelemetry.io/otel/sdk v1.44.0
-	golang.org/x/crypto v0.53.0
+	golang.org/x/crypto v0.54.0
 	golang.org/x/image v0.12.0
-	golang.org/x/sync v0.21.0
+	golang.org/x/sync v0.22.0
 	google.golang.org/api v0.287.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260630182238-925bb5da69e7
 	google.golang.org/grpc v1.82.0
@@ -94,6 +94,8 @@ require (
 	github.com/poy/onpar v1.1.2 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/webitel/crypto/cryptobox v0.2.0 // indirect
+	github.com/webitel/crypto/env v0.1.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/bridges/otelzap v0.11.0 // indirect
@@ -123,8 +125,8 @@ require (
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.56.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.38.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
+	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
