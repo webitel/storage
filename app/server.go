@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
+	"github.com/webitel/webitel-go-kit/infra/health"
 	"github.com/webitel/wlog"
 
 	"github.com/webitel/storage/store"
@@ -82,6 +83,7 @@ func (a *App) StartServer() error {
 	}
 
 	a.Srv.ListenAddr = listener.Addr().(*net.TCPAddr)
+	a.health.Critical(health.SystemHTTP, health.ListenerCheck(listener), health.WithName("external"))
 	wlog.Info(fmt.Sprintf("Server is listening on %v", listener.Addr().String()))
 	a.Srv.didFinishListen = make(chan struct{})
 
@@ -116,6 +118,7 @@ func (a *App) StartInternalServer() error {
 	}
 
 	a.InternalSrv.ListenAddr = listener.Addr().(*net.TCPAddr)
+	a.health.Critical(health.SystemHTTP, health.ListenerCheck(listener), health.WithName("internal"))
 	wlog.Info(fmt.Sprintf("Server internal is listening on %v", listener.Addr().String()))
 	a.InternalSrv.didFinishListen = make(chan struct{})
 
