@@ -61,10 +61,11 @@ func (c *SystemSettingsConsumer) run(ctx context.Context) {
 }
 
 func (c *SystemSettingsConsumer) consume(ctx context.Context) error {
-	ch, err := c.conn.Channel(ctx)
+	ch, err := c.conn.NewChannel(ctx)
 	if err != nil {
-		return fmt.Errorf("get channel: %w", err)
+		return fmt.Errorf("open channel: %w", err)
 	}
+	defer func() { _ = ch.Close() }()
 
 	if err = ch.ExchangeDeclare(EXCHANGE_EVENT, "topic", true, false, false, false, nil); err != nil {
 		return fmt.Errorf("declare exchange %q: %w", EXCHANGE_EVENT, err)
