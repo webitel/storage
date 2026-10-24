@@ -35,7 +35,7 @@ func (self *LocalFileBackend) GetStoreDirectory(f File) string {
 }
 
 func (self *LocalFileBackend) TestConnection() model.AppError {
-	if err := os.MkdirAll(self.directory, 0o774); err != nil {
+	if err := os.MkdirAll(self.directory, 0o750); err != nil {
 		return model.NewInternalError("utils.file.locally.test_connection.create_dir.app_error", err.Error())
 	}
 
