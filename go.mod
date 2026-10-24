@@ -30,7 +30,7 @@ require (
 	github.com/webitel/webitel-go-kit/infra/httpproxy v0.0.0-20260707115612-427dabf84692
 	github.com/webitel/webitel-go-kit/infra/logger_client v0.0.0-20260803090450-fac61ca3df42
 	github.com/webitel/webitel-go-kit/infra/otel v0.6.0
-	github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.1.0
+	github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.2.0
 	github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab
 	github.com/webitel/wlog v0.0.0-20260929140055-f81a38037840
 	go.opentelemetry.io/otel v1.47.0
