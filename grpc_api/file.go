@@ -51,6 +51,32 @@ func CustomPropertiesFromProto(in *storage.CustomFileProperties) *model.CustomFi
 	}
 }
 
+func customPropertiesToProto(in *model.CustomFileProperties) *storage.CustomFileProperties {
+	if in == nil {
+		return nil
+	}
+
+	return &storage.CustomFileProperties{
+		StartTime: int64(in.StartTime),
+		EndTime:   int64(in.EndTime),
+		Width:     int64(in.Width),
+		Height:    int64(in.Height),
+		Duration:  int64(in.Duration),
+	}
+}
+
+func thumbnailToProto(in *model.Thumbnail) *storage.Thumbnail {
+	if in == nil {
+		return nil
+	}
+
+	return &storage.Thumbnail{
+		MimeType: in.MimeType,
+		Size:     in.Size,
+		Scale:    in.Scale,
+	}
+}
+
 func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 	var chunk *storage.UploadFileRequest_Chunk
 
@@ -171,7 +197,32 @@ func getMalware(in *model.MalwareScan) *storage.FileMalwareScan {
 }
 
 func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileLinkRequest) (*storage.GenerateFileLinkResponse, error) {
-	uri, err := api.ctrl.GeneratePreSignedResourceSignatureBulk(in.GetFileId(), in.GetDomainId(), model.AnyFileRouteName, in.GetAction(), in.GetSource(), in.GetQuery())
+	query := in.GetQuery()
+
+	var checked *model.File
+	if requireChannel := query[model.PreSignRequireChannelParam]; requireChannel != "" {
+		query = cloneQueryWithout(query, model.PreSignRequireChannelParam)
+
+		if in.GetSource() != "file" {
+			return nil, model.NewForbiddenError("grpc.file.generate_link.channel_forbidden", "file is not available in this channel")
+		}
+
+		meta, err := api.ctrl.App().Store.File().Metadata(in.GetDomainId(), in.GetFileId())
+		if err != nil {
+			if err.GetStatusCode() == http.StatusNotFound {
+				return nil, model.NewForbiddenError("grpc.file.generate_link.channel_forbidden", "file is not available in this channel")
+			}
+			return nil, err
+		}
+
+		if !channelMatches(meta.Channel, requireChannel) {
+			return nil, model.NewForbiddenError("grpc.file.generate_link.channel_forbidden", "file is not available in this channel")
+		}
+
+		checked = &meta
+	}
+
+	uri, err := api.ctrl.GeneratePreSignedResourceSignatureBulk(in.GetFileId(), in.GetDomainId(), model.AnyFileRouteName, in.GetAction(), in.GetSource(), query)
 	if err != nil {
 		return nil, err
 	}
@@ -182,12 +233,14 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 	}
 
 	if in.Metadata {
-		var f model.BaseFile
-		switch in.Source {
-		case "file":
+		var f model.File
+		switch {
+		case in.Source == "file" && checked != nil:
+			f = *checked
+		case in.Source == "file":
 			f, err = api.ctrl.App().Store.File().Metadata(in.GetDomainId(), in.GetFileId())
 		default:
-			f, err = api.ctrl.App().Store.MediaFile().Metadata(in.GetDomainId(), in.GetFileId())
+			f.BaseFile, err = api.ctrl.App().Store.MediaFile().Metadata(in.GetDomainId(), in.GetFileId())
 		}
 
 		if err != nil {
@@ -195,10 +248,12 @@ func (api *file) GenerateFileLink(ctx context.Context, in *storage.GenerateFileL
 		}
 
 		response.Metadata = &storage.GenerateFileLinkResponse_Metadata{
-			Id:       in.GetFileId(),
-			Name:     f.GetViewName(),
-			MimeType: f.GetMimeType(),
-			Size:     f.GetSize(),
+			Id:         in.GetFileId(),
+			Name:       f.GetViewName(),
+			MimeType:   f.GetMimeType(),
+			Size:       f.GetSize(),
+			Properties: customPropertiesToProto(f.CustomProperties),
+			Thumbnail:  thumbnailToProto(f.Thumbnail),
 		}
 	}
 
@@ -250,13 +305,7 @@ func (api *file) DownloadFile(in *storage.DownloadFileRequest, stream storage.Fi
 		if f.SHA256Sum != nil {
 			d.Metadata.Sha256Sum = *f.SHA256Sum
 		}
-		if f.Thumbnail != nil {
-			d.Metadata.Thumbnail = &storage.Thumbnail{
-				MimeType: f.Thumbnail.MimeType,
-				Size:     f.Thumbnail.Size,
-				Scale:    f.Thumbnail.Scale,
-			}
-		}
+		d.Metadata.Thumbnail = thumbnailToProto(f.Thumbnail)
 		err = stream.Send(&storage.StreamFile{
 			Data: d,
 		})
@@ -997,6 +1046,27 @@ func toGrpcFile(src *model.File) *storage.File {
 	}
 
 	return f
+}
+
+func cloneQueryWithout(query map[string]string, key string) map[string]string {
+	if query == nil {
+		return nil
+	}
+	out := make(map[string]string, len(query))
+	for k, v := range query {
+		if k == key {
+			continue
+		}
+		out[k] = v
+	}
+	return out
+}
+
+func channelMatches(stored *string, required string) bool {
+	if stored == nil || *stored == "" {
+		return required == model.UploadFileChannelChat
+	}
+	return *stored == required
 }
 
 func channelType(channel storage.UploadFileChannel) string {
