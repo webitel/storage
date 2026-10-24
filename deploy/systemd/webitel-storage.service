@@ -34,8 +34,7 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
 NoExecPaths=/
-ExecPaths=/usr/local/bin/webitel-storage
-ExecPaths=/usr/bin/ffmpeg
+ExecPaths=/usr/local/bin/webitel-storage /usr/bin/ffmpeg /usr/lib -/lib -/lib64
 ReadWritePaths=/opt/storage
 
 # Process isolation
