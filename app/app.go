@@ -304,17 +304,9 @@ func New(options ...string) (outApp *App, outErr error) {
 	app.health.Critical("filestore", utils.FileBackendHealthAdapter(app.DefaultFileStore), health.WithName("default"))
 	app.health.Critical(health.SystemGRPC, health.ListenerCheck(app.GrpcServer.lis))
 	app.health.Informational(health.SystemPostgreSQL, sqlSupplier.Ping)
-	app.health.Informational(health.SystemRabbitMQ, app.pingRabbitMQ)
+	app.health.Informational(health.SystemRabbitMQ, app.rabbitConn.Ping)
 
 	return app, outErr
-}
-
-func (app *App) pingRabbitMQ(ctx context.Context) error {
-	// go-kit rabbitmq.Connection does not expose direct Ping.
-	// Channel returns the existing shared channel after connection/channel liveness
-	// checks; it does not open a new channel or touch the broker.
-	_, err := app.rabbitConn.Channel(ctx)
-	return err
 }
 
 // initUploadFileClient builds the HTTP client used by the UploadFileUrl API.
