@@ -28,17 +28,18 @@ const (
 
 type S3FileBackend struct {
 	BaseFileBackend
-	name           string
-	region         string
-	accessKey      string
-	accessToken    string
-	bucket         string
-	endpoint       string
-	pathPattern    string
-	sess           *session.Session
-	svc            *s3.S3
-	uploader       *s3manager.Uploader
-	forcePathStyle bool
+	name                string
+	region              string
+	accessKey           string
+	accessToken         string
+	bucket              string
+	endpoint            string
+	pathPattern         string
+	sess                *session.Session
+	svc                 *s3.S3
+	uploader            *s3manager.Uploader
+	forcePathStyle      bool
+	healthCheckDisabled bool
 }
 
 func (self *S3FileBackend) Name() string {
@@ -63,7 +64,7 @@ func isS3ForcePathStyle(name string) bool {
 	return name == GoogleStorage || strings.HasSuffix(name, SelCDN)
 }
 
-func (self *S3FileBackend) TestConnection() model.AppError {
+func (self *S3FileBackend) Init() model.AppError {
 	config := &aws.Config{
 		Region:      aws.String(strings.ToLower(self.region)),
 		Endpoint:    self.getEndpoint(),
@@ -82,6 +83,22 @@ func (self *S3FileBackend) TestConnection() model.AppError {
 	self.sess = sess
 	self.svc = s3.New(sess)
 	self.uploader = s3manager.NewUploader(sess)
+
+	return nil
+}
+
+func (self *S3FileBackend) TestConnection() model.AppError {
+	if self.healthCheckDisabled {
+		return nil
+	}
+
+	if self.svc == nil {
+		return model.NewInternalError("utils.file.s3.test_connection.not_initialized.app_error", "s3 client is not initialized")
+	}
+
+	if _, err := self.svc.HeadBucket(&s3.HeadBucketInput{Bucket: &self.bucket}); err != nil {
+		return model.NewInternalError("utils.file.s3.test_connection.app_error", err.Error())
+	}
 
 	return nil
 }
