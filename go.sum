@@ -17,8 +17,8 @@ cloud.google.com/go/longrunning v1.2.0 h1:WjYH3YHBGCxGJP9M4dWGHBfXr/cFIjMkNgWcJj
 cloud.google.com/go/longrunning v1.2.0/go.mod h1:5KMQALFGOCtFoi2xSOA1u3H7WKlhmckgiyFw7+LGQp0=
 cloud.google.com/go/monitoring v1.24.3 h1:dde+gMNc0UhPZD1Azu6at2e79bfdztVDS5lvhOdsgaE=
 cloud.google.com/go/monitoring v1.24.3/go.mod h1:nYP6W0tm3N9H/bOw8am7t62YTzZY+zUeQ+Bi6+2eonI=
-cloud.google.com/go/speech v1.30.0 h1:R+KGIbRMrj8jA4U6Qea8hqCMsAEdg576ShNsmRr4gcQ=
-cloud.google.com/go/speech v1.30.0/go.mod h1:F2+NJujR8uzDLd6bwy5kgtVycxvEq06nzvzz5eQ/gMo=
+cloud.google.com/go/speech v1.37.0 h1:Vjp/bU/o9MMcHpFZuz1SBAZ5fOhnF92BIKGDnf1WO+o=
+cloud.google.com/go/speech v1.37.0/go.mod h1:WpZ3x/jVYuLVAW/6CikPpSJaSfUY5yPI1TGJSwJOLEA=
 cloud.google.com/go/storage v1.56.0 h1:iixmq2Fse2tqxMbWhLWC9HfBj1qdxqAmiK8/eqtsLxI=
 cloud.google.com/go/storage v1.56.0/go.mod h1:Tpuj6t4NweCLzlNbw9Z9iwxEkrSem20AetIeH/shgVU=
 cloud.google.com/go/texttospeech v1.22.0 h1:xGqQv2LB4nttaBNMepCm19EQ0Sk0YdjzPvklDU+LYsI=
