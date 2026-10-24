@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
@@ -40,6 +39,7 @@ import (
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/otlp"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/stdout"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/otlp"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/prometheus"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/stdout"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/trace/otlp"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/trace/stdout"
@@ -90,7 +90,6 @@ type App struct {
 
 	ctx              context.Context
 	otelShutdownFunc otelsdk.ShutdownFunc
-	otelHealth       metric.Registration
 
 	fileChipher utils.Chipher
 
@@ -185,6 +184,11 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	slogLog := slog.New(wlog.NewSlogHandler(app.Log))
 
+	var healthMetrics *otelhealth.Transport
+	if config.Log.Otel {
+		healthMetrics = otelhealth.NewTransport()
+	}
+
 	// nil when NOTIFY_SOCKET is unset or HEALTH_ADDRESS is empty; WithTransport skips nil.
 	app.health = health.New(health.DefaultConfig(), slogLog,
 		health.WithTransport(sdnotify.New(
@@ -192,6 +196,7 @@ func New(options ...string) (outApp *App, outErr error) {
 			sdnotify.WithStartTimeout(time.Duration(config.Health.StartTimeout)*time.Second),
 		)),
 		health.WithTransport(healthhttp.NewServer(config.Health.Address, healthhttp.WithLogger(slogLog))),
+		health.WithTransport(healthMetrics),
 	)
 	if err := app.health.Start(app.ctx); err != nil {
 		return nil, fmt.Errorf("unable to start health registry: %w", err)
@@ -295,18 +300,11 @@ func New(options ...string) (outApp *App, outErr error) {
 	}
 
 	// Critical is node-local only dependencies: a shared one drops the whole fleet at once.
-	app.health.Critical("media_file_store", utils.FileBackendHealthAdapter(app.MediaFileStore))
-	app.health.Critical("default_file_store", utils.FileBackendHealthAdapter(app.DefaultFileStore))
-	app.health.Critical("grpc", health.ListenerCheck(app.GrpcServer.lis))
-	app.health.Informational("postgres", sqlSupplier.Ping)
-	app.health.Informational("rabbitmq", app.pingRabbitMQ)
-
-	if config.Log.Otel {
-		var err error
-		if app.otelHealth, err = otelhealth.Start(app.health); err != nil {
-			return nil, fmt.Errorf("unable to register health metrics: %w", err)
-		}
-	}
+	app.health.Critical("filestore", utils.FileBackendHealthAdapter(app.MediaFileStore), health.WithName("media"))
+	app.health.Critical("filestore", utils.FileBackendHealthAdapter(app.DefaultFileStore), health.WithName("default"))
+	app.health.Critical(health.SystemGRPC, health.ListenerCheck(app.GrpcServer.lis))
+	app.health.Informational(health.SystemPostgreSQL, sqlSupplier.Ping)
+	app.health.Informational(health.SystemRabbitMQ, app.pingRabbitMQ)
 
 	return app, outErr
 }
@@ -570,12 +568,6 @@ func (app *App) Shutdown() {
 
 	if app.otelShutdownFunc != nil {
 		app.otelShutdownFunc(app.ctx)
-	}
-
-	if app.otelHealth != nil {
-		if err := app.otelHealth.Unregister(); err != nil {
-			app.Log.Error(fmt.Sprintf("health metrics unregister: %s", err.Error()), wlog.Err(err))
-		}
 	}
 }
 

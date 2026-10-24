@@ -83,7 +83,7 @@ func (a *App) StartServer() error {
 	}
 
 	a.Srv.ListenAddr = listener.Addr().(*net.TCPAddr)
-	a.health.Critical("http_external", health.ListenerCheck(listener))
+	a.health.Critical(health.SystemHTTP, health.ListenerCheck(listener), health.WithName("external"))
 	wlog.Info(fmt.Sprintf("Server is listening on %v", listener.Addr().String()))
 	a.Srv.didFinishListen = make(chan struct{})
 
@@ -118,7 +118,7 @@ func (a *App) StartInternalServer() error {
 	}
 
 	a.InternalSrv.ListenAddr = listener.Addr().(*net.TCPAddr)
-	a.health.Critical("http_internal", health.ListenerCheck(listener))
+	a.health.Critical(health.SystemHTTP, health.ListenerCheck(listener), health.WithName("internal"))
 	wlog.Info(fmt.Sprintf("Server internal is listening on %v", listener.Addr().String()))
 	a.InternalSrv.didFinishListen = make(chan struct{})
 
