@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
-	github.com/gorilla/handlers v1.5.1
+	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0
 	github.com/h2non/filetype v1.1.3
