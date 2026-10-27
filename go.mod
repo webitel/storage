@@ -23,7 +23,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.13.0
 	github.com/robfig/cron v1.2.0
 	github.com/webitel/engine/pkg/discovery v0.0.0-20260826062815-ac09649ed0d9
-	github.com/webitel/engine/pkg/presign v0.0.0-20250508102602-4109efdb5e30
+	github.com/webitel/engine/pkg/presign v0.1.0
 	github.com/webitel/engine/pkg/wbt v0.0.0-20250919085327-014f1a899fd3
 	github.com/webitel/engine/pkg/werror v0.0.0-20250508121332-6ae1563235d8
 	github.com/webitel/webitel-go-kit/infra/health v0.3.0
@@ -102,6 +102,8 @@ require (
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.8.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
+	github.com/webitel/crypto/cryptobox v0.3.0 // indirect
+	github.com/webitel/crypto/env v0.2.0 // indirect
 	github.com/webitel/webitel-go-kit/pkg/logging v0.1.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
