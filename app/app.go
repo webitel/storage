@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"net/url"
 	"sync/atomic"
@@ -23,7 +22,7 @@ import (
 	otelhealth "github.com/webitel/webitel-go-kit/infra/otel/instrumentation/health"
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
-	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
 
@@ -46,6 +45,8 @@ import (
 )
 
 const (
+	serviceLogComponent logging.Component = "storage"
+
 	defaultLogTimeout = 5 * time.Second
 	filePolicyExpire  = 5
 )
@@ -72,6 +73,7 @@ type App struct {
 	uploadFileClient *http.Client
 
 	Log        *wlog.Logger
+	logger     *logging.Logger
 	configFile string
 	config     atomic.Value
 	health     *health.Registry
@@ -148,47 +150,35 @@ func New(options ...string) (outApp *App, outErr error) {
 
 	app.thumbnailSettings = config.Thumbnail
 
-	logConfig := &wlog.LoggerConfiguration{
-		EnableConsole: config.Log.Console,
-		ConsoleJson:   false,
-		ConsoleLevel:  config.Log.Lvl,
+	var logLevel logging.Level
+	if err := logLevel.UnmarshalText([]byte(config.Log.Lvl)); err != nil {
+		return nil, fmt.Errorf("invalid LOG_LVL: %w", err)
 	}
 
-	if config.Log.File != "" {
-		logConfig.FileLocation = config.Log.File
-		logConfig.EnableFile = true
-		logConfig.FileJson = true
-		logConfig.FileLevel = config.Log.Lvl
+	var err error
+	app.otelShutdownFunc, err = otelsdk.Configure(
+		app.ctx,
+		otelsdk.WithResource(resource.NewSchemaless(
+			semconv.ServiceName(model.APP_SERVICE_NAME),
+			semconv.ServiceVersion(model.CurrentVersion),
+			semconv.ServiceInstanceID(*app.id),
+			semconv.ServiceNamespace("webitel"),
+		)),
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	if config.Log.Otel {
-		// TODO
-		var err error
-		logConfig.EnableExport = true
-		app.otelShutdownFunc, err = otelsdk.Configure(
-			app.ctx,
-			otelsdk.WithResource(resource.NewSchemaless(
-				semconv.ServiceName(model.APP_SERVICE_NAME),
-				semconv.ServiceVersion(model.CurrentVersion),
-				semconv.ServiceInstanceID(*app.id),
-				semconv.ServiceNamespace("webitel"),
-			)),
-		)
-		if err != nil {
-			return nil, err
-		}
-	}
-	app.Log = wlog.NewLogger(logConfig)
+	app.logger = logging.New(
+		logging.WithComponent(serviceLogComponent),
+		logging.WithLevel(logLevel),
+	)
+	app.Log = wlog.NewLogger(&wlog.LoggerConfiguration{EnableExport: true})
 
 	wlog.RedirectStdLog(app.Log)
 	wlog.InitGlobalLogger(app.Log)
 
-	slogLog := slog.New(wlog.NewSlogHandler(app.Log))
-
-	var healthMetrics *otelhealth.Transport
-	if config.Log.Otel {
-		healthMetrics = otelhealth.NewTransport()
-	}
+	slogLog := app.logger.Slog()
 
 	// nil when NOTIFY_SOCKET is unset or HEALTH_ADDRESS is empty; WithTransport skips nil.
 	app.health = health.New(health.DefaultConfig(), slogLog,
@@ -197,7 +187,7 @@ func New(options ...string) (outApp *App, outErr error) {
 			sdnotify.WithStartTimeout(time.Duration(config.Health.StartTimeout)*time.Second),
 		)),
 		health.WithTransport(healthhttp.NewServer(config.Health.Address, healthhttp.WithLogger(slogLog))),
-		health.WithTransport(healthMetrics),
+		health.WithTransport(otelhealth.NewTransport()),
 	)
 	if err := app.health.Start(app.ctx); err != nil {
 		return nil, fmt.Errorf("unable to start health registry: %w", err)
@@ -378,7 +368,7 @@ func (app *App) initWatchers(config *model.Config) error {
 
 func (app *App) initListeners() error {
 	domainsCreatedEventHandler := handler.NewEventDomainCreatedHandler(app.Store.FilePolicies())
-	eventConsumer := rabbit.NewMultiEventConsumer(wlogadapter.NewWlogLogger(app.Log))
+	eventConsumer := rabbit.NewMultiEventConsumer(app.logger)
 
 	rabbit.HandleFunc(eventConsumer, domainsCreatedEventHandler)
 
@@ -388,7 +378,7 @@ func (app *App) initListeners() error {
 	}
 
 	app.rabbitConsumer = eventConsumer
-	app.sysSettingsConsumer = rabbit.NewSystemSettingsConsumer(app.rabbitConn, app.InvalidateCachedSystemSetting, wlogadapter.NewWlogLogger(app.Log))
+	app.sysSettingsConsumer = rabbit.NewSystemSettingsConsumer(app.rabbitConn, app.InvalidateCachedSystemSetting, app.logger)
 
 	return nil
 }
@@ -425,7 +415,7 @@ func (app *App) makeLoggerPublisher(conn *rabbitmq.Connection) error {
 		return fmt.Errorf("logger publisher config error: %w", err)
 	}
 
-	publisher, err := rabbitmq.NewPublisher(conn, pubCfg, wlogadapter.NewWlogLogger(app.Log))
+	publisher, err := rabbitmq.NewPublisher(conn, pubCfg, app.logger)
 	if err != nil {
 		return fmt.Errorf("create logger publisher error: %w", err)
 	}
@@ -448,7 +438,7 @@ loop:
 
 	conn, err := rabbitmq.NewConnection(
 		cfg,
-		wlogadapter.NewWlogLogger(app.Log),
+		app.logger,
 	)
 	if err != nil {
 		count++
@@ -478,7 +468,7 @@ loop:
 	}
 
 	// Create publisher
-	publisher, err := rabbitmq.NewPublisher(conn, pubCfg, wlogadapter.NewWlogLogger(app.Log))
+	publisher, err := rabbitmq.NewPublisher(conn, pubCfg, app.logger)
 	if err != nil {
 		return fmt.Errorf("rabbitmq publisher error: %w", err)
 	}

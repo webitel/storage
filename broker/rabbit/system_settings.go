@@ -9,6 +9,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 )
 
 const (
@@ -23,16 +24,16 @@ var errSystemSettingsDeliveriesClosed = errors.New("system settings deliveries c
 type SystemSettingsConsumer struct {
 	conn    *rabbitmq.Connection
 	handler func(e *model.SystemSettingEvent)
-	logger  rabbitmq.Logger
+	logger  *logging.Logger
 	cancel  context.CancelFunc
 	done    chan struct{}
 }
 
-func NewSystemSettingsConsumer(conn *rabbitmq.Connection, handler func(e *model.SystemSettingEvent), logger rabbitmq.Logger) *SystemSettingsConsumer {
+func NewSystemSettingsConsumer(conn *rabbitmq.Connection, handler func(e *model.SystemSettingEvent), logger *logging.Logger) *SystemSettingsConsumer {
 	return &SystemSettingsConsumer{
 		conn:    conn,
 		handler: handler,
-		logger:  logger,
+		logger:  logger.WithComponent(logComponent),
 		done:    make(chan struct{}),
 	}
 }
@@ -49,7 +50,7 @@ func (c *SystemSettingsConsumer) run(ctx context.Context) {
 
 	for {
 		if err := c.consume(ctx); err != nil {
-			c.logger.Error("system settings consumer", err)
+			c.logger.ErrorCtx(ctx, "system settings consumer", logging.Err(err))
 		}
 
 		select {
@@ -98,13 +99,13 @@ func (c *SystemSettingsConsumer) consume(ctx context.Context) error {
 			}
 
 			if e, appErr := model.NewSystemSettingEventFromRoutingKey(msg.RoutingKey); appErr != nil {
-				c.logger.Warn("invalid system settings event", "error", appErr.Error())
+				c.logger.WarnCtx(ctx, "invalid system settings event", logging.Err(appErr))
 			} else {
 				c.handler(e)
 			}
 
 			if err = msg.Ack(false); err != nil {
-				c.logger.Error("ack system settings event", err)
+				c.logger.ErrorCtx(ctx, "ack system settings event", logging.Err(err))
 			}
 		}
 	}
