@@ -17,6 +17,7 @@ type SearchFile struct {
 	ListRequest
 	Ids            []int64
 	UploadedAt     *FilterBetween
+	StartAt        *FilterBetween
 	UploadedBy     []int64
 	ReferenceIds   []string // todo uuid rename
 	Channels       []string
@@ -32,6 +33,7 @@ type CustomFileProperties struct {
 	EndTime   int `json:"end_time,omitempty"`
 	Width     int `json:"width,omitempty"`
 	Height    int `json:"height,omitempty"`
+	Duration  int `json:"duration,omitempty"` // milliseconds
 }
 
 type BaseFile struct {

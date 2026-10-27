@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sync/atomic"
@@ -14,8 +15,12 @@ import (
 
 	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
+	"github.com/webitel/webitel-go-kit/infra/health"
+	healthhttp "github.com/webitel/webitel-go-kit/infra/health/http"
+	"github.com/webitel/webitel-go-kit/infra/health/sdnotify"
 	"github.com/webitel/webitel-go-kit/infra/httpproxy"
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
+	otelhealth "github.com/webitel/webitel-go-kit/infra/otel/instrumentation/health"
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
@@ -34,6 +39,7 @@ import (
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/otlp"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/log/stdout"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/otlp"
+	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/prometheus"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/metric/stdout"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/trace/otlp"
 	_ "github.com/webitel/webitel-go-kit/infra/otel/sdk/trace/stdout"
@@ -68,7 +74,7 @@ type App struct {
 	Log        *wlog.Logger
 	configFile string
 	config     atomic.Value
-	newStore   func() store.Store
+	health     *health.Registry
 	// Jobs       *jobs.JobServer
 
 	sessionManager auth_manager.AuthManager
@@ -94,7 +100,8 @@ type App struct {
 	rabbitConn      *rabbitmq.Connection
 	rabbitPublisher rabbitmq.Publisher
 
-	rabbitConsumer *rabbit.MultiEventConsumer
+	rabbitConsumer      *rabbit.MultiEventConsumer
+	sysSettingsConsumer *rabbit.SystemSettingsConsumer
 
 	// ---- Logger ------
 	wtelLogger      *wlogger.Logger
@@ -176,10 +183,30 @@ func New(options ...string) (outApp *App, outErr error) {
 	wlog.RedirectStdLog(app.Log)
 	wlog.InitGlobalLogger(app.Log)
 
+	slogLog := slog.New(wlog.NewSlogHandler(app.Log))
+
+	var healthMetrics *otelhealth.Transport
+	if config.Log.Otel {
+		healthMetrics = otelhealth.NewTransport()
+	}
+
+	// nil when NOTIFY_SOCKET is unset or HEALTH_ADDRESS is empty; WithTransport skips nil.
+	app.health = health.New(health.DefaultConfig(), slogLog,
+		health.WithTransport(sdnotify.New(
+			sdnotify.WithLogger(slogLog),
+			sdnotify.WithStartTimeout(time.Duration(config.Health.StartTimeout)*time.Second),
+		)),
+		health.WithTransport(healthhttp.NewServer(config.Health.Address, healthhttp.WithLogger(slogLog))),
+		health.WithTransport(healthMetrics),
+	)
+	if err := app.health.Start(app.ctx); err != nil {
+		return nil, fmt.Errorf("unable to start health registry: %w", err)
+	}
+
 	// Bind http.DefaultTransport to the proxy manager before any outbound
 	// client is built, so every default-transport call site follows the
 	// watched proxy settings without a restart.
-	app.ProxyManager = httpproxy.NewManager(httpproxy.WithLogger(newSlogLogger(app.Log)))
+	app.ProxyManager = httpproxy.NewManager(httpproxy.WithLogger(slogLog))
 	if err := app.ProxyManager.HookDefaultTransport(); err != nil {
 		return nil, err
 	}
@@ -225,13 +252,9 @@ func New(options ...string) (outApp *App, outErr error) {
 		app.Log.Info("use clamd")
 	}
 
-	if app.newStore == nil {
-		app.newStore = func() store.Store {
-			return store.NewLayeredStore(sqlstore.NewSqlSupplier(app.Config().SqlSettings))
-		}
-	}
+	sqlSupplier := sqlstore.NewSqlSupplier(app.Config().SqlSettings)
 
-	app.Srv.Store = app.newStore()
+	app.Srv.Store = store.NewLayeredStore(sqlSupplier)
 	app.Store = app.Srv.Store
 
 	app.GrpcServer = NewGrpcServer(app.Config().ServerSettings)
@@ -276,6 +299,13 @@ func New(options ...string) (outApp *App, outErr error) {
 	if err := app.initListeners(); err != nil {
 		return nil, err
 	}
+
+	// Critical is node-local only dependencies: a shared one drops the whole fleet at once.
+	app.health.Critical("filestore", utils.FileBackendHealthAdapter(app.MediaFileStore), health.WithName("media"))
+	app.health.Critical("filestore", utils.FileBackendHealthAdapter(app.DefaultFileStore), health.WithName("default"))
+	app.health.Critical(health.SystemGRPC, health.ListenerCheck(app.GrpcServer.lis))
+	app.health.Informational(health.SystemPostgreSQL, sqlSupplier.Ping)
+	app.health.Informational(health.SystemRabbitMQ, app.rabbitConn.Ping)
 
 	return app, outErr
 }
@@ -358,11 +388,16 @@ func (app *App) initListeners() error {
 	}
 
 	app.rabbitConsumer = eventConsumer
+	app.sysSettingsConsumer = rabbit.NewSystemSettingsConsumer(app.rabbitConn, app.InvalidateCachedSystemSetting, wlogadapter.NewWlogLogger(app.Log))
 
 	return nil
 }
 
 func (app *App) StartRabbitListeners() error {
+	if err := app.sysSettingsConsumer.Start(app.ctx); err != nil {
+		return fmt.Errorf("app.start_rabbit_listeners.system_settings: %w", err)
+	}
+
 	return app.rabbitConsumer.Start(app.ctx)
 }
 
@@ -494,6 +529,17 @@ func (app *App) UseDefaultStore() bool {
 func (app *App) Shutdown() {
 	wlog.Info("Stopping Server...")
 
+	if app.health != nil {
+		ctx, cancel := context.WithTimeout(context.Background(),
+			time.Duration(app.Config().Health.StopTimeout)*time.Second)
+
+		if err := app.health.Shutdown(ctx); err != nil {
+			app.Log.Error(fmt.Sprintf("health shutdown: %s", err.Error()), wlog.Err(err))
+		}
+
+		cancel()
+	}
+
 	if app.proxyWatchStop != nil {
 		app.proxyWatchStop()
 	}
@@ -508,6 +554,10 @@ func (app *App) Shutdown() {
 
 	if app.cluster != nil {
 		app.cluster.Stop()
+	}
+
+	if app.sysSettingsConsumer != nil {
+		app.sysSettingsConsumer.Close()
 	}
 
 	if app.rabbitConsumer != nil {

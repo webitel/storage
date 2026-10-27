@@ -95,14 +95,27 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		}
 	}
 
+	var startFrom, startTo *int64
+	if search.StartAt != nil {
+		if search.StartAt.From != 0 {
+			startFrom = &search.StartAt.From
+		}
+		if search.StartAt.To != 0 {
+			startTo = &search.StartAt.To
+		}
+	}
+
 	f := map[string]interface{}{
 		"DomainId":     domainId,
 		"Ids":          pq.Array(search.Ids),
+		"CallId":       search.CallId,
 		"ReferenceIds": pq.Array(search.ReferenceIds),
 		"MimeTypes":    pq.Array(mimeFilters),
 		"UserId":       pq.Array(search.UploadedBy),
 		"From":         model.GetBetweenFromTime(search.UploadedAt),
 		"To":           model.GetBetweenToTime(search.UploadedAt),
+		"StartFrom":    startFrom,
+		"StartTo":      startTo,
 		"Removed":      search.Removed,
 		"AgentIds":     pq.Array(search.AgentIds),
 		"Channel":      screenrecordingChannel,
@@ -112,11 +125,32 @@ func (self *SqlFileStore) GetScreenRecordings(ctx context.Context, domainId int6
 		`domain_id = :DomainId
 		and ( :From::timestamptz isnull or uploaded_at >= :From::timestamptz )
 		and ( :To::timestamptz isnull or uploaded_at <= :To::timestamptz )
+		and (
+			(:StartFrom::bigint isnull and :StartTo::bigint isnull)
+			or exists (
+				select 1
+				from storage.files f
+				where f.id = t.id
+					and (:StartFrom::bigint isnull or coalesce(nullif((f.custom_properties ->> 'start_time')::bigint, 0), f.created_at) >= :StartFrom::bigint)
+					and (:StartTo::bigint isnull or coalesce(nullif((f.custom_properties ->> 'start_time')::bigint, 0), f.created_at) <= :StartTo::bigint)
+			)
+		)
 		and (:UserId::int[] isnull or uploaded_by_id = any(:UserId))
 		and (:Ids::int[] isnull or id = any(:Ids))
 		and (:Removed::bool isnull or case when :Removed::bool then removed is true else not removed is true end)
 		and (:ReferenceIds::varchar[] isnull or uuid = any(:ReferenceIds::varchar[]))
         and (:Channel::varchar isnull or channel = :Channel::varchar)
+		and (:CallId::varchar isnull or (uuid = (select x.id
+                                           from (select coalesce(c.parent_id, c.id)::varchar id
+                                                 from call_center.cc_calls c
+                                                 where c.id = :CallId::uuid
+                                                   and c.domain_id = :DomainId::int8
+                                                 union all
+                                                 select coalesce(c.parent_id, c.id)::varchar id
+                                                 from call_center.cc_calls_history c
+                                                 where c.id = :CallId::uuid
+                                                   and c.domain_id = :DomainId::int8) x
+                                           limit 1)))
 		and (:AgentIds::int[] isnull or uploaded_by_id = any(array(select a.user_id
 			from call_center.cc_agent a
 			where a.domain_id = :DomainId
@@ -342,9 +376,9 @@ FROM storage.files f
 	return file, nil
 }
 
-func (s SqlFileStore) Metadata(domainId int64, id int64) (model.BaseFile, model.AppError) {
-	var m model.BaseFile
-	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size
+func (s SqlFileStore) Metadata(domainId int64, id int64) (model.File, model.AppError) {
+	var m model.File
+	err := s.GetReplica().SelectOne(&m, `select mime_type, coalesce(view_name, name) as name, size, custom_properties, thumbnail, channel
 from storage.files
 where domain_id = :DomainId and id = :Id`, map[string]any{
 		"DomainId": domainId,
@@ -352,7 +386,7 @@ where domain_id = :DomainId and id = :Id`, map[string]any{
 	})
 
 	if err != nil {
-		return model.BaseFile{}, model.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
+		return model.File{}, model.NewCustomCodeError("store.sql_file.metadata.app_error", err.Error(), extractCodeFromErr(err))
 	}
 
 	return m, nil

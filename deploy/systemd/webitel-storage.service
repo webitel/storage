@@ -5,9 +5,9 @@ StartLimitIntervalSec=60
 StartLimitBurst=3
 
 [Service]
-Type=simple
-User=webitel
-Group=webitel
+Type=notify
+User=webitel-svc
+Group=webitel-svc
 LogsDirectory=webitel
 CacheDirectory=webitel-storage
 
@@ -20,7 +20,7 @@ Restart=on-failure
 RestartSec=5
 KillMode=mixed
 KillSignal=SIGTERM
-TimeoutStartSec=0
+TimeoutStartSec=90
 TimeoutStopSec=30
 LimitNOFILE=64000
 LimitNPROC=4096
@@ -34,8 +34,7 @@ ProtectSystem=strict
 ProtectHome=yes
 PrivateTmp=yes
 NoExecPaths=/
-ExecPaths=/usr/local/bin/webitel-storage
-ExecPaths=/usr/bin/ffmpeg
+ExecPaths=/usr/local/bin/webitel-storage /usr/bin/ffmpeg /usr/lib -/lib -/lib64
 ReadWritePaths=/opt/storage
 
 # Process isolation

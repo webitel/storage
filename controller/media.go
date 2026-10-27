@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"io"
 
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
@@ -52,7 +53,7 @@ func (c *Controller) GetMediaFile(session *auth_manager.Session, domainId int64,
 	return c.app.GetMediaFile(session.Domain(domainId), id)
 }
 
-func (c *Controller) DeleteMediaFile(session *auth_manager.Session, domainId int64, id int) (*model.MediaFile, model.AppError) {
+func (c *Controller) DeleteMediaFile(ctx context.Context, session *auth_manager.Session, r *model.DeleteMediaFileRequest) (*model.MediaFile, model.AppError) {
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanRead() {
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_READ)
@@ -62,5 +63,7 @@ func (c *Controller) DeleteMediaFile(session *auth_manager.Session, domainId int
 		return nil, c.app.MakePermissionError(session, permission, auth_manager.PERMISSION_ACCESS_DELETE)
 	}
 
-	return c.app.DeleteMediaFile(session.Domain(domainId), id)
+	r.DomainID = int(session.Domain(0))
+
+	return c.app.DeleteMediaFile(ctx, r)
 }

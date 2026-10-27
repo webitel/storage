@@ -31,6 +31,7 @@ const (
 	FileService_SearchFiles_FullMethodName                   = "/storage.FileService/SearchFiles"
 	FileService_SearchScreenRecordings_FullMethodName        = "/storage.FileService/SearchScreenRecordings"
 	FileService_SearchScreenRecordingsByAgent_FullMethodName = "/storage.FileService/SearchScreenRecordingsByAgent"
+	FileService_SearchScreenRecordingsByCall_FullMethodName  = "/storage.FileService/SearchScreenRecordingsByCall"
 	FileService_DeleteScreenRecordings_FullMethodName        = "/storage.FileService/DeleteScreenRecordings"
 	FileService_DeleteScreenRecordingsByAgent_FullMethodName = "/storage.FileService/DeleteScreenRecordingsByAgent"
 	FileService_SearchFilesByCall_FullMethodName             = "/storage.FileService/SearchFilesByCall"
@@ -53,6 +54,7 @@ type FileServiceClient interface {
 	SearchFiles(ctx context.Context, in *SearchFilesRequest, opts ...grpc.CallOption) (*ListFile, error)
 	SearchScreenRecordings(ctx context.Context, in *SearchScreenRecordingsRequest, opts ...grpc.CallOption) (*ListFile, error)
 	SearchScreenRecordingsByAgent(ctx context.Context, in *SearchScreenRecordingsByAgentRequest, opts ...grpc.CallOption) (*ListFile, error)
+	SearchScreenRecordingsByCall(ctx context.Context, in *SearchScreenRecordingsByCallRequest, opts ...grpc.CallOption) (*ListFile, error)
 	DeleteScreenRecordings(ctx context.Context, in *DeleteScreenRecordingsRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	DeleteScreenRecordingsByAgent(ctx context.Context, in *DeleteScreenRecordingsByAgentRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error)
 	SearchFilesByCall(ctx context.Context, in *SearchFilesByCallRequest, opts ...grpc.CallOption) (*ListFile, error)
@@ -245,6 +247,15 @@ func (c *fileServiceClient) SearchScreenRecordingsByAgent(ctx context.Context, i
 	return out, nil
 }
 
+func (c *fileServiceClient) SearchScreenRecordingsByCall(ctx context.Context, in *SearchScreenRecordingsByCallRequest, opts ...grpc.CallOption) (*ListFile, error) {
+	out := new(ListFile)
+	err := c.cc.Invoke(ctx, FileService_SearchScreenRecordingsByCall_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *fileServiceClient) DeleteScreenRecordings(ctx context.Context, in *DeleteScreenRecordingsRequest, opts ...grpc.CallOption) (*DeleteFilesResponse, error) {
 	out := new(DeleteFilesResponse)
 	err := c.cc.Invoke(ctx, FileService_DeleteScreenRecordings_FullMethodName, in, out, opts...)
@@ -297,6 +308,7 @@ type FileServiceServer interface {
 	SearchFiles(context.Context, *SearchFilesRequest) (*ListFile, error)
 	SearchScreenRecordings(context.Context, *SearchScreenRecordingsRequest) (*ListFile, error)
 	SearchScreenRecordingsByAgent(context.Context, *SearchScreenRecordingsByAgentRequest) (*ListFile, error)
+	SearchScreenRecordingsByCall(context.Context, *SearchScreenRecordingsByCallRequest) (*ListFile, error)
 	DeleteScreenRecordings(context.Context, *DeleteScreenRecordingsRequest) (*DeleteFilesResponse, error)
 	DeleteScreenRecordingsByAgent(context.Context, *DeleteScreenRecordingsByAgentRequest) (*DeleteFilesResponse, error)
 	SearchFilesByCall(context.Context, *SearchFilesByCallRequest) (*ListFile, error)
@@ -343,6 +355,9 @@ func (UnimplementedFileServiceServer) SearchScreenRecordings(context.Context, *S
 }
 func (UnimplementedFileServiceServer) SearchScreenRecordingsByAgent(context.Context, *SearchScreenRecordingsByAgentRequest) (*ListFile, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SearchScreenRecordingsByAgent not implemented")
+}
+func (UnimplementedFileServiceServer) SearchScreenRecordingsByCall(context.Context, *SearchScreenRecordingsByCallRequest) (*ListFile, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchScreenRecordingsByCall not implemented")
 }
 func (UnimplementedFileServiceServer) DeleteScreenRecordings(context.Context, *DeleteScreenRecordingsRequest) (*DeleteFilesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteScreenRecordings not implemented")
@@ -604,6 +619,24 @@ func _FileService_SearchScreenRecordingsByAgent_Handler(srv interface{}, ctx con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FileService_SearchScreenRecordingsByCall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchScreenRecordingsByCallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FileServiceServer).SearchScreenRecordingsByCall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FileService_SearchScreenRecordingsByCall_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FileServiceServer).SearchScreenRecordingsByCall(ctx, req.(*SearchScreenRecordingsByCallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FileService_DeleteScreenRecordings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteScreenRecordingsRequest)
 	if err := dec(in); err != nil {
@@ -718,6 +751,10 @@ var FileService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SearchScreenRecordingsByAgent",
 			Handler:    _FileService_SearchScreenRecordingsByAgent_Handler,
+		},
+		{
+			MethodName: "SearchScreenRecordingsByCall",
+			Handler:    _FileService_SearchScreenRecordingsByCall_Handler,
 		},
 		{
 			MethodName: "DeleteScreenRecordings",

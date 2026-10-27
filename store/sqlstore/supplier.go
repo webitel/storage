@@ -194,7 +194,7 @@ func (me typeConverter) ToDb(val interface{}) (interface{}, error) {
 func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 	switch target.(type) {
 
-	case **model.Thumbnail, **model.MalwareScan:
+	case **model.Thumbnail, **model.MalwareScan, **model.CustomFileProperties:
 		binder := func(holder, target interface{}) error {
 			s, ok := holder.(*[]byte)
 			if !ok {
@@ -329,6 +329,11 @@ func (me typeConverter) FromDb(target interface{}) (gorp.CustomScanner, bool) {
 	}
 
 	return gorp.CustomScanner{}, false
+}
+
+// Ping reports whether the master connection is usable.
+func (ss *SqlSupplier) Ping(ctx context.Context) error {
+	return ss.master.Db.PingContext(ctx)
 }
 
 func (ss *SqlSupplier) GetMaster() *gorp.DbMap {

@@ -1,6 +1,7 @@
 package sqlstore
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"net/http"
@@ -107,12 +108,75 @@ func (s *SqlMediaFileStore) Get(domainId int64, id int) (*model.MediaFile, model
 	return file, nil
 }
 
-func (s SqlMediaFileStore) Delete(domainId, id int64) model.AppError {
+func (s SqlMediaFileStore) Delete(ctx context.Context, domainId, id int64) model.AppError {
 	if _, err := s.GetMaster().Exec(`delete from storage.media_files p where id = :Id and domain_id = :DomainId`,
 		map[string]interface{}{"Id": id, "DomainId": domainId}); err != nil {
 		return model.NewCustomCodeError("store.sql_media_file.delete.app_error", fmt.Sprintf("Id=%v, %s", id, err.Error()), extractCodeFromErr(err))
 	}
 	return nil
+}
+
+func (s SqlMediaFileStore) DeleteReturning(ctx context.Context, r *model.DeleteMediaFileRequest) (*model.MediaFile, model.AppError) {
+	const query = `
+			with queue_nullify as (
+				update call_center.cc_queue
+				set ringtone_id = null
+				where :IsForce is true
+				  and ringtone_id = :ID
+				  and domain_id = :DomainID
+				returning 1
+			),
+			agent_nullify as (
+				update call_center.cc_agent
+				set greeting_media_id = null
+				where :IsForce is true
+				  and greeting_media_id = :ID
+				  and domain_id = :DomainID
+				returning 1
+			),
+			media_del as (
+				delete from storage.media_files
+				where id = :ID
+				  and domain_id = :DomainID
+					  and (select count(*) from queue_nullify) >= 0
+					  and (select count(*) from agent_nullify) >= 0
+				returning
+					id, name, created_at, created_by, updated_at, updated_by,
+					mime_type, size, properties, domain_id
+			)
+			select
+				f.id,
+				f.name,
+				f.created_at,
+				call_center.cc_get_lookup(c.id, c.name) as created_by,
+				f.updated_at,
+				call_center.cc_get_lookup(u.id, u.name) as updated_by,
+				f.mime_type,
+				f.size,
+				f.properties,
+				d.name as domain_name
+			from media_del f
+			left join directory.wbt_user c on c.id = f.created_by
+			left join directory.wbt_user u on u.id = f.updated_by
+			inner join directory.wbt_domain d on d.dc = f.domain_id;
+	`
+
+	args := map[string]any{
+		"ID":       r.ID,
+		"DomainID": r.DomainID,
+		"IsForce":  r.Force,
+	}
+
+	var media model.MediaFile
+	if err := s.GetMaster().WithContext(ctx).SelectOne(&media, query, args); err != nil {
+		if appErr := MediaFileConstraints.Map(err); appErr != nil {
+			return nil, appErr
+		}
+
+		return nil, model.NewCustomCodeError("store.sql_media_file.delete.app_error", fmt.Sprintf("ID=%d %+v", r.ID, err), extractCodeFromErr(err))
+	}
+
+	return &media, nil
 }
 
 func (self *SqlMediaFileStore) Save(file *model.MediaFile) store.StoreChannel {
@@ -135,8 +199,8 @@ func (self *SqlMediaFileStore) GetAllByDomain(domain string, offset, limit int) 
 	return store.Do(func(result *store.StoreResult) {
 		var files []*model.MediaFile
 
-		query := `SELECT * FROM storage.media_files 
-			WHERE domain = :Domain  
+		query := `SELECT * FROM storage.media_files
+			WHERE domain = :Domain
 			LIMIT :Limit OFFSET :Offset`
 
 		if _, err := self.GetReplica().Select(&files, query, map[string]interface{}{"Domain": domain, "Offset": offset, "Limit": limit}); err != nil {
@@ -149,7 +213,7 @@ func (self *SqlMediaFileStore) GetAllByDomain(domain string, offset, limit int) 
 
 func (self *SqlMediaFileStore) GetCountByDomain(domain string) store.StoreChannel {
 	return store.Do(func(result *store.StoreResult) {
-		query := `SELECT count(*) FROM storage.media_files 
+		query := `SELECT count(*) FROM storage.media_files
 			WHERE domain = :Domain`
 
 		if count, err := self.GetReplica().SelectInt(query, map[string]interface{}{"Domain": domain}); err != nil {

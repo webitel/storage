@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"fmt"
+
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	"golang.org/x/sync/singleflight"
@@ -14,13 +14,13 @@ var (
 )
 
 func (a *App) GetCachedSystemSetting(ctx context.Context, domainId int64, name string) (model.SysValue, model.AppError) {
-	key := fmt.Sprintf("%d-%s", domainId, name)
+	key := model.SystemSettingCacheKey(domainId, name)
 	c, ok := systemCache.Get(key)
 	if ok {
 		return c.(model.SysValue), nil
 	}
 
-	v, err, share := systemGroup.Do(fmt.Sprintf("%d-%s", domainId, name), func() (interface{}, error) {
+	v, err, share := systemGroup.Do(key, func() (interface{}, error) {
 		res, err := a.Store.SystemSettings().ValueByName(ctx, domainId, name)
 		if err != nil {
 			return model.SysValue{}, err
@@ -42,4 +42,10 @@ func (a *App) GetCachedSystemSetting(ctx context.Context, domainId int64, name s
 	}
 
 	return v.(model.SysValue), nil
+}
+
+func (a *App) InvalidateCachedSystemSetting(e *model.SystemSettingEvent) {
+	key := model.SystemSettingCacheKey(e.DomainID, e.Name)
+	systemCache.Remove(key)
+	systemGroup.Forget(key)
 }

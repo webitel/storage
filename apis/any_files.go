@@ -15,9 +15,9 @@ import (
 
 func (api *API) InitAnyFile() {
 	api.PublicRoutes.AnyFiles.Handle("/{id}/stream", api.ApiHandler(streamAnyFile)).Methods("GET")
-	api.PublicRoutes.AnyFiles.Handle("/{id}/download", api.ApiHandler(downloadAnyFile)).Methods("GET")
+	api.PublicRoutes.AnyFiles.Handle("/{id}/download", api.ApiHandler(downloadAnyFile)).Methods("GET", "HEAD")
 	api.PublicRoutes.AnyFiles.Handle("/stream", api.ApiHandler(streamAnyFileByQuery)).Methods("GET")
-	api.PublicRoutes.AnyFiles.Handle("/download", api.ApiHandler(downloadAnyFileByQuery)).Methods("GET")
+	api.PublicRoutes.AnyFiles.Handle("/download", api.ApiHandler(downloadAnyFileByQuery)).Methods("GET", "HEAD")
 }
 
 func streamAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -124,7 +124,6 @@ func downloadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 	var backend utils.FileBackend
 	var id, domainId int
 	var err error
-	var reader io.ReadCloser
 
 	if id, err = strconv.Atoi(c.Params.Id); err != nil {
 		c.SetInvalidUrlParam("id")
@@ -137,21 +136,9 @@ func downloadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendSize := file.Size
-	code := http.StatusOK
+	useThumbnail(file, r.URL.Query())
 
-	if reader, c.Err = backend.Reader(file, 0); c.Err != nil {
-		return
-	}
-
-	defer reader.Close()
-
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.GetViewName())))
-	w.Header().Set("Content-Type", file.MimeType)
-	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
-
-	w.WriteHeader(code)
-	io.Copy(w, reader)
+	writeFileBody(c, w, r, file, backend, file.GetViewName())
 }
 
 func streamAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
@@ -233,6 +220,14 @@ func streamAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) {
 	io.CopyN(w, reader, sendSize)
 }
 
+// useThumbnail serves the stored thumbnail instead of the file. The flag is
+// covered by the link signature, so a holder cannot toggle it.
+func useThumbnail(file *model.File, q url.Values) {
+	if file.Thumbnail != nil && q.Get("fetch_thumbnail") == "true" {
+		file.BaseFile = file.Thumbnail.BaseFile
+	}
+}
+
 func createValidationKey(key url.URL) string {
 	existingParams := key.Query()
 	existingParams.Del("signature")
@@ -273,7 +268,6 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 	var file utils.File
 	var backend utils.FileBackend
 	var domainId int
-	var reader io.ReadCloser
 
 	// region VALIDATION
 	validationString := createValidationKey(*r.URL)
@@ -300,7 +294,11 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		fileId, _ := strconv.Atoi(uuid)
-		file, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId))
+		var f *model.File
+		if f, backend, c.Err = c.App.GetFileWithProfile(int64(domainId), int64(fileId)); f != nil {
+			useThumbnail(f, q)
+			file = f
+		}
 	case "tts":
 		tts(c, w, r, true)
 		return
@@ -359,19 +357,54 @@ func downloadAnyFileByQuery(c *Context, w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	sendSize := file.GetSize()
-	code := http.StatusOK
+	writeFileBody(c, w, r, file, backend, file.GetStoreName())
+}
 
-	if reader, c.Err = backend.Reader(file, 0); c.Err != nil {
+// writeFileBody honors a single byte Range so media fetchers can seek (Viber
+// reads a trailing mp4 index); without one the response is unchanged. A
+// malformed Range is ignored, as RFC 9110 allows, rather than failing a
+// download that used to succeed.
+func writeFileBody(c *Context, w http.ResponseWriter, r *http.Request, file utils.File, backend utils.FileBackend, name string) {
+	size := file.GetSize()
+
+	var part *HttpRange
+	if ranges, err := parseRange(r.Header.Get("Range"), size); err == nil && len(ranges) == 1 {
+		part = &ranges[0]
+	}
+
+	var reader io.ReadCloser
+	if r.Method != http.MethodHead {
+		var offset int64
+		if part != nil {
+			offset = part.Start
+		}
+
+		if reader, c.Err = backend.Reader(file, offset); c.Err != nil {
+			return
+		}
+		defer reader.Close()
+	}
+
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(name)))
+	w.Header().Set("Content-Type", file.GetMimeType())
+
+	if part == nil {
+		w.Header().Set("Content-Length", strconv.FormatInt(size, 10))
+		w.WriteHeader(http.StatusOK)
+
+		if reader != nil {
+			io.Copy(w, reader)
+		}
+
 		return
 	}
 
-	defer reader.Close()
+	w.Header().Set("Content-Range", part.ContentRange(size))
+	w.Header().Set("Content-Length", strconv.FormatInt(part.Length, 10))
+	w.WriteHeader(http.StatusPartialContent)
 
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment;  filename=\"%s\"", model.EncodeURIComponent(file.GetStoreName())))
-	w.Header().Set("Content-Type", file.GetMimeType())
-	w.Header().Set("Content-Length", strconv.FormatInt(sendSize, 10))
-
-	w.WriteHeader(code)
-	io.Copy(w, reader)
+	if reader != nil {
+		io.CopyN(w, reader, part.Length)
+	}
 }
