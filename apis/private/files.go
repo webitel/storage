@@ -56,7 +56,7 @@ func putRecordCallFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	if err := c.App.AddUploadJobFile(r.Body, &fileRequest); err != nil {
+	if err := c.App.AddUploadJobFile(c.Ctx, r.Body, &fileRequest); err != nil {
 		c.Err = err
 		return
 	}

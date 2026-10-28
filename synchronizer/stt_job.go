@@ -1,18 +1,20 @@
 package synchronizer
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"time"
+
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
 )
 
 type SttJob struct {
-	file model.SyncJob
-	app  *app.App
+	file   model.SyncJob
+	app    *app.App
+	logger *logging.Logger
 }
 
 type params struct {
@@ -20,28 +22,32 @@ type params struct {
 	Locale    string `json:"locale"`
 }
 
-func (s *SttJob) Execute() {
+func (s *SttJob) Execute(ctx context.Context) {
 	var p model.TranscriptOptions
 	json.Unmarshal(s.file.Config, &p)
 
 	n := time.Now()
 
-	wlog.Debug(fmt.Sprintf("[stt] job_id: %d, file_id: %d start transcript to %v", s.file.Id, s.file.FileId, p.Locale))
+	var locale string
+	if p.Locale != nil {
+		locale = *p.Locale
+	}
+	s.logger.DebugCtx(ctx, "stt job started", logging.Str("locale", locale))
 	t, err := s.app.TranscriptFile(s.file.FileId, p)
 	if err != nil {
-		wlog.Error(err.Error())
+		s.logger.ErrorCtx(ctx, "transcript file", logging.Err(err))
 		if err = s.app.Store.SyncFile().SetError(s.file.Id, err); err != nil {
-			wlog.Error(err.Error())
+			s.logger.ErrorCtx(ctx, "set sync job error", logging.Err(err))
 		}
 		return
 	} else {
-		wlog.Debug(fmt.Sprintf("[stt] file %d, transcript: %s", s.file.FileId, t.Transcript))
+		s.logger.DebugCtx(ctx, "file transcribed", logging.Str("transcript", t.Transcript))
 	}
 
 	err = s.app.Store.SyncFile().Remove(s.file.Id)
 	if err != nil {
-		wlog.Error(fmt.Sprintf("[stt] file %d, error: %s", s.file.FileId, err.Error()))
+		s.logger.ErrorCtx(ctx, "remove sync job", logging.Err(err))
 	}
-	wlog.Debug(fmt.Sprintf("[stt] job_id: %d, file_id: %d stop, time %v", s.file.Id, s.file.FileId, time.Since(n)))
+	s.logger.DebugCtx(ctx, "stt job finished", logging.Dur("duration", time.Since(n)))
 
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, model.AppError) {
+func (app *App) SaveMediaFile(ctx context.Context, src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, model.AppError) {
 	var size int64
 	var err model.AppError
 
@@ -17,7 +17,7 @@ func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*m
 		return nil, err
 	}
 
-	src, err = app.FilePolicyForUpload(mediaFile.DomainId, &mediaFile.BaseFile, src)
+	src, err = app.FilePolicyForUpload(ctx, mediaFile.DomainId, &mediaFile.BaseFile, src)
 	if err != nil {
 		return nil, err
 	}

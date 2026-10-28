@@ -2,14 +2,13 @@ package app
 
 import (
 	"context"
-	"fmt"
 
 	"net/http"
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
-	"github.com/webitel/wlog"
 )
 
 var (
@@ -80,8 +79,8 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 	return &file.File, backend, nil
 }
 
-func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
-	files, err := app.Store.File().GetAllPage(context.Background(), domainId, &model.SearchFile{
+func (app *App) RemoveFiles(ctx context.Context, domainId int64, ids []int64) model.AppError {
+	files, err := app.Store.File().GetAllPage(ctx, domainId, &model.SearchFile{
 		Ids:      ids,
 		Channels: []string{model.UploadFileChannelCase},
 		ListRequest: model.ListRequest{
@@ -104,7 +103,7 @@ func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
 			watcherkit.EventTypeDelete,
 			NewFileWatcherData(file),
 		); notifyErr != nil {
-			wlog.Error(fmt.Sprintf("could not notify file store: %s", notifyErr.Error()))
+			app.logger.ErrorCtx(ctx, "notify file watchers", logging.Int64("file_id", file.Id), logging.Err(notifyErr))
 		}
 	}
 

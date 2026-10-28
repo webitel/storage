@@ -1,22 +1,24 @@
 package synchronizer
 
 import (
-	"fmt"
+	"context"
+
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
 )
 
 type removeFileJob struct {
-	file model.SyncJob
-	app  *app.App
+	file   model.SyncJob
+	app    *app.App
+	logger *logging.Logger
 }
 
-func (j *removeFileJob) Execute() {
+func (j *removeFileJob) Execute(ctx context.Context) {
 	store, err := j.app.GetFileBackendStore(j.file.ProfileId, j.file.ProfileUpdatedAt)
 	if err != nil {
-		wlog.Error(err.Error())
+		j.logger.ErrorCtx(ctx, "get file backend store", logging.Err(err))
 		//todo set db error
 
 		return
@@ -32,13 +34,13 @@ func (j *removeFileJob) Execute() {
 	})
 
 	if err != nil {
-		wlog.Error(fmt.Sprintf("file %d, error: %s", j.file.FileId, err.Error()))
+		j.logger.ErrorCtx(ctx, "remove file from store", logging.Err(err))
 	}
 
 	err = j.app.Store.SyncFile().Clean(j.file.Id)
 	if err != nil {
-		wlog.Error(fmt.Sprintf("file %d, error: %s", j.file.FileId, err.Error()))
+		j.logger.ErrorCtx(ctx, "clean sync job", logging.Err(err))
 	}
 
-	wlog.Debug(fmt.Sprintf("file %d removed \"%s\" from store \"%s\"", j.file.FileId, j.file.Name, store.Name()))
+	j.logger.DebugCtx(ctx, "file removed", logging.Str("file_name", j.file.Name), logging.Str("store", store.Name()))
 }

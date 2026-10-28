@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/webitel/storage/apis"
@@ -49,8 +50,9 @@ func main() {
 	}
 	private.Init(a, a.InternalSrv.Router)
 
-	a.Uploader.Start()
-	a.Synchronizer.Start()
+	ctx := context.Background()
+	a.Uploader.Start(ctx)
+	a.Synchronizer.Start(ctx)
 
 	grpc_api.Init(a, a.GrpcServer.Server())
 

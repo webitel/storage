@@ -13,6 +13,7 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/pborman/uuid"
 
+	"github.com/webitel/webitel-go-kit/infra/otel/correlation"
 	"github.com/webitel/wlog"
 
 	"github.com/webitel/storage/app"
@@ -115,6 +116,7 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 		fileRequest.Name = metadata.Metadata.Name
 	}
 
+	ctx := correlation.WithIdentity(in.Context(), fileRequest.DomainId, metadata.Metadata.UploadedBy)
 	pipeReader, pipeWriter := io.Pipe()
 
 	go func(writer *io.PipeWriter) {
@@ -149,9 +151,9 @@ func (api *file) UploadFile(in storage.FileService_UploadFileServer) error {
 
 	if metadata.Metadata.ProfileId != 0 {
 		fileRequest.Name = fmt.Sprintf("%s_%s", model.NewId()[0:7], fileRequest.Name)
-		err = api.ctrl.UploadFileStreamToProfile(pipeReader, int(metadata.Metadata.ProfileId), &fileRequest)
+		err = api.ctrl.UploadFileStreamToProfile(ctx, pipeReader, int(metadata.Metadata.ProfileId), &fileRequest)
 	} else {
-		err = api.ctrl.UploadFileStream(pipeReader, &fileRequest)
+		err = api.ctrl.UploadFileStream(ctx, pipeReader, &fileRequest)
 	}
 
 	if err != nil {
@@ -394,7 +396,8 @@ func (api *file) UploadFileUrl(ctx context.Context, in *storage.UploadFileUrlReq
 	}
 	fileRequest.MimeType = mimeType
 
-	if err = api.ctrl.UploadFileStream(body, &fileRequest); err != nil {
+	ctx = correlation.WithIdentity(ctx, fileRequest.DomainId, 0)
+	if err = api.ctrl.UploadFileStream(ctx, body, &fileRequest); err != nil {
 		return nil, err
 	}
 
@@ -515,6 +518,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		if gErr != nil {
 			return gErr
 		}
+		ctx = correlation.WithIdentity(ctx, su.File().DomainId, 0)
 		break
 	case *storage.SafeUploadFileRequest_Metadata_:
 		var fileRequest model.JobUploadFile
@@ -531,7 +535,8 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		if r.Metadata.ProfileId > 0 {
 			pid = model.NewInt(int(r.Metadata.ProfileId))
 		}
-		su, gErr = api.ctrl.App().NewSafeUpload(pid, &fileRequest)
+		ctx = correlation.WithIdentity(ctx, fileRequest.DomainId, 0)
+		su, gErr = api.ctrl.App().NewSafeUpload(ctx, pid, &fileRequest)
 		if gErr != nil {
 			return gErr
 		}
@@ -596,7 +601,7 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 
 	policyErr := model.IsFilePolicyError(su.Err())
 	if gErr != nil && gErr != io.EOF && !policyErr {
-		su.Sleep()
+		su.Sleep(ctx)
 		wlog.Error(gErr.Error())
 		return gErr
 	} else {

@@ -120,7 +120,7 @@ func streamFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
-	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	reader, c.Err = c.App.FilePolicyForDownload(c.Ctx, file.DomainId, &file.BaseFile, reader)
 	if c.Err != nil {
 		return
 	}
@@ -187,7 +187,7 @@ func downloadFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
-	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	reader, c.Err = c.App.FilePolicyForDownload(c.Ctx, file.DomainId, &file.BaseFile, reader)
 	if c.Err != nil {
 		return
 	}

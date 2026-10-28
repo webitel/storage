@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"io"
 
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
@@ -18,23 +19,23 @@ func (c *Controller) GetFileWithProfile(session *auth_manager.Session, domainId,
 	return c.app.GetFileWithProfile(session.Domain(domainId), id)
 }
 
-func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFile) model.AppError {
-	src2, err := c.app.FilePolicyForUpload(file.DomainId, &file.BaseFile, src)
+func (c *Controller) UploadFileStream(ctx context.Context, src io.ReadCloser, file *model.JobUploadFile) model.AppError {
+	src2, err := c.app.FilePolicyForUpload(ctx, file.DomainId, &file.BaseFile, src)
 	if err != nil {
 		return err
 	}
 	defer src.Close()
-	return c.app.SyncUpload(src2, file)
+	return c.app.SyncUpload(ctx, src2, file)
 }
 
-func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int, file *model.JobUploadFile) model.AppError {
-	src2, err := c.app.FilePolicyForUpload(file.DomainId, &file.BaseFile, src)
+func (c *Controller) UploadFileStreamToProfile(ctx context.Context, src io.ReadCloser, profileId int, file *model.JobUploadFile) model.AppError {
+	src2, err := c.app.FilePolicyForUpload(ctx, file.DomainId, &file.BaseFile, src)
 	if err != nil {
 		return err
 	}
 	defer src.Close()
 
-	return c.app.SyncUploadToProfile(src2, profileId, file)
+	return c.app.SyncUploadToProfile(ctx, src2, profileId, file)
 }
 
 func (c *Controller) GeneratePreSignetResourceSignature(resource, action string, id int64, domainId int64) (string, model.AppError) {

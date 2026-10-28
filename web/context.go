@@ -1,18 +1,20 @@
 package web
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
-	"github.com/webitel/wlog"
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 )
 
 type Context struct {
 	App           *app.App
-	Log           *wlog.Logger
+	Ctx           context.Context
+	Log           *logging.Logger
 	Session       auth_manager.Session
 	Err           model.AppError
 	Params        *Params
@@ -28,11 +30,7 @@ func (c *Context) LogError(err model.AppError) {
 	if err.GetStatusCode() == http.StatusNotFound {
 		c.LogDebug(err)
 	} else {
-		c.Log.Error(
-			err.Error(),
-			wlog.Int("http_code", err.GetStatusCode()),
-			wlog.String("err_details", err.GetDetailedError()),
-		)
+		c.Log.ErrorCtx(c.Ctx, "http request failed", appErrorFields(err)...)
 	}
 }
 
@@ -41,20 +39,20 @@ func (c *Context) LogInfo(err model.AppError) {
 	if err.GetStatusCode() == http.StatusUnauthorized {
 		c.LogDebug(err)
 	} else {
-		c.Log.Info(
-			err.Error(),
-			wlog.Int("http_code", err.GetStatusCode()),
-			wlog.String("err_details", err.GetDetailedError()),
-		)
+		c.Log.InfoCtx(c.Ctx, "http request failed", appErrorFields(err)...)
 	}
 }
 
 func (c *Context) LogDebug(err model.AppError) {
-	c.Log.Debug(
-		err.Error(),
-		wlog.Int("http_code", err.GetStatusCode()),
-		wlog.String("err_details", err.GetDetailedError()),
-	)
+	c.Log.DebugCtx(c.Ctx, "http request failed", appErrorFields(err)...)
+}
+
+func appErrorFields(err model.AppError) []logging.Field {
+	return []logging.Field{
+		logging.Err(err),
+		logging.Int("http_code", err.GetStatusCode()),
+		logging.Str("err_details", err.GetDetailedError()),
+	}
 }
 
 func (c *Context) SessionRequired() {

@@ -1,13 +1,15 @@
 package synchronizer
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
+	"strings"
+
+	"github.com/webitel/webitel-go-kit/pkg/logging"
+
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
-	"github.com/webitel/wlog"
-	"strings"
 )
 
 type RestoreConfig struct {
@@ -15,39 +17,36 @@ type RestoreConfig struct {
 }
 
 type restoreFileJob struct {
-	file model.SyncJob
-	app  *app.App
+	file   model.SyncJob
+	app    *app.App
+	logger *logging.Logger
 }
 
-func (j *restoreFileJob) Execute() {
+func (j *restoreFileJob) Execute(ctx context.Context) {
 	var file *model.FileWithProfile
 	var backend utils.FileBackend
 	var err model.AppError
 	app := j.app
 
-	log := app.Log.With(wlog.Int64("file_id", j.file.Id),
-		wlog.String("action", model.Restore),
-	)
-
 	defer func() {
 		err := j.app.Store.SyncFile().Remove(j.file.Id)
 		if err != nil {
-			log.Error(fmt.Sprintf("[restore] file %d, error: %s", j.file.FileId, err.Error()))
+			j.logger.ErrorCtx(ctx, "remove sync job", logging.Err(err))
 		}
 	}()
 
 	if file, err = app.Store.File().GetFileWithProfile(j.file.DomainId, j.file.FileId); err != nil {
-		log.Error(fmt.Sprintf("[restore] file %d, error: %s", j.file.FileId, err.Error()))
+		j.logger.ErrorCtx(ctx, "get file with profile", logging.Err(err))
 		return
 	}
 
 	if backend, err = app.GetFileBackendStore(file.ProfileId, file.ProfileUpdatedAt); err != nil {
-		log.Error(fmt.Sprintf("[restore] file %d, error: %s", j.file.FileId, err.Error()))
+		j.logger.ErrorCtx(ctx, "get file backend store", logging.Err(err))
 		return
 	}
 
 	if file.Malware == nil {
-		log.Error(fmt.Sprintf("[restore] file %d, malware is nil", j.file.FileId))
+		j.logger.ErrorCtx(ctx, "restore file without malware scan")
 		return
 	}
 
@@ -60,23 +59,23 @@ func (j *restoreFileJob) Execute() {
 	})
 
 	if err != nil {
-		log.Error(fmt.Sprintf("[restore] copy file %d, error: %s", j.file.FileId, err.String()))
+		j.logger.ErrorCtx(ctx, "copy file", logging.Err(err))
 		return
 	}
 
 	err = app.Store.File().Restored(file.Id, file.Properties, conf.UserId)
 	if err != nil {
-		log.Error(fmt.Sprintf("[restore] set properties file %d, error: %s", j.file.FileId, err.String()))
+		j.logger.ErrorCtx(ctx, "set restored file properties", logging.Err(err))
 		return
 	}
 
 	file.Properties = prop
 	err = backend.Remove(file)
 	if err != nil {
-		log.Error(fmt.Sprintf("[restore] remove file %d, error: %s", j.file.FileId, err.String()))
+		j.logger.ErrorCtx(ctx, "remove quarantined file", logging.Err(err))
 		return
 	}
 
-	wlog.Debug(fmt.Sprintf("file %d restore \"%s\" from store \"%s\"", j.file.FileId, j.file.Name, backend.Name()))
+	j.logger.DebugCtx(ctx, "file restored", logging.Str("file_name", j.file.Name), logging.Str("store", backend.Name()))
 
 }

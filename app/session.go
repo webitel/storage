@@ -6,8 +6,8 @@ import (
 	"github.com/webitel/storage/model"
 )
 
-func (app *App) GetSession(token string) (*auth_manager.Session, model.AppError) {
-	session, err := app.sessionManager.GetSession(context.Background(), token)
+func (app *App) GetSession(ctx context.Context, token string) (*auth_manager.Session, model.AppError) {
+	session, err := app.sessionManager.GetSession(ctx, token)
 
 	if err != nil {
 		switch err {

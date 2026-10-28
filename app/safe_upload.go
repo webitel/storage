@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/webitel/wlog"
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
@@ -40,6 +40,7 @@ type SafeUpload struct {
 	size            int
 	mx              sync.RWMutex
 	Progress        bool
+	logger          *logging.Logger
 }
 
 func (s *SafeUpload) Id() string {
@@ -99,14 +100,14 @@ func (s *SafeUpload) Write(src []byte) error {
 	return err
 }
 
-func (s *SafeUpload) run() {
-	wlog.Debug(fmt.Sprintf("start safe upload id=%s, name=%s", s.id, s.request.Name))
+func (s *SafeUpload) run(ctx context.Context) {
+	s.logger.DebugCtx(ctx, "safe upload started")
 
 	var err model.AppError
 	if s.profileId != nil {
-		err = s.app.SyncUploadToProfile(s.reader, *s.profileId, s.request)
+		err = s.app.SyncUploadToProfile(ctx, s.reader, *s.profileId, s.request)
 	} else {
-		err = s.app.SyncUpload(s.reader, s.request)
+		err = s.app.SyncUpload(ctx, s.reader, s.request)
 	}
 
 	s.setState(SafeUploadStateFinished)
@@ -115,9 +116,9 @@ func (s *SafeUpload) run() {
 		s.err = err
 		s.mx.Unlock()
 
-		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, error=%s", s.id, s.request.Name, err.GetDetailedError()))
+		s.logger.DebugCtx(ctx, "safe upload finished", logging.Str("err_details", err.GetDetailedError()))
 	} else {
-		wlog.Debug(fmt.Sprintf("finished safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
+		s.logger.DebugCtx(ctx, "safe upload finished", logging.Int("size", s.Size()))
 	}
 	close(s.uploaded)
 	s.writer.Close()
@@ -132,9 +133,9 @@ func (s *SafeUpload) timeout() {
 	s.cancelSleepChan = nil
 }
 
-func (s *SafeUpload) Sleep() {
+func (s *SafeUpload) Sleep(ctx context.Context) {
 	s.setState(SafeUploadStateSleep)
-	wlog.Debug(fmt.Sprintf("sleep safe upload id=%s, name=%s, size=%d", s.id, s.request.Name, s.Size()))
+	s.logger.DebugCtx(ctx, "safe upload sleep", logging.Int("size", s.Size()))
 	addSafeUploadProcess(s)
 	s.mx.Lock()
 	s.cancelSleepChan = schedule(s.timeout, s.app.Config().MaxSafeUploadSleep)
@@ -177,7 +178,7 @@ func RecoverySafeUploadProcess(ctx context.Context, id string) (*SafeUpload, err
 	}
 	su.setState(SafeUploadStateActive)
 	su.cancelSleep()
-	wlog.Debug(fmt.Sprintf("recovery upload id=%s, name=%s, size=%d", su.id, su.request.Name, su.Size()))
+	su.logger.DebugCtx(ctx, "safe upload recovered", logging.Int("size", su.Size()))
 
 	return su, nil
 }
@@ -191,11 +192,11 @@ func getSafeUploadProcess(id string) (*SafeUpload, bool) {
 	return s.(*SafeUpload), true
 }
 
-func (app *App) NewSafeUpload(profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
-	return newSafeUpload(app, profileId, req)
+func (app *App) NewSafeUpload(ctx context.Context, profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
+	return newSafeUpload(ctx, app, profileId, req)
 }
 
-func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
+func newSafeUpload(ctx context.Context, app *App, profileId *int, req *model.JobUploadFile) (*SafeUpload, error) {
 	var err model.AppError
 	r, w := io.Pipe()
 	if profileId != nil {
@@ -212,12 +213,13 @@ func newSafeUpload(app *App, profileId *int, req *model.JobUploadFile) (*SafeUpl
 		request:   req,
 		writer:    w,
 	}
-	s.reader, err = app.FilePolicyForUpload(req.DomainId, &req.BaseFile, r)
+	s.logger = app.logger.With(logging.Str("upload_id", s.id), logging.Str("file_name", req.Name))
+	s.reader, err = app.FilePolicyForUpload(ctx, req.DomainId, &req.BaseFile, r)
 	if err != nil {
 		return nil, err
 	}
 
-	go s.run()
+	go s.run(context.WithoutCancel(ctx))
 
 	return s, nil
 }

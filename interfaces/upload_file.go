@@ -1,6 +1,8 @@
 package interfaces
 
+import "context"
+
 type UploadRecordingsFilesInterface interface {
-	Start()
+	Start(ctx context.Context)
 	Stop()
 }

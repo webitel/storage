@@ -1,15 +1,18 @@
 package web
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/webitel/webitel-go-kit/infra/otel/correlation"
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 
 	"github.com/webitel/storage/app"
 	"github.com/webitel/storage/controller"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
-	"github.com/webitel/wlog"
 )
+
+const httpLogComponent logging.Component = "storage.http"
 
 type Handler struct {
 	App            *app.App
@@ -22,8 +25,6 @@ type Handler struct {
 }
 
 func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	wlog.Debug(fmt.Sprintf("%v - %v", r.Method, r.URL.Path))
-
 	c := &Context{}
 	c.App = h.App
 	c.Ctrl = h.Ctrl
@@ -31,7 +32,15 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c.RequestId = model.NewId()
 	c.IpAddress = utils.GetIpAddress(r)
 	c.Path = r.URL.Path
-	c.Log = c.App.Log
+	c.Ctx = r.Context()
+	c.Log = c.App.Logger().WithComponent(httpLogComponent).With(
+		logging.Str("path", c.Path),
+		logging.Str("request_id", c.RequestId),
+		logging.Str("ip_addr", c.IpAddress),
+		logging.Str("method", r.Method),
+	)
+
+	c.Log.DebugCtx(c.Ctx, "request")
 
 	w.Header().Set(model.HEADER_REQUEST_ID, c.RequestId)
 	w.Header().Set("Content-Type", "application/json")
@@ -42,9 +51,9 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//TODO
 	token, _ := app.ParseAuthTokenFromRequest(r)
 	if len(token) != 0 && h.RequireSession {
-		session, err := c.App.GetSession(token)
+		session, err := c.App.GetSession(c.Ctx, token)
 		if err != nil {
-			c.Log.Info("Invalid session", wlog.Err(err))
+			c.Log.InfoCtx(c.Ctx, "invalid session", logging.Err(err))
 			if err.GetStatusCode() == http.StatusInternalServerError {
 				c.Err = err
 			} else {
@@ -52,16 +61,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			c.Session = *session
+			c.Ctx = correlation.WithIdentity(c.Ctx, session.DomainId, session.UserId)
+			r = r.WithContext(c.Ctx)
 		}
 	}
-
-	c.Log = c.App.Log.With(
-		wlog.String("path", c.Path),
-		wlog.String("request_id", c.RequestId),
-		wlog.String("ip_addr", c.IpAddress),
-		wlog.Int64("user_id", c.Session.UserId),
-		wlog.String("method", r.Method),
-	)
 
 	if c.Err == nil && h.RequireSession {
 		c.SessionRequired()

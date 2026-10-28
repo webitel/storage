@@ -247,7 +247,7 @@ func New(options ...string) (outApp *App, outErr error) {
 	app.Srv.Store = store.NewLayeredStore(sqlSupplier)
 	app.Store = app.Srv.Store
 
-	app.GrpcServer = NewGrpcServer(app.Config().ServerSettings)
+	app.GrpcServer = app.newGrpcServer(app.Config().ServerSettings)
 
 	if outErr = app.cluster.Start(); outErr != nil {
 		return nil, outErr
@@ -576,6 +576,10 @@ func (a *App) Handle404(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) GetInstanceId() string {
 	return *a.id
+}
+
+func (a *App) Logger() *logging.Logger {
+	return a.logger
 }
 
 func (a *App) initUploader() {

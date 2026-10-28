@@ -66,7 +66,7 @@ func streamMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
-	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	reader, c.Err = c.App.FilePolicyForDownload(c.Ctx, file.DomainId, &file.BaseFile, reader)
 	if c.Err != nil {
 		return
 	}
@@ -114,7 +114,7 @@ func downloadMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
-	reader, c.Err = c.App.FilePolicyForDownload(file.DomainId, &file.BaseFile, reader)
+	reader, c.Err = c.App.FilePolicyForDownload(c.Ctx, file.DomainId, &file.BaseFile, reader)
 	if c.Err != nil {
 		return
 	}
@@ -156,7 +156,7 @@ func saveMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.Name = part.FileName()
 			file.MimeType = part.Header.Get("Content-Type")
 
-			if file, c.Err = c.Ctrl.CreateMediaFile(&c.Session, part, file); c.Err != nil {
+			if file, c.Err = c.Ctrl.CreateMediaFile(c.Ctx, &c.Session, part, file); c.Err != nil {
 				break
 			}
 			files = append(files, file)
@@ -168,7 +168,7 @@ func saveMediaFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.Name = r.URL.Query().Get("name")
 		file.MimeType = r.Header.Get("Content-Type")
 
-		if file, c.Err = c.Ctrl.CreateMediaFile(&c.Session, r.Body, file); c.Err == nil {
+		if file, c.Err = c.Ctrl.CreateMediaFile(c.Ctx, &c.Session, r.Body, file); c.Err == nil {
 			files = append(files, file)
 		}
 	}

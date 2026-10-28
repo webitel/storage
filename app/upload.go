@@ -2,6 +2,7 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -15,8 +16,8 @@ import (
 	"github.com/hashicorp/golang-lru/v2/expirable"
 	"golang.org/x/sync/singleflight"
 
+	"github.com/webitel/webitel-go-kit/pkg/logging"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
-	"github.com/webitel/wlog"
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
@@ -28,7 +29,7 @@ var (
 )
 
 // AddUploadJobFile додає файл до черги завантаження
-func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) model.AppError {
+func (app *App) AddUploadJobFile(ctx context.Context, src io.Reader, file *model.JobUploadFile) model.AppError {
 	size, err := app.FileCache.Write(src, file)
 	if err != nil {
 		return err
@@ -39,12 +40,18 @@ func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) model
 
 	file, err = app.Store.UploadJob().Create(file)
 	if err != nil {
-		wlog.Error(fmt.Sprintf("Failed to store file %s, %v", file.Uuid, err))
+		app.logger.ErrorCtx(ctx, "create upload job", logging.Str("call_id", file.Uuid), logging.Err(err))
 		if errRem := app.FileCache.Remove(file); errRem != nil {
-			wlog.Error(fmt.Sprintf("Failed to remove cache file %v", err))
+			app.logger.ErrorCtx(ctx, "remove cache file", logging.Str("call_id", file.Uuid), logging.Err(errRem))
 		}
 	} else {
-		wlog.Debug(fmt.Sprintf("created new file job %d, upload file: %s [%d %s]", file.Id, file.Name, file.Size, file.MimeType))
+		app.logger.DebugCtx(ctx, "upload job created",
+			logging.Int64("job_id", file.Id),
+			logging.Str("call_id", file.Uuid),
+			logging.Str("file_name", file.Name),
+			logging.Int64("size", file.Size),
+			logging.Str("mime_type", file.MimeType),
+		)
 	}
 
 	return err
@@ -97,30 +104,30 @@ func (app *App) domainStore(domainId int64) (utils.FileBackend, model.AppError) 
 }
 
 // SyncUpload синхронно завантажує файл за замовчуванням
-func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) model.AppError {
+func (app *App) SyncUpload(ctx context.Context, src io.Reader, file *model.JobUploadFile) model.AppError {
 	store, err := app.domainStore(file.DomainId)
 	if err != nil {
 		return err
 	}
 
-	return app.upload(src, store.Id(), store, file)
+	return app.upload(ctx, src, store.Id(), store, file)
 }
 
 // SyncUploadToProfile синхронно завантажує файл у профіль користувача
-func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.JobUploadFile) model.AppError {
+func (app *App) SyncUploadToProfile(ctx context.Context, src io.Reader, profileId int, file *model.JobUploadFile) model.AppError {
 	store, err := app.GetFileBackendStoreById(file.DomainId, profileId)
 	if err != nil {
 		return err
 	}
 
-	return app.upload(src, &profileId, store, file)
+	return app.upload(ctx, src, &profileId, store, file)
 }
 
 func (app *App) useClamd(file *model.BaseFile) bool {
 	return app.clamd != nil && file.Channel != nil && *file.Channel == model.UploadFileChannelChat
 }
 
-func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) model.AppError {
+func (app *App) upload(ctx context.Context, src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) model.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail
 	var ch chan model.AppError
@@ -187,7 +194,7 @@ endScan:
 		}
 
 		if ms.Found && ms.Desc != nil {
-			app.Log.Warn(fmt.Sprintf("virus detected on upload of file '%s'. Signature: %s", file.Name, *ms.Desc))
+			app.logger.WarnCtx(ctx, "virus detected on upload", logging.Str("file_name", file.Name), logging.Str("signature", *ms.Desc))
 			if file.UploadedBy != nil { // internal user
 				return FileMalwareErr
 			}
@@ -202,7 +209,7 @@ endScan:
 		// yields no frame; the frame is taken from a spooled copy instead.
 		f, spoolErr := os.CreateTemp(app.Config().TempDir, "thumb-src-*")
 		if spoolErr != nil {
-			wlog.Warn(fmt.Sprintf("video thumbnail of '%s' skipped: %s", file.Name, spoolErr))
+			app.logger.WarnCtx(ctx, "video thumbnail skipped", logging.Str("file_name", file.Name), logging.Err(spoolErr))
 			reader = src
 		} else {
 			spool = &spoolFile{f: f}
@@ -232,7 +239,7 @@ endScan:
 	if file.GenerateThumbnail && utils.IsSupportMediaProbe(file.MimeType) && spool == nil {
 		var probeErr error
 		if probe, probeErr = utils.NewMediaProbe(); probeErr != nil {
-			wlog.Warn(fmt.Sprintf("media probe of '%s' not started: %s", file.Name, probeErr))
+			app.logger.WarnCtx(ctx, "media probe not started", logging.Str("file_name", file.Name), logging.Err(probeErr))
 		} else {
 			reader = io.TeeReader(reader, probe)
 		}
@@ -242,7 +249,7 @@ endScan:
 	sf, err := app.syncUpload(store, reader, file, profileId)
 	if probe != nil {
 		d, probeErr := probe.Duration()
-		app.applyMediaDuration(file, sf, d, probeErr)
+		app.applyMediaDuration(ctx, file, sf, d, probeErr)
 	}
 	if err != nil {
 		return err
@@ -262,16 +269,16 @@ endScan:
 	if spool != nil {
 		if spool.err == nil {
 			d, probeErr := utils.ProbeDurationFromFile(spool.f.Name())
-			app.applyMediaDuration(file, sf, d, probeErr)
+			app.applyMediaDuration(ctx, file, sf, d, probeErr)
 		}
 
-		if sf.Thumbnail, err = app.videoThumbnail(store, spool, file); err != nil {
+		if sf.Thumbnail, err = app.videoThumbnail(ctx, store, spool, file); err != nil {
 			return err
 		}
 		file.Thumbnail = sf.Thumbnail
 	}
 
-	file.Id, err = app.storeFile(store, sf)
+	file.Id, err = app.storeFile(ctx, store, sf)
 	if err != nil {
 		return err
 	}
@@ -281,9 +288,9 @@ endScan:
 
 // applyMediaDuration is best effort: a file ffprobe cannot read is still stored,
 // just without a duration.
-func (app *App) applyMediaDuration(file *model.JobUploadFile, sf *model.File, d time.Duration, err error) {
+func (app *App) applyMediaDuration(ctx context.Context, file *model.JobUploadFile, sf *model.File, d time.Duration, err error) {
 	if err != nil {
-		wlog.Warn(fmt.Sprintf("media probe of '%s' failed: %s", file.Name, err))
+		app.logger.WarnCtx(ctx, "media probe failed", logging.Str("file_name", file.Name), logging.Err(err))
 		return
 	}
 
@@ -303,15 +310,15 @@ func (app *App) applyMediaDuration(file *model.JobUploadFile, sf *model.File, d 
 
 // videoThumbnail is best effort: an unreadable video is stored without a
 // thumbnail rather than with an empty one.
-func (app *App) videoThumbnail(store utils.FileBackend, spool *spoolFile, file *model.JobUploadFile) (*model.Thumbnail, model.AppError) {
+func (app *App) videoThumbnail(ctx context.Context, store utils.FileBackend, spool *spoolFile, file *model.JobUploadFile) (*model.Thumbnail, model.AppError) {
 	if spool.err != nil {
-		wlog.Warn(fmt.Sprintf("video thumbnail of '%s' skipped: %s", file.Name, spool.err))
+		app.logger.WarnCtx(ctx, "video thumbnail skipped", logging.Str("file_name", file.Name), logging.Err(spool.err))
 		return nil, nil
 	}
 
 	png, scale, err := utils.VideoThumbnailFromFile(spool.f.Name(), app.thumbnailSettings.DefaultScale)
 	if err != nil {
-		wlog.Warn(fmt.Sprintf("video thumbnail of '%s' failed: %s", file.Name, err))
+		app.logger.WarnCtx(ctx, "video thumbnail failed", logging.Str("file_name", file.Name), logging.Err(err))
 		return nil, nil
 	}
 
@@ -434,7 +441,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 }
 
 // storeFile зберігає інформацію про файл у базі даних
-func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, model.AppError) {
+func (app *App) storeFile(ctx context.Context, store utils.FileBackend, file *model.File) (int64, model.AppError) {
 	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
 		return 0, res.Err
@@ -442,7 +449,15 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 
 	file.Id, _ = res.Data.(int64)
 
-	wlog.Debug(fmt.Sprintf("stored %s in %s, %d bytes [encrypted=%v, SHA256=%v, clamd=%v]", file.GetStoreName(), store.Name(), file.Size, file.IsEncrypted(), file.SHA256Sum != nil, file.BaseFile.StringMalware()))
+	app.logger.DebugCtx(ctx, "file stored",
+		logging.Int64("file_id", file.Id),
+		logging.Str("file_name", file.GetStoreName()),
+		logging.Str("store", store.Name()),
+		logging.Int64("size", file.Size),
+		logging.Bool("encrypted", file.IsEncrypted()),
+		logging.Bool("sha256", file.SHA256Sum != nil),
+		logging.Str("clamd", file.BaseFile.StringMalware()),
+	)
 
 	// TODO
 	if file.Channel != nil && *file.Channel == model.UploadFileChannelCase {
@@ -451,7 +466,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 			watcherkit.EventTypeCreate,
 			NewFileWatcherData(file),
 		); notifyErr != nil {
-			wlog.Error(fmt.Sprintf("could not notify file store: %s, ", notifyErr.Error()))
+			app.logger.ErrorCtx(ctx, "notify file watchers", logging.Int64("file_id", file.Id), logging.Err(notifyErr))
 		}
 	}
 	return file.Id, nil

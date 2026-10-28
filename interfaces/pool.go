@@ -1,12 +1,14 @@
 package interfaces
 
+import "context"
+
 type TaskInterface interface {
-	Execute()
+	Execute(ctx context.Context)
 }
 
 type PoolInterface interface {
 	Resize(n int)
 	Close()
 	Wait()
-	Exec(task TaskInterface)
+	Exec(ctx context.Context, task TaskInterface)
 }

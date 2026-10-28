@@ -8,7 +8,7 @@ import (
 	"github.com/webitel/storage/model"
 )
 
-func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, model.AppError) {
+func (c *Controller) CreateMediaFile(ctx context.Context, session *auth_manager.Session, src io.ReadCloser, mediaFile *model.MediaFile) (*model.MediaFile, model.AppError) {
 	//var err model.AppError
 	permission := session.GetPermission(model.PERMISSION_SCOPE_MEDIA_FILE)
 	if !permission.CanCreate() {
@@ -31,7 +31,7 @@ func (c *Controller) CreateMediaFile(session *auth_manager.Session, src io.ReadC
 		return nil, err
 	}
 
-	return c.app.SaveMediaFile(src, mediaFile)
+	return c.app.SaveMediaFile(ctx, src, mediaFile)
 }
 
 func (c *Controller) SearchMediaFile(session *auth_manager.Session, domainId int64, search *model.SearchMediaFile) ([]*model.MediaFile, bool, model.AppError) {

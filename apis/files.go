@@ -100,13 +100,13 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
 
 			var reader io.ReadCloser
-			reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, part)
+			reader, c.Err = c.App.FilePolicyForUpload(c.Ctx, c.Session.DomainId, &file.BaseFile, part)
 			if c.Err != nil {
 				return
 			}
 
 			// TODO PERMISSION
-			if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
+			if c.Err = c.App.SyncUpload(c.Ctx, reader, file); c.Err != nil {
 				if c.Err.GetId() == utils.ErrMaxLimitId {
 					c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 				}
@@ -140,14 +140,14 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
 
 		var reader io.ReadCloser
-		reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, r.Body)
+		reader, c.Err = c.App.FilePolicyForUpload(c.Ctx, c.Session.DomainId, &file.BaseFile, r.Body)
 		if c.Err != nil {
 			return
 		}
 		defer reader.Close()
 
 		// TODO PERMISSION
-		if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
+		if c.Err = c.App.SyncUpload(c.Ctx, reader, file); c.Err != nil {
 			if c.Err.GetId() == utils.ErrMaxLimitId {
 				c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 			}

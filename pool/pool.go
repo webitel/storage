@@ -1,21 +1,27 @@
 package pool
 
 import (
+	"context"
 	"github.com/webitel/storage/interfaces"
 	"sync"
 )
 
+type job struct {
+	ctx  context.Context
+	task interfaces.TaskInterface
+}
+
 type Pool struct {
 	mu    sync.Mutex
 	size  int
-	tasks chan interfaces.TaskInterface
+	tasks chan job
 	kill  chan struct{}
 	wg    sync.WaitGroup
 }
 
 func NewPool(workers int, queueCount int) interfaces.PoolInterface {
 	pool := &Pool{
-		tasks: make(chan interfaces.TaskInterface, queueCount),
+		tasks: make(chan job, queueCount),
 		kill:  make(chan struct{}),
 	}
 	pool.Resize(workers)
@@ -26,11 +32,11 @@ func (p *Pool) worker() {
 	defer p.wg.Done()
 	for {
 		select {
-		case task, ok := <-p.tasks:
+		case j, ok := <-p.tasks:
 			if !ok {
 				return
 			}
-			task.Execute()
+			j.task.Execute(j.ctx)
 		case <-p.kill:
 			return
 		}
@@ -59,10 +65,6 @@ func (p *Pool) Wait() {
 	p.wg.Wait()
 }
 
-func (p *Pool) Exec(task interfaces.TaskInterface) {
-	p.tasks <- task
-}
-
-func (p *Pool) ChannelJobs() chan interfaces.TaskInterface {
-	return p.tasks
+func (p *Pool) Exec(ctx context.Context, task interfaces.TaskInterface) {
+	p.tasks <- job{ctx: ctx, task: task}
 }
