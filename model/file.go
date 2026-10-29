@@ -61,6 +61,7 @@ type MalwareScan struct {
 
 type File struct {
 	BaseFile
+
 	Id          int64      `db:"id" json:"id"`
 	DomainId    int64      `db:"domain_id" json:"domain_id"`
 	Uuid        string     `db:"uuid" json:"uuid"`
@@ -234,7 +235,7 @@ func (f File) DefaultOrder() string {
 func (f File) AllowFields() []string {
 	return []string{
 		"id", "name", "view_name", "size", "mime_type", "reference_id", "profile", "uploaded_at",
-		"sha256sum", "channel", "thumbnail", "retention_until", "domain_id", "uploaded_by",
+		"sha256sum", "channel", "thumbnail", "retention_until", "domain_id", "uploaded_by", "custom_properties",
 	}
 }
 
