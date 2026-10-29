@@ -8,6 +8,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/h2non/filetype"
@@ -865,6 +866,11 @@ func (api *file) SearchScreenRecordingsByCall(ctx context.Context, in *storage.S
 		CallId:       &callID,
 	}
 
+	//client side send "properties" to retrive "custom_properties" due to proto contract naming
+	if idx := slices.IndexFunc(search.Fields, func(f string) bool { return strings.EqualFold("properties", f) }); idx >= 0 {
+		search.Fields[idx] = "custom_properties"
+	}
+
 	switch in.GetType() {
 	case storage.ScreenrecordingType_PDF:
 		search.Channels = []string{"pdf"}
@@ -1022,6 +1028,7 @@ func toGrpcFile(src *model.File) *storage.File {
 		Thumbnail:      nil,
 		RetentionUntil: model.TimeToInt64(src.RetentionUntil),
 		Uuid:           src.Uuid,
+		Properties:     customPropertiesToProto(src.CustomProperties),
 	}
 
 	if src.ViewName != nil {
