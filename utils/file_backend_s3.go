@@ -24,6 +24,10 @@ import (
 const (
 	SelCDN        = "selcdn.ru"
 	GoogleStorage = "storage.googleapis.com"
+
+	// Not ErrFileWriteExistsId: callers take that one as success and save a
+	// file row pointing at the object that is already there.
+	ErrObjectExistsId = "utils.file.s3.exists"
 )
 
 type S3FileBackend struct {
@@ -150,6 +154,13 @@ func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppErro
 	location, appErr := objectKey(self.GetStoreDirectory(file), file.GetStoreName())
 	if appErr != nil {
 		return 0, appErr
+	}
+
+	// A put replaces an object silently, and a store name is predictable from
+	// what the client sends (a call record is "<call_id>_<call_id>_<name>"),
+	// so never write over a key that is already taken.
+	if _, err := self.svc.HeadObject(&s3.HeadObjectInput{Bucket: &self.bucket, Key: aws.String(location)}); err == nil {
+		return 0, model.NewBadRequestError(ErrObjectExistsId, "name="+file.GetStoreName())
 	}
 	isEncrypted := file.IsEncrypted()
 
