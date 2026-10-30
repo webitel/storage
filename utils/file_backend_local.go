@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/webitel/wlog"
@@ -24,7 +25,22 @@ type LocalFileBackend struct {
 const (
 	ErrFileWriteExistsId = "utils.file.locally.exists.app_error"
 	ErrMaxLimitId        = "utils.file.locally.writing.limit"
+	ErrPathEscapeId      = "utils.file.locally.path_escape"
 )
+
+// localPath joins parts under the backend's directory and refuses a path
+// that leaves it. Store names are built from what the client sends (an
+// upload's ?name=, a gRPC request's name or uuid), so "9_<id>_/../../x" must
+// not reach the file system above the root.
+func (self *LocalFileBackend) localPath(parts ...string) (string, model.AppError) {
+	root := filepath.Clean(self.directory)
+	full := filepath.Join(append([]string{root}, parts...)...)
+	rel, err := filepath.Rel(root, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", model.NewBadRequestError(ErrPathEscapeId, fmt.Sprintf("path %q leaves the storage directory", filepath.Join(parts...)))
+	}
+	return full, nil
+}
 
 func (self *LocalFileBackend) Name() string {
 	return self.name
@@ -68,8 +84,14 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 }
 
 func (self *LocalFileBackend) write(src io.Reader, file File, directory string, encrypt bool) (int64, model.AppError) {
-	root := path.Join(self.directory, directory)
-	allPath := path.Join(root, file.GetStoreName())
+	root, appErr := self.localPath(directory)
+	if appErr != nil {
+		return 0, appErr
+	}
+	allPath, appErr := self.localPath(directory, file.GetStoreName())
+	if appErr != nil {
+		return 0, appErr
+	}
 
 	fi, _ := os.Stat(allPath)
 	if fi != nil && fi.Size() > 0 {
@@ -118,7 +140,11 @@ func (self *LocalFileBackend) write(src io.Reader, file File, directory string, 
 }
 
 func (self *LocalFileBackend) Remove(file File) model.AppError {
-	if err := os.Remove(path.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())); err != nil {
+	fullPath, appErr := self.localPath(file.GetPropertyString("directory"), file.GetStoreName())
+	if appErr != nil {
+		return appErr
+	}
+	if err := os.Remove(fullPath); err != nil {
 		e, ok := err.(*os.PathError)
 		if ok && e.Err == syscall.ENOENT {
 			return model.NewNotFoundError("utils.file.locally.removing.not_found", err.Error())
@@ -151,7 +177,10 @@ func (self *LocalFileBackend) CopyTo(file File, to func(string) string) model.Ap
 }
 
 func (self *LocalFileBackend) RemoveFile(directory, name string) model.AppError {
-	fullPath := path.Join(self.directory, directory, name)
+	fullPath, appErr := self.localPath(directory, name)
+	if appErr != nil {
+		return appErr
+	}
 
 	if err := os.Remove(fullPath); err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -169,7 +198,10 @@ func (self *LocalFileBackend) RemoveFile(directory, name string) model.AppError 
 }
 
 func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, model.AppError) {
-	fullPath := filepath.Join(self.directory, file.GetPropertyString("directory"), file.GetStoreName())
+	fullPath, appErr := self.localPath(file.GetPropertyString("directory"), file.GetStoreName())
+	if appErr != nil {
+		return nil, appErr
+	}
 
 	f, err := os.Open(fullPath)
 	if err != nil {
