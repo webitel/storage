@@ -23,6 +23,10 @@ import (
 const (
 	SelCDN        = "selcdn.ru"
 	GoogleStorage = "storage.googleapis.com"
+
+	// Not ErrFileWriteExistsId: callers take that one as success and save a
+	// file row pointing at the object that is already there.
+	ErrObjectExistsId = "utils.file.s3.exists"
 )
 
 type S3FileBackend struct {
@@ -38,6 +42,22 @@ type S3FileBackend struct {
 	svc            *s3.S3
 	uploader       *s3manager.Uploader
 	forcePathStyle bool
+}
+
+// objectKey joins parts into an object key and refuses one with a ".."
+// element. Unlike a file system, the bucket has no root to escape from, but
+// path.Join would still fold "<uuid>_<id>_/../../../etc/x" out of the
+// directory prefix and let a client overwrite any object in the bucket. The
+// directory itself is checked too: $MIME and $CHANNEL come from the request.
+func objectKey(parts ...string) (string, model.AppError) {
+	for _, p := range parts {
+		for _, el := range strings.Split(p, "/") {
+			if el == ".." {
+				return "", model.NewBadRequestError(ErrPathEscapeId, fmt.Sprintf("object key %q leaves its directory", strings.Join(parts, "/")))
+			}
+		}
+	}
+	return path.Join(parts...), nil
 }
 
 func (self *S3FileBackend) Name() string {
@@ -113,8 +133,17 @@ func (self *S3FileBackend) CopyTo(file File, to func(string) string) model.AppEr
 }
 
 func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppError) {
-	directory := self.GetStoreDirectory(file)
-	location := path.Join(directory, file.GetStoreName())
+	location, appErr := objectKey(self.GetStoreDirectory(file), file.GetStoreName())
+	if appErr != nil {
+		return 0, appErr
+	}
+
+	// A put replaces an object silently, and a store name is predictable from
+	// what the client sends (a call record is "<call_id>_<call_id>_<name>"),
+	// so never write over a key that is already taken.
+	if _, err := self.svc.HeadObject(&s3.HeadObjectInput{Bucket: &self.bucket, Key: aws.String(location)}); err == nil {
+		return 0, model.NewBadRequestError(ErrObjectExistsId, "name="+file.GetStoreName())
+	}
 	isEncrypted := file.IsEncrypted()
 
 	params := &s3manager.UploadInput{
@@ -192,7 +221,10 @@ func (self *S3FileBackend) remove(location string) model.AppError {
 }
 
 func (self *S3FileBackend) RemoveFile(directory, name string) model.AppError {
-	location := path.Join(directory, name)
+	location, appErr := objectKey(directory, name)
+	if appErr != nil {
+		return appErr
+	}
 
 	_, err := self.svc.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: &self.bucket,
