@@ -42,6 +42,22 @@ type S3FileBackend struct {
 	healthCheckDisabled bool
 }
 
+// objectKey joins parts into an object key and refuses one with a ".."
+// element. Unlike a file system, the bucket has no root to escape from, but
+// path.Join would still fold "<uuid>_<id>_/../../../etc/x" out of the
+// directory prefix and let a client overwrite any object in the bucket. The
+// directory itself is checked too: $MIME and $CHANNEL come from the request.
+func objectKey(parts ...string) (string, model.AppError) {
+	for _, p := range parts {
+		for _, el := range strings.Split(p, "/") {
+			if el == ".." {
+				return "", model.NewBadRequestError(ErrPathEscapeId, fmt.Sprintf("object key %q leaves its directory", strings.Join(parts, "/")))
+			}
+		}
+	}
+	return path.Join(parts...), nil
+}
+
 func (self *S3FileBackend) Name() string {
 	return self.name
 }
@@ -131,8 +147,10 @@ func (self *S3FileBackend) CopyTo(file File, to func(string) string) model.AppEr
 }
 
 func (self *S3FileBackend) write(src io.Reader, file File) (int64, model.AppError) {
-	directory := self.GetStoreDirectory(file)
-	location := path.Join(directory, file.GetStoreName())
+	location, appErr := objectKey(self.GetStoreDirectory(file), file.GetStoreName())
+	if appErr != nil {
+		return 0, appErr
+	}
 	isEncrypted := file.IsEncrypted()
 
 	params := &s3manager.UploadInput{
@@ -210,7 +228,10 @@ func (self *S3FileBackend) remove(location string) model.AppError {
 }
 
 func (self *S3FileBackend) RemoveFile(directory, name string) model.AppError {
-	location := path.Join(directory, name)
+	location, appErr := objectKey(directory, name)
+	if appErr != nil {
+		return appErr
+	}
 
 	_, err := self.svc.DeleteObject(&s3.DeleteObjectInput{
 		Bucket: &self.bucket,
