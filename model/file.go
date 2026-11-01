@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -222,6 +223,20 @@ func (f *BaseFile) SetPropertyString(name, value string) {
 		f.Properties = StringInterface{}
 	}
 	f.Properties[name] = value
+}
+
+var storeNameSeparators = strings.NewReplacer("/", "_", "\\", "_")
+
+// SafeStoreName makes a name that comes from the client (an upload's name, a
+// call's uuid) one element of a store path: a separator becomes "_", so the
+// name cannot climb out of its directory into another domain's tree, and a
+// name of "." or ".." cannot stand for a directory.
+func SafeStoreName(name string) string {
+	name = storeNameSeparators.Replace(name)
+	if name == "." || name == ".." {
+		name = "_" + name
+	}
+	return name
 }
 
 func (f *File) GetStoreName() string {

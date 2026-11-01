@@ -29,6 +29,7 @@ var (
 
 // AddUploadJobFile додає файл до черги завантаження
 func (app *App) AddUploadJobFile(src io.Reader, file *model.JobUploadFile) model.AppError {
+	file.Name = model.SafeStoreName(file.Name)
 	size, err := app.FileCache.Write(src, file)
 	if err != nil {
 		return err
@@ -387,6 +388,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 	if file.CreatedAt == 0 {
 		file.CreatedAt = model.GetMillis()
 	}
+	file.Name = model.SafeStoreName(file.Name)
 
 	f := &model.File{
 		DomainId:  file.DomainId,
@@ -415,7 +417,15 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 	tr := io.TeeReader(src, h)
 
 	size, err := store.Write(tr, f)
-	if err != nil && err.GetId() != utils.ErrFileWriteExistsId {
+	if err != nil && (err.GetId() == utils.ErrFileWriteExistsId || err.GetId() == utils.ErrObjectExistsId) {
+		// The name is taken by a file stored before, maybe by someone else:
+		// a record must not point at it, so this one gets a name of its own.
+		// A backend refuses before it reads src, so src is still whole.
+		f.Name = model.NewId()[:7] + "_" + f.Name
+		file.Name = f.Name
+		size, err = store.Write(tr, f)
+	}
+	if err != nil {
 		return nil, err
 	}
 
