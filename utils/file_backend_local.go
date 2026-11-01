@@ -28,18 +28,27 @@ const (
 	ErrPathEscapeId      = "utils.file.locally.path_escape"
 )
 
-// localPath joins parts under the backend's directory and refuses a path
-// that leaves it. Store names are built from what the client sends (an
-// upload's ?name=, a gRPC request's name or uuid), so "9_<id>_/../../x" must
-// not reach the file system above the root.
-func (self *LocalFileBackend) localPath(parts ...string) (string, model.AppError) {
+// localPath joins name under directory, both under the backend's root, and
+// refuses a path that leaves either. Store names are built from what the
+// client sends (an upload's ?name=, a gRPC request's name or uuid), so
+// "9_<id>_/../../x" must not reach the file system above the root. The root
+// is shared by all domains, and a domain's tree is its directory ($DOMAIN/...),
+// so the name must not leave the directory either: "../../2/x" stays in the
+// root but writes, reads or removes a file of domain 2.
+func (self *LocalFileBackend) localPath(directory, name string) (string, string, model.AppError) {
 	root := filepath.Clean(self.directory)
-	full := filepath.Join(append([]string{root}, parts...)...)
-	rel, err := filepath.Rel(root, full)
-	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", model.NewBadRequestError(ErrPathEscapeId, fmt.Sprintf("path %q leaves the storage directory", filepath.Join(parts...)))
+	dir := filepath.Join(root, directory)
+	full := filepath.Join(dir, name)
+	if !insideDir(root, dir) || !insideDir(dir, full) || full == dir {
+		return "", "", model.NewBadRequestError(ErrPathEscapeId, fmt.Sprintf("path %q leaves the storage directory", filepath.Join(directory, name)))
 	}
-	return full, nil
+	return dir, full, nil
+}
+
+// insideDir reports whether p is base or below it; both are clean.
+func insideDir(base, p string) bool {
+	rel, err := filepath.Rel(base, p)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 func (self *LocalFileBackend) Name() string {
@@ -84,11 +93,7 @@ func (self *LocalFileBackend) Write(src io.Reader, file File) (int64, model.AppE
 }
 
 func (self *LocalFileBackend) write(src io.Reader, file File, directory string, encrypt bool) (int64, model.AppError) {
-	root, appErr := self.localPath(directory)
-	if appErr != nil {
-		return 0, appErr
-	}
-	allPath, appErr := self.localPath(directory, file.GetStoreName())
+	root, allPath, appErr := self.localPath(directory, file.GetStoreName())
 	if appErr != nil {
 		return 0, appErr
 	}
@@ -140,7 +145,7 @@ func (self *LocalFileBackend) write(src io.Reader, file File, directory string, 
 }
 
 func (self *LocalFileBackend) Remove(file File) model.AppError {
-	fullPath, appErr := self.localPath(file.GetPropertyString("directory"), file.GetStoreName())
+	_, fullPath, appErr := self.localPath(file.GetPropertyString("directory"), file.GetStoreName())
 	if appErr != nil {
 		return appErr
 	}
@@ -177,7 +182,7 @@ func (self *LocalFileBackend) CopyTo(file File, to func(string) string) model.Ap
 }
 
 func (self *LocalFileBackend) RemoveFile(directory, name string) model.AppError {
-	fullPath, appErr := self.localPath(directory, name)
+	_, fullPath, appErr := self.localPath(directory, name)
 	if appErr != nil {
 		return appErr
 	}
@@ -198,7 +203,7 @@ func (self *LocalFileBackend) RemoveFile(directory, name string) model.AppError 
 }
 
 func (self *LocalFileBackend) Reader(file File, offset int64) (io.ReadCloser, model.AppError) {
-	fullPath, appErr := self.localPath(file.GetPropertyString("directory"), file.GetStoreName())
+	_, fullPath, appErr := self.localPath(file.GetPropertyString("directory"), file.GetStoreName())
 	if appErr != nil {
 		return nil, appErr
 	}
