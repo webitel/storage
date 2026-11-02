@@ -63,7 +63,6 @@ func main() {
 		return
 	}
 
-	setDebug()
 	// wait for kill signal before attempting to gracefully shutdown
 	// the running service
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

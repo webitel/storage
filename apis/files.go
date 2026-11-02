@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -128,7 +129,12 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		file := &model.JobUploadFile{}
+		// A name is a name, not a path — as part.FileName() already makes it
+		// for a multipart upload above.
 		name := r.URL.Query().Get("name")
+		if name != "" {
+			name = filepath.Base(name)
+		}
 		file.ViewName = &name
 		file.Name = model.NewId() + "_" + name
 		file.MimeType = r.Header.Get("Content-Type")
