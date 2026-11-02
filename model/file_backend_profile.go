@@ -2,14 +2,18 @@ package model
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"maps"
+	"slices"
+	"strings"
 )
 
 const (
-	BackendCacheSize             = 1000
-	BackendProfileAccessKeyField = "access_key"
-	BackendProfileDirectoryField = "directory"
+	BackendCacheSize               = 1000
+	BackendProfileAccessKeyField   = "access_key"
+	BackendProfilePathPatternField = "path_pattern"
+	BackendProfileDirectoryField   = "directory"
 )
 
 type BackendProfileType string
@@ -186,6 +190,33 @@ func (f *FileBackendProfile) IsValidType(old *FileBackendProfile) AppError {
 	if old.Type == FileDriverLocal && f.Properties.GetString(BackendProfileDirectoryField) != old.Properties.GetString(BackendProfileDirectoryField) {
 		return NewBadRequestError("model.file_backend_profile.type.local.app_error",
 			"the directory of a local profile cannot be changed: local storage is set in the service config only")
+	}
+	return nil
+}
+
+// storePathPatternVars are the placeholders a path pattern is made of; see
+// parseStorePattern in utils.
+var storePathPatternVars = []string{"$DOMAIN", "$Y", "$M", "$D", "$H", "$m", "$CHANNEL", "$MIME"}
+
+// IsValidPathPattern checks the path pattern set by a create or an update,
+// so the pattern cannot be a path of its own ("../2/$Y", "/etc") that puts
+// files outside the domain's tree. A pattern is placeholders joined by "/"
+// (empty is no subdirectory). Profiles stored before this check may have
+// any pattern: old is the stored profile on an update (nil on a create),
+// and a pattern it already has is not checked again.
+func (f *FileBackendProfile) IsValidPathPattern(old *FileBackendProfile) AppError {
+	pattern := f.Properties.GetString(BackendProfilePathPatternField)
+	if old != nil && old.Properties.GetString(BackendProfilePathPatternField) == pattern {
+		return nil
+	}
+	if pattern == "" {
+		return nil
+	}
+	for _, el := range strings.Split(pattern, "/") {
+		if !slices.Contains(storePathPatternVars, el) {
+			return NewBadRequestError("model.file_backend_profile.path_pattern.app_error",
+				fmt.Sprintf("path pattern %q: %q is not one of %s joined by \"/\"", pattern, el, strings.Join(storePathPatternVars, ", ")))
+		}
 	}
 	return nil
 }

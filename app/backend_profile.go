@@ -22,6 +22,9 @@ func (app *App) CreateFileBackendProfile(profile *model.FileBackendProfile) (*mo
 	if err := profile.IsValidType(nil); err != nil {
 		return nil, err
 	}
+	if err := profile.IsValidPathPattern(nil); err != nil {
+		return nil, err
+	}
 	return app.Store.FileBackendProfile().Create(profile)
 }
 
@@ -68,6 +71,9 @@ func (app *App) UpdateFileBackendProfile(profile *model.FileBackendProfile) (*mo
 	if err = profile.IsValidType(oldProfile); err != nil {
 		return nil, err
 	}
+	if err = profile.IsValidPathPattern(oldProfile); err != nil {
+		return nil, err
+	}
 	oldProfile.Properties = profile.Properties
 	oldProfile.Description = profile.Description
 
@@ -88,6 +94,9 @@ func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBac
 		return nil, err
 	}
 	if err = oldProfile.IsValidType(stored); err != nil {
+		return nil, err
+	}
+	if err = oldProfile.IsValidPathPattern(stored); err != nil {
 		return nil, err
 	}
 
