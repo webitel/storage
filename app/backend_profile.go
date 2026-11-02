@@ -19,6 +19,9 @@ func (app *App) FileBackendProfileCheckAccess(domainId, id int64, groups []int, 
 }
 
 func (app *App) CreateFileBackendProfile(profile *model.FileBackendProfile) (*model.FileBackendProfile, model.AppError) {
+	if err := profile.IsValidPathPattern(nil); err != nil {
+		return nil, err
+	}
 	return app.Store.FileBackendProfile().Create(profile)
 }
 
@@ -62,6 +65,9 @@ func (app *App) UpdateFileBackendProfile(profile *model.FileBackendProfile) (*mo
 	if oldAccessKey, newAccessKey := oldProfile.Properties.GetString(model.BackendProfileAccessKeyField), profile.Properties.GetString(model.BackendProfileAccessKeyField); newAccessKey == "" {
 		profile.Properties[model.BackendProfileAccessKeyField] = oldAccessKey
 	}
+	if err = profile.IsValidPathPattern(oldProfile); err != nil {
+		return nil, err
+	}
 	oldProfile.Properties = profile.Properties
 	oldProfile.Description = profile.Description
 
@@ -75,9 +81,13 @@ func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBac
 		return nil, err
 	}
 
+	stored := *oldProfile
 	oldProfile.Patch(patch)
 
 	if err = oldProfile.IsValid(); err != nil {
+		return nil, err
+	}
+	if err = oldProfile.IsValidPathPattern(&stored); err != nil {
 		return nil, err
 	}
 
