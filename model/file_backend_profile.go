@@ -207,9 +207,6 @@ func (f *FileBackendProfile) Patch(path *FileBackendProfilePath) {
 	}
 
 	if path.Priority != nil {
-		if oldAccessKey, newAccessKey := f.Properties.GetString(BackendProfileAccessKeyField), path.Properties.GetString(BackendProfileAccessKeyField); newAccessKey == "" {
-			f.Properties[BackendProfileAccessKeyField] = oldAccessKey
-		}
 		f.Priority = *path.Priority
 	}
 
@@ -222,7 +219,17 @@ func (f *FileBackendProfile) Patch(path *FileBackendProfilePath) {
 	}
 
 	if path.Properties != nil {
-		f.Properties = *path.Properties
+		props := *path.Properties
+		// an empty access_key keeps the stored one (WTEL-4344)
+		if props.GetString(BackendProfileAccessKeyField) == "" {
+			if old := f.Properties.GetString(BackendProfileAccessKeyField); old != "" {
+				if props == nil {
+					props = StringInterface{}
+				}
+				props[BackendProfileAccessKeyField] = old
+			}
+		}
+		f.Properties = props
 	}
 
 	if path.Description != nil {
