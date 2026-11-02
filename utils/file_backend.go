@@ -157,7 +157,12 @@ func parseStorePattern(pattern string, f File) string {
 			}
 			return "undef"
 		case "$MIME":
-			return f.GetMimeType()
+			// The mime type is the client's Content-Type: "../../2" must not
+			// put the file into another domain's tree.
+			if m := f.GetMimeType(); !strings.Contains(m, "..") {
+				return m
+			}
+			return "undef"
 		}
 		return s
 	})
