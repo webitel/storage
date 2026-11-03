@@ -8,6 +8,7 @@ import (
 const (
 	BackendCacheSize             = 1000
 	BackendProfileAccessKeyField = "access_key"
+	BackendProfileDirectoryField = "directory"
 )
 
 type BackendProfileType string
@@ -155,6 +156,24 @@ func (f *FileBackendProfile) IsValid() AppError {
 	//if f.TypeId != 1 {
 	//	return NewBadRequestError("model.file_backend_profile.type_id.app_error", "")
 	//}
+	return nil
+}
+
+// IsValidType keeps local storage to the service config: a create cannot
+// make a local profile, and a local profile made before cannot be moved to
+// another directory. old is the stored profile on an update (nil on a create).
+func (f *FileBackendProfile) IsValidType(old *FileBackendProfile) AppError {
+	if old == nil {
+		if f.Type == FileDriverLocal {
+			return NewBadRequestError("model.file_backend_profile.type.local.app_error",
+				"local storage is set in the service config only")
+		}
+		return nil
+	}
+	if old.Type == FileDriverLocal && f.Properties.GetString(BackendProfileDirectoryField) != old.Properties.GetString(BackendProfileDirectoryField) {
+		return NewBadRequestError("model.file_backend_profile.type.local.app_error",
+			"the directory of a local profile cannot be changed: local storage is set in the service config only")
+	}
 	return nil
 }
 

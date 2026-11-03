@@ -257,6 +257,7 @@ func (e SqlFileBackendProfileStore) Default(domainId int64) (*model.DomainFileBa
 from storage.file_backend_profiles p
 where domain_id = :DomainId
     and not disabled
+    and type != 'local' -- local storage is set in the service config only
 order by priority desc
 limit 1`, map[string]any{
 		"DomainId": domainId,
