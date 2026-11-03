@@ -84,6 +84,39 @@ type FileBackend interface {
 	Id() *int
 }
 
+const ErrReadOnlyId = "utils.file.read_only"
+
+// NewProfileBackendStore makes the backend of a profile stored in the
+// database. Local storage is the service's own (its config: the default
+// store, media, the file cache); a profile from the database, which a domain
+// edits through the API, must not make the service write where it says. A
+// local profile created before this rule still serves and removes the files
+// it has, but stores no new ones.
+func NewProfileBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBackend, model.AppError) {
+	store, err := NewBackendStore(profile, chipher)
+	if err != nil || profile.Type != model.FileDriverLocal {
+		return store, err
+	}
+	return readOnlyBackend{store}, nil
+}
+
+// readOnlyBackend serves the files a backend has and refuses new ones.
+type readOnlyBackend struct {
+	FileBackend
+}
+
+func (b readOnlyBackend) Write(io.Reader, File) (int64, model.AppError) {
+	return 0, b.errReadOnly()
+}
+
+func (b readOnlyBackend) CopyTo(File, func(string) string) model.AppError {
+	return b.errReadOnly()
+}
+
+func (b readOnlyBackend) errReadOnly() model.AppError {
+	return model.NewBadRequestError(ErrReadOnlyId, fmt.Sprintf("store %q is a local profile: local storage is set in the service config only", b.Name()))
+}
+
 func NewBackendStore(profile *model.FileBackendProfile, chipher Chipher) (FileBackend, model.AppError) {
 	switch profile.Type {
 	case model.FileDriverLocal:
