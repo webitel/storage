@@ -124,3 +124,70 @@ func TestStorePatternMimeEscape(t *testing.T) {
 		t.Errorf("pattern = %q, want 1/audio/mpeg", got)
 	}
 }
+
+// Local storage is the service's own: a local profile from the database
+// serves and removes the files it has but stores no new ones.
+func TestProfileBackendStoreLocalReadOnly(t *testing.T) {
+	root := t.TempDir()
+	profile := &model.FileBackendProfile{
+		DomainRecord: model.DomainRecord{Id: 7},
+		Name:         "tenant local",
+		Type:         model.FileDriverLocal,
+		Properties:   model.StringInterface{"directory": root, "path_pattern": "$DOMAIN"},
+	}
+
+	// A file stored before the rule, written as the old code did.
+	old, err := NewBackendStore(profile, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &model.File{DomainId: 1, BaseFile: model.BaseFile{Name: "old.wav"}}
+	if _, err := old.Write(strings.NewReader("old"), f); err != nil {
+		t.Fatal(err)
+	}
+
+	be, err := NewProfileBackendStore(profile, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if be.Name() != "tenant local" || be.Id() == nil || *be.Id() != 7 {
+		t.Errorf("name/id = %q/%v, want the profile's", be.Name(), be.Id())
+	}
+
+	nf := &model.File{DomainId: 1, BaseFile: model.BaseFile{Name: "new.wav"}}
+	if _, err := be.Write(strings.NewReader("new"), nf); err == nil || err.GetId() != ErrReadOnlyId {
+		t.Errorf("Write: err = %v, want %s", err, ErrReadOnlyId)
+	}
+	if _, err := os.Stat(filepath.Join(root, "1", "new.wav")); err == nil {
+		t.Error("Write stored a file")
+	}
+	if err := be.CopyTo(f, func(s string) string { return s + "/copy" }); err == nil || err.GetId() != ErrReadOnlyId {
+		t.Errorf("CopyTo: err = %v, want %s", err, ErrReadOnlyId)
+	}
+
+	r, err := be.Reader(f, 0)
+	if err != nil {
+		t.Fatalf("Reader: %v", err)
+	}
+	b, _ := io.ReadAll(r)
+	r.Close()
+	if string(b) != "old" {
+		t.Errorf("Reader = %q, want old", b)
+	}
+	if err := be.Remove(f); err != nil {
+		t.Errorf("Remove: %v", err)
+	}
+}
+
+func TestProfileBackendStoreNotLocal(t *testing.T) {
+	be, err := NewProfileBackendStore(&model.FileBackendProfile{
+		Type:       model.FileDriverS3,
+		Properties: model.StringInterface{"bucket_name": "b", "region": "us-east-1", "endpoint": "http://127.0.0.1:1", "key_id": "k", "access_key": "s"},
+	}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := be.(readOnlyBackend); ok {
+		t.Error("an s3 profile is read-only")
+	}
+}
