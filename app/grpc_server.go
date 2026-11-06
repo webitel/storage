@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
@@ -22,10 +23,16 @@ type GrpcServer struct {
 	lis net.Listener
 }
 
-func (grpc *GrpcServer) GetPublicInterface() (string, int) {
+func (grpc *GrpcServer) GetListeningInterface() (string, int) {
 	h, p, _ := net.SplitHostPort(grpc.lis.Addr().String())
-	if h == "::" {
-		h = model.GetPublicAddr()
+
+	ip := net.ParseIP(h)
+	if ip != nil && ip.IsUnspecified() {
+		if addr, err := model.GetPrivateAddr(); err == nil {
+			h = addr
+		} else {
+			h = model.GetPublicAddr()
+		}
 	}
 	port, _ := strconv.Atoi(p)
 	return h, port
@@ -113,11 +120,18 @@ func wrapGrpcErr(err model.AppError) error {
 	return status.Error(code, err.ToJson())
 }
 
-func NewGrpcServer(settings model.ServerSettings) *GrpcServer {
-	address := fmt.Sprintf("%s:%d", settings.Address, settings.Port)
-	lis, err := net.Listen(settings.Network, address)
+func NewGrpcServer(settings model.ServerSettings) (*GrpcServer, error) {
+	host := strings.Trim(settings.Address, "[]")
+	if host == "" {
+		var err error
+		if host, err = model.GetPrivateAddr(); err != nil {
+			return nil, fmt.Errorf("resolve default grpc address: %w; set GRPC_ADDR explicitly", err)
+		}
+	}
+
+	lis, err := net.Listen(settings.Network, net.JoinHostPort(host, strconv.Itoa(settings.Port)))
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
 	return &GrpcServer{
 		lis: lis,
@@ -125,7 +139,7 @@ func NewGrpcServer(settings model.ServerSettings) *GrpcServer {
 			grpc.UnaryInterceptor(unaryInterceptor),
 			grpc.StreamInterceptor(streamInterceptor),
 		),
-	}
+	}, nil
 }
 
 func (s *GrpcServer) Server() *grpc.Server {
