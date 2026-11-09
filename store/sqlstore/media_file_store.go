@@ -117,49 +117,7 @@ func (s SqlMediaFileStore) Delete(ctx context.Context, domainId, id int64) model
 }
 
 func (s SqlMediaFileStore) DeleteReturning(ctx context.Context, r *model.DeleteMediaFileRequest) (*model.MediaFile, model.AppError) {
-	const query = `
-			with queue_nullify as (
-				update call_center.cc_queue
-				set ringtone_id = null
-				where :IsForce is true
-				  and ringtone_id = :ID
-				  and domain_id = :DomainID
-				returning 1
-			),
-			agent_nullify as (
-				update call_center.cc_agent
-				set greeting_media_id = null
-				where :IsForce is true
-				  and greeting_media_id = :ID
-				  and domain_id = :DomainID
-				returning 1
-			),
-			media_del as (
-				delete from storage.media_files
-				where id = :ID
-				  and domain_id = :DomainID
-					  and (select count(*) from queue_nullify) >= 0
-					  and (select count(*) from agent_nullify) >= 0
-				returning
-					id, name, created_at, created_by, updated_at, updated_by,
-					mime_type, size, properties, domain_id
-			)
-			select
-				f.id,
-				f.name,
-				f.created_at,
-				call_center.cc_get_lookup(c.id, c.name) as created_by,
-				f.updated_at,
-				call_center.cc_get_lookup(u.id, u.name) as updated_by,
-				f.mime_type,
-				f.size,
-				f.properties,
-				d.name as domain_name
-			from media_del f
-			left join directory.wbt_user c on c.id = f.created_by
-			left join directory.wbt_user u on u.id = f.updated_by
-			inner join directory.wbt_domain d on d.dc = f.domain_id;
-	`
+	const query = "select * from storage.media_file_delete_returning(:ID, :DomainID, :IsForce);"
 
 	args := map[string]any{
 		"ID":       r.ID,
@@ -169,6 +127,10 @@ func (s SqlMediaFileStore) DeleteReturning(ctx context.Context, r *model.DeleteM
 
 	var media model.MediaFile
 	if err := s.GetMaster().WithContext(ctx).SelectOne(&media, query, args); err != nil {
+		if pgerr, ok := err.(*pq.Error); ok && pgerr.Code == "CC409" {
+			return nil, model.NewCustomCodeError("store.sql_media_file.delete.in_use", pgerr.Message, http.StatusConflict)
+		}
+
 		if appErr := MediaFileConstraints.Map(err); appErr != nil {
 			return nil, appErr
 		}
