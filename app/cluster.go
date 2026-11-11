@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/webitel/engine/pkg/discovery"
 	"github.com/webitel/storage/model"
 )
@@ -23,8 +25,11 @@ func (c *cluster) Start() error {
 	}
 	c.discovery = sd
 
-	host, port := c.app.GrpcServer.GetPublicInterface()
-	err = sd.RegisterService(model.APP_SERVICE_NAME, host, port, model.APP_SERVICE_TTL, model.APP_DEREGISTER_CRITICAL_TTL)
+	addr, err := c.app.GrpcServer.AdvertiseAddr()
+	if err != nil {
+		return fmt.Errorf("resolve grpc advertise address: %w; set GRPC_ADDR to a specific IP", err)
+	}
+	err = sd.RegisterService(model.APP_SERVICE_NAME, addr.Addr().String(), int(addr.Port()), model.APP_SERVICE_TTL, model.APP_DEREGISTER_CRITICAL_TTL)
 	if err != nil {
 		return err
 	}
