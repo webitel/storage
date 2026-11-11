@@ -387,6 +387,8 @@ github.com/webitel/webitel-go-kit/infra/otel v0.6.0 h1:FK5Nq22MAYxS8To06oLccNAZL
 github.com/webitel/webitel-go-kit/infra/otel v0.6.0/go.mod h1:STmo9n9XkIe5m39Djb3rtfek9fp+KeK/zVBkVVcJX9E=
 github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.2.0 h1:taSucjV+gjYKAU45Jio4QAsun/Non+aPsfAoLWw6mxY=
 github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq v0.2.0/go.mod h1:sBJfsQ0zbZbDM2wojMuDylI7X0qvTCegZ44Xeyuq1Gk=
+github.com/webitel/webitel-go-kit/pkg/hostaddr v0.1.0 h1:EifVZJ7FbtlBonDlQzyPIMW8ja8VSzop6SDhIx1GCL4=
+github.com/webitel/webitel-go-kit/pkg/hostaddr v0.1.0/go.mod h1:dwUg3lSRmx30tg7/OyceBBgs5AQlUHTpoa3npq+COsY=
 github.com/webitel/webitel-go-kit/pkg/logging v0.1.0 h1:v4jTtz4rMBNP0apjeJcunvLFweLEW+g71/QPO5Qm3xc=
 github.com/webitel/webitel-go-kit/pkg/logging v0.1.0/go.mod h1:pbc/NQTMSydE3VXzsYqa/WmmHnfqjPUfvQq9R4Dg5Lw=
 github.com/webitel/webitel-go-kit/pkg/watcher v0.1.1-0.20260722105243-203af541f8ab h1:1B1GKv5o1FS1agw590ZZLXnkrvEPOCgUPx+Aukic5mM=

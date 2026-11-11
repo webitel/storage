@@ -257,7 +257,7 @@ func New(options ...string) (outApp *App, outErr error) {
 	app.Srv.Store = store.NewLayeredStore(sqlSupplier)
 	app.Store = app.Srv.Store
 
-	if app.GrpcServer, outErr = NewGrpcServer(app.Config().ServerSettings); outErr != nil {
+	if app.GrpcServer, outErr = NewGrpcServer(app.Config().ServerSettings, app.Log); outErr != nil {
 		return nil, fmt.Errorf("unable to initialize grpc server: %w", outErr)
 	}
 
