@@ -81,13 +81,13 @@ func (app *App) PatchFileBackendProfile(domainId, id int64, patch *model.FileBac
 		return nil, err
 	}
 
-	stored := *oldProfile
+	stored := oldProfile.Clone()
 	oldProfile.Patch(patch)
 
 	if err = oldProfile.IsValid(); err != nil {
 		return nil, err
 	}
-	if err = oldProfile.IsValidType(&stored); err != nil {
+	if err = oldProfile.IsValidType(stored); err != nil {
 		return nil, err
 	}
 
