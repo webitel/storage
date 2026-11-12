@@ -30,3 +30,22 @@ func TestFileBackendProfileLocalType(t *testing.T) {
 		t.Errorf("update s3: %v", err)
 	}
 }
+
+// The stored profile a patch is checked against must not change with the
+// patch, even when the patch writes into the properties it has.
+func TestFileBackendProfileClone(t *testing.T) {
+	old := &FileBackendProfile{Type: FileDriverLocal, Properties: StringInterface{BackendProfileDirectoryField: "/data"}}
+	stored := old.Clone()
+
+	old.Properties[BackendProfileDirectoryField] = "/etc"
+	if got := stored.Properties.GetString(BackendProfileDirectoryField); got != "/data" {
+		t.Fatalf("stored directory = %q, want /data", got)
+	}
+	if err := old.IsValidType(stored); err == nil {
+		t.Error("directory changed in place: want an error")
+	}
+
+	if (&FileBackendProfile{}).Clone().Properties != nil {
+		t.Error("clone of nil properties is not nil")
+	}
+}
