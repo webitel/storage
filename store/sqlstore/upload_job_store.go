@@ -103,7 +103,9 @@ from (
                                                    p1.updated_at,
                                                    p1.priority
                                                  from storage.file_backend_profiles p1
-                                                 where p1.domain_id = t.domain_id and NOT p1.disabled is TRUE) as tmp
+                                                 where p1.domain_id = t.domain_id and NOT p1.disabled is TRUE
+                                                   and p1.type != 'local' -- local storage is set in the service config only
+                                                 ) as tmp
                                            order by tmp.priority desc
                                            FETCH FIRST 1 ROW ONLY              ) profile ON profile.domain_id = t.domain_id
        WHERE state = 0  and (:UseDef::bool = true or profile.id notnull ) AND instance = :Instance AND (t.updated_at < :UpdatedAt OR attempts = 0)
