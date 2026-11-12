@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"io"
+	"maps"
 )
 
 const (
@@ -159,9 +160,21 @@ func (f *FileBackendProfile) IsValid() AppError {
 	return nil
 }
 
+// Clone copies the profile with properties of its own, so a patch of one
+// leaves the other as it was: an update checks the patched profile against
+// the stored one.
+func (f *FileBackendProfile) Clone() *FileBackendProfile {
+	c := *f
+	c.Properties = maps.Clone(f.Properties)
+	return &c
+}
+
 // IsValidType keeps local storage to the service config: a create cannot
 // make a local profile, and a local profile made before cannot be moved to
 // another directory. old is the stored profile on an update (nil on a create).
+// The type itself never changes after a create: the update and patch
+// requests have no type, and the store's Update does not write it, so a
+// profile of another type cannot become local.
 func (f *FileBackendProfile) IsValidType(old *FileBackendProfile) AppError {
 	if old == nil {
 		if f.Type == FileDriverLocal {
