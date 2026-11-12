@@ -17,7 +17,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/juju/ratelimit v1.0.2
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.12.3
 	github.com/makiuchi-d/gozxing v0.1.1
 	github.com/pborman/uuid v1.2.1
 	github.com/rabbitmq/amqp091-go v1.13.0
