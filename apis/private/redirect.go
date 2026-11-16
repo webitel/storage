@@ -2,9 +2,10 @@ package private
 
 import (
 	"bytes"
-	"github.com/h2non/filetype"
 	"io"
 	"net/http"
+
+	"github.com/webitel/storage/utils/mimex"
 )
 
 func (api *API) InitRedirect() {
@@ -66,7 +67,7 @@ func redirectPlayback(ctx *Context, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if !filetype.IsAudio(body.Bytes()) {
+	if !mimex.IsAudio(body.Bytes()) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("file is not audio"))
 		return

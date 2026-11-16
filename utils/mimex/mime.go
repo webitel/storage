@@ -2,6 +2,7 @@ package mimex
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -12,10 +13,18 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 )
 
+func init() {
+	mimetype.Lookup("application/zip").Extend(isASiCE, "application/vnd.etsi.asic-e+zip", ".asice")
+}
+
+func isASiCE(raw []byte, _ uint32) bool {
+	return len(raw) > 30 && bytes.HasPrefix(raw[30:], []byte("mimetypeapplication/vnd.etsi.asic-e+zip"))
+}
+
 const (
 	mimeOctetStream       = "application/octet-stream"
 	mimeBinaryOctetStream = "binary/octet-stream"
-	sniffLen              = 512
+	sniffLen              = 4096
 )
 
 var ErrReadingHead = errors.New("mime: could not read head of body")
@@ -34,7 +43,7 @@ func normalize(s string) string {
 	return m
 }
 
-func isGeneric(m string) bool {
+func IsGeneric(m string) bool {
 	m = strings.TrimSpace(m)
 
 	return m == "" || m == mimeOctetStream || m == mimeBinaryOctetStream
@@ -44,7 +53,7 @@ func pickMime(sniffed, declared string) string {
 	switch {
 	case declared == "":
 		return sniffed
-	case isGeneric(sniffed):
+	case IsGeneric(sniffed):
 		return declared
 	}
 
@@ -57,6 +66,26 @@ func pickMime(sniffed, declared string) string {
 	return sniffed
 }
 
+func IsAudio(raw []byte) bool {
+	if len(raw) == 0 {
+		return false
+	}
+
+	mt := mimetype.Detect(raw)
+
+	return strings.HasPrefix(mt.String(), "audio/")
+}
+
+func Detect(raw []byte) (string, string) {
+	if len(raw) == 0 {
+		return "", ""
+	}
+
+	mt := mimetype.Detect(raw)
+
+	return normalize(mt.String()), mt.Extension()
+}
+
 func ResolveURLUploadMIME(res *http.Response, clientHint string) (io.ReadCloser, string, error) {
 	br := bufio.NewReaderSize(res.Body, sniffLen)
 
@@ -66,7 +95,7 @@ func ResolveURLUploadMIME(res *http.Response, clientHint string) (io.ReadCloser,
 	}
 
 	declared := normalize(res.Header.Get("Content-Type"))
-	if isGeneric(declared) {
+	if IsGeneric(declared) {
 		declared = normalize(clientHint)
 	}
 

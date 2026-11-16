@@ -1,11 +1,11 @@
 package mimex
 
 import (
-	"archive/zip"
 	"bytes"
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 )
 
@@ -26,7 +26,7 @@ func TestIsGeneric(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if is := isGeneric(tt.mime); is != tt.want {
+			if is := IsGeneric(tt.mime); is != tt.want {
 				t.Errorf("isGeneric() want: %t\ngot: %t", tt.want, is)
 			}
 		})
@@ -201,37 +201,189 @@ func TestResolveURLUploadMIME(t *testing.T) {
 	})
 }
 
-func TestResolveURLUploadMIME_RealWordDocument(t *testing.T) {
-	var buf bytes.Buffer
+func TestResolveURLUploadMIME_TestData(t *testing.T) {
+	t.Parallel()
 
-	zipWriter := zip.NewWriter(&buf)
+	tests := []struct {
+		name                     string
+		filepath                 string
+		declaredType             string
+		clientHint, expectedMIME string
+	}{
+		{
+			name:         "ASiC-E Container (.asice)",
+			filepath:     "../../test_data/WTEL-10996.asice",
+			expectedMIME: "application/vnd.etsi.asic-e+zip",
+		},
+		{
+			name:         "Legacy Word Document (.doc)",
+			filepath:     "../../test_data/WTEL-10996.doc",
+			declaredType: "application/msword",
+			expectedMIME: "application/msword",
+		},
+		{
+			name:         "Word Document (.docx)",
+			filepath:     "../../test_data/WTEL-10996.docx",
+			expectedMIME: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+		},
+		{
+			name:         "Excel Spreadsheet (.xlsx)",
+			filepath:     "../../test_data/WTEL-10996.xlsx",
+			expectedMIME: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+		},
+		{
+			name:         "ASiC-E with generic zip header",
+			filepath:     "../../test_data/WTEL-10996.asice",
+			declaredType: "application/zip",
+			expectedMIME: "application/vnd.etsi.asic-e+zip",
+		}}
 
-	if _, err := zipWriter.Create("word/document.xml"); err != nil {
-		t.Fatalf("failed to create zip entry for docx mock: %v", err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			file, err := os.Open(tt.filepath)
+			if err != nil {
+				t.Errorf("opening file: %v path: %q", err, tt.filepath)
+			}
+			defer file.Close()
+
+			resp := &http.Response{
+				Header: http.Header{},
+				Body:   file,
+			}
+
+			if tt.declaredType != "" {
+				resp.Header.Set("Content-Type", tt.declaredType)
+			}
+
+			bodyReaderCloser, mimeType, err := ResolveURLUploadMIME(resp, tt.clientHint)
+			if err != nil {
+				t.Fatalf("resolving mime: %v", err)
+			}
+
+			if mimeType != tt.expectedMIME {
+				t.Errorf("expected mime type %q, got %q", tt.expectedMIME, mimeType)
+			}
+
+			if bodyReaderCloser == nil {
+				t.Error("expected non-nil body reader")
+				return
+			}
+
+			_ = bodyReaderCloser.Close()
+		})
+	}
+}
+
+func TestDetect(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		raw          []byte
+		expectedMIME string
+		expectedExt  string
+	}{
+		{
+			name:         "Nil slice returns empty",
+			raw:          nil,
+			expectedMIME: "",
+			expectedExt:  "",
+		},
+		{
+			name:         "Empty slice returns empty",
+			raw:          []byte{},
+			expectedMIME: "",
+			expectedExt:  "",
+		},
+		{
+			name:         "Plain text strips charset parameter via normalize",
+			raw:          []byte("Simple UTF-8 plain text content"),
+			expectedMIME: "text/plain",
+			expectedExt:  ".txt",
+		},
+		{
+			name:         "PNG magic bytes",
+			raw:          []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
+			expectedMIME: "image/png",
+			expectedExt:  ".png",
+		},
+		{
+			name:         "Random binary bytes fallback to octet-stream",
+			raw:          []byte{0x00, 0xFF, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC},
+			expectedMIME: "application/octet-stream",
+			expectedExt:  "",
+		},
 	}
 
-	if err := zipWriter.Close(); err != nil {
-		t.Fatalf("failed to close zip writer: %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	resp := &http.Response{
-		Header: http.Header{},
-		Body:   io.NopCloser(&buf),
+			gotMIME, gotExt := Detect(tt.raw)
+			if gotMIME != tt.expectedMIME {
+				t.Errorf("Detect() mime = %q, want %q", gotMIME, tt.expectedMIME)
+			}
+			if gotExt != tt.expectedExt {
+				t.Errorf("Detect() ext = %q, want %q", gotExt, tt.expectedExt)
+			}
+		})
 	}
+}
 
-	bodyReaderCloser, mimeType, err := ResolveURLUploadMIME(resp, "")
-	if err != nil {
-		t.Fatalf("unexpected error resolving docx mime: %v", err)
+func TestIsAudio(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		raw      []byte
+		expected bool
+	}{{
+		name:     "Nil slice",
+		raw:      nil,
+		expected: false,
+	}, {
+		name:     "Empty slice",
+		raw:      []byte{},
+		expected: false,
+	}, {
+		name:     "WAV audio header",
+		raw:      []byte("RIFF\x24\x00\x00\x00WAVEfmt "),
+		expected: true,
+	}, {
+		name:     "MP3 raw sync frame (MPEG-1 Layer 3)",
+		raw:      []byte{0xFF, 0xFB, 0x90, 0x00},
+		expected: true,
+	}, {
+		name:     "FLAC audio header",
+		raw:      []byte("fLaC\x00\x00\x00\x22"),
+		expected: true,
+	}, {
+		name:     "Non-audio RIFF container (WebP image)",
+		raw:      []byte("RIFF\x24\x00\x00\x00WEBPVP8 "),
+		expected: false,
+	}, {
+		name:     "PNG image header",
+		raw:      []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
+		expected: false,
+	}, {
+		name:     "Plain text",
+		raw:      []byte("Just some plain text content"),
+		expected: false,
+	}, {
+		name:     "Random binary bytes",
+		raw:      []byte{0x00, 0x01, 0x02, 0x03, 0xFA, 0xFB, 0xFC, 0xFD},
+		expected: false,
+	}}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := IsAudio(tt.raw); got != tt.expected {
+				t.Errorf("IsAudio() = %v, want %v", got, tt.expected)
+			}
+		})
 	}
-
-	expectedMime := "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-	if mimeType != expectedMime {
-		t.Errorf("expected mime type %q, got %q", expectedMime, mimeType)
-	}
-
-	if bodyReaderCloser == nil {
-		t.Error("expected non-nil body reader for docx")
-	}
-
-	_ = bodyReaderCloser.Close()
 }
