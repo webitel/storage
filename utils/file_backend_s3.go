@@ -73,7 +73,10 @@ func (self *S3FileBackend) GetStoreDirectory(f File) string {
 func (self *S3FileBackend) getEndpoint() *string {
 	if self.endpoint == "amazonaws.com" {
 		return nil
-	} else if self.region != "" && !isS3ForcePathStyle(self.endpoint) && !self.forcePathStyle {
+	} else if self.region != "" && !isS3ForcePathStyle(self.endpoint) && !self.forcePathStyle &&
+		// An endpoint with a scheme is a full URL: prefixing the region would
+		// turn "https://host" into "region.https://host".
+		!strings.Contains(self.endpoint, "://") {
 		return aws.String(fmt.Sprintf("%s.%s", self.region, self.endpoint))
 	} else {
 		return aws.String(fmt.Sprintf("%s", self.endpoint))
