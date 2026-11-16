@@ -37,6 +37,33 @@ func TestS3ObjectKeyPathEscape(t *testing.T) {
 	}
 }
 
+// The region is prefixed only to a bare host name; an endpoint given as a
+// URL is used as is, and the region only signs requests.
+func TestS3Endpoint(t *testing.T) {
+	for _, tc := range []struct {
+		endpoint, region string
+		forcePathStyle   bool
+		want             string
+	}{
+		{"https://alac80-rz-prd.halykbank.nb", "alac80", false, "https://alac80-rz-prd.halykbank.nb"},
+		{"http://minio:9000", "us-east-1", false, "http://minio:9000"},
+		{"https://alac80-rz-prd.halykbank.nb", "alac80", true, "https://alac80-rz-prd.halykbank.nb"},
+		{"halykbank.nb", "alac80-rz-prd", false, "alac80-rz-prd.halykbank.nb"},
+		{"halykbank.nb", "alac80-rz-prd", true, "halykbank.nb"},
+		{"halykbank.nb", "", false, "halykbank.nb"},
+		{GoogleStorage, "eu", false, GoogleStorage},
+	} {
+		b := &S3FileBackend{endpoint: tc.endpoint, region: tc.region, forcePathStyle: tc.forcePathStyle}
+		if got := b.getEndpoint(); got == nil || *got != tc.want {
+			t.Errorf("getEndpoint(%q, %q, %v) = %v; want %q", tc.endpoint, tc.region, tc.forcePathStyle, got, tc.want)
+		}
+	}
+
+	if got := (&S3FileBackend{endpoint: "amazonaws.com", region: "eu-west-1"}).getEndpoint(); got != nil {
+		t.Errorf("getEndpoint(amazonaws.com) = %q; want nil", *got)
+	}
+}
+
 // A key that is already in the bucket is not written over.
 func TestS3WriteRefusesExistingKey(t *testing.T) {
 	var puts int
