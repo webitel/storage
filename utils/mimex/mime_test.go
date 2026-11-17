@@ -100,7 +100,7 @@ func TestResolveURLUploadMIME(t *testing.T) {
 
 	pngMagicBytes := []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A}
 
-	t.Run("Success: Normal flow with valid Content-Type and matching body", func(t *testing.T) {
+	t.Run("success:_normal_flow_with_valid_content_type_and_matching_body", func(t *testing.T) {
 		t.Parallel()
 
 		resp := &http.Response{
@@ -135,7 +135,7 @@ func TestResolveURLUploadMIME(t *testing.T) {
 		_ = bodyReaderCloser.Close()
 	})
 
-	t.Run("Success: Generic Content-Type falls back to clientHint", func(t *testing.T) {
+	t.Run("success:_generic_content_type_falls_back_to_client_hint", func(t *testing.T) {
 		t.Parallel()
 
 		resp := &http.Response{
@@ -155,7 +155,7 @@ func TestResolveURLUploadMIME(t *testing.T) {
 		}
 	})
 
-	t.Run("Success: Body shorter than sniffLen (triggers io.EOF safely)", func(t *testing.T) {
+	t.Run("success:_body_shorter_than_sniff_len_(triggers_io.eof_safely)", func(t *testing.T) {
 		t.Parallel()
 
 		shortBody := []byte("short")
@@ -177,7 +177,7 @@ func TestResolveURLUploadMIME(t *testing.T) {
 		}
 	})
 
-	t.Run("Error: Reading head fails with underlying IO error", func(t *testing.T) {
+	t.Run("error:_reading_head_fails_with_underlying_io_error", func(t *testing.T) {
 		t.Parallel()
 
 		expectedIOErr := errors.New("connection reset by peer")
@@ -211,28 +211,28 @@ func TestResolveURLUploadMIME_TestData(t *testing.T) {
 		clientHint, expectedMIME string
 	}{
 		{
-			name:         "ASiC-E Container (.asice)",
+			name:         "a_si_c_e_container_(.asice)",
 			filepath:     "../../test_data/WTEL-10996.asice",
 			expectedMIME: "application/vnd.etsi.asic-e+zip",
 		},
 		{
-			name:         "Legacy Word Document (.doc)",
+			name:         "legacy_word_document_(.doc)",
 			filepath:     "../../test_data/WTEL-10996.doc",
 			declaredType: "application/msword",
 			expectedMIME: "application/msword",
 		},
 		{
-			name:         "Word Document (.docx)",
+			name:         "word_document_(.docx)",
 			filepath:     "../../test_data/WTEL-10996.docx",
 			expectedMIME: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 		},
 		{
-			name:         "Excel Spreadsheet (.xlsx)",
+			name:         "excel_spreadsheet_(.xlsx)",
 			filepath:     "../../test_data/WTEL-10996.xlsx",
 			expectedMIME: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 		},
 		{
-			name:         "ASiC-E with generic zip header",
+			name:         "a_si_c_e_with_generic_zip_header",
 			filepath:     "../../test_data/WTEL-10996.asice",
 			declaredType: "application/zip",
 			expectedMIME: "application/vnd.etsi.asic-e+zip",
@@ -286,31 +286,31 @@ func TestDetect(t *testing.T) {
 		expectedExt  string
 	}{
 		{
-			name:         "Nil slice returns empty",
+			name:         "nil_slice_returns_empty",
 			raw:          nil,
 			expectedMIME: "",
 			expectedExt:  "",
 		},
 		{
-			name:         "Empty slice returns empty",
+			name:         "empty_slice_returns_empty",
 			raw:          []byte{},
 			expectedMIME: "",
 			expectedExt:  "",
 		},
 		{
-			name:         "Plain text strips charset parameter via normalize",
+			name:         "plain_text_strips_charset_parameter_via_normalize",
 			raw:          []byte("Simple UTF-8 plain text content"),
 			expectedMIME: "text/plain",
 			expectedExt:  ".txt",
 		},
 		{
-			name:         "PNG magic bytes",
+			name:         "png_magic_bytes",
 			raw:          []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
 			expectedMIME: "image/png",
 			expectedExt:  ".png",
 		},
 		{
-			name:         "Random binary bytes fallback to octet-stream",
+			name:         "random_binary_bytes_fallback_to_octet_stream",
 			raw:          []byte{0x00, 0xFF, 0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC},
 			expectedMIME: "application/octet-stream",
 			expectedExt:  "",
@@ -340,39 +340,39 @@ func TestIsAudio(t *testing.T) {
 		raw      []byte
 		expected bool
 	}{{
-		name:     "Nil slice",
+		name:     "nil_slice",
 		raw:      nil,
 		expected: false,
 	}, {
-		name:     "Empty slice",
+		name:     "empty_slice",
 		raw:      []byte{},
 		expected: false,
 	}, {
-		name:     "WAV audio header",
+		name:     "wav_audio_header",
 		raw:      []byte("RIFF\x24\x00\x00\x00WAVEfmt "),
 		expected: true,
 	}, {
-		name:     "MP3 raw sync frame (MPEG-1 Layer 3)",
+		name:     "mp_3_raw_sync_frame_(mpeg_1_layer_3)",
 		raw:      []byte{0xFF, 0xFB, 0x90, 0x00},
 		expected: true,
 	}, {
-		name:     "FLAC audio header",
+		name:     "flac_audio_header",
 		raw:      []byte("fLaC\x00\x00\x00\x22"),
 		expected: true,
 	}, {
-		name:     "Non-audio RIFF container (WebP image)",
+		name:     "non_audio_riff_container_(web_p_image)",
 		raw:      []byte("RIFF\x24\x00\x00\x00WEBPVP8 "),
 		expected: false,
 	}, {
-		name:     "PNG image header",
+		name:     "png_image_header",
 		raw:      []byte{0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A},
 		expected: false,
 	}, {
-		name:     "Plain text",
+		name:     "plain_text",
 		raw:      []byte("Just some plain text content"),
 		expected: false,
 	}, {
-		name:     "Random binary bytes",
+		name:     "random_binary_bytes",
 		raw:      []byte{0x00, 0x01, 0x02, 0x03, 0xFA, 0xFB, 0xFC, 0xFD},
 		expected: false,
 	}}
@@ -383,6 +383,74 @@ func TestIsAudio(t *testing.T) {
 
 			if got := IsAudio(tt.raw); got != tt.expected {
 				t.Errorf("IsAudio() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestMatches(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name, declared, detected string
+		want                     bool
+	}{
+		{
+			name:     "empty_string",
+			declared: "",
+			detected: "",
+			want:     false,
+		},
+		{
+			name:     "exact_match",
+			declared: "image/jpeg",
+			detected: "image/jpeg",
+			want:     true,
+		},
+		{
+			name:     "exact_mismatch",
+			declared: "image/jpeg",
+			detected: "image/png",
+			want:     false,
+		},
+		{
+			name:     "unknown_mime_type",
+			declared: "image/unknown",
+			detected: "image/jpeg",
+			want:     false,
+		},
+		{
+			name:     "hierarchical_parent_match",
+			declared: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			detected: "application/zip",
+			want:     true,
+		},
+		{
+			name:     "hierarchical_mismatch",
+			declared: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			detected: "application/pdf",
+			want:     false,
+		},
+		{
+			name:     "wav_children_match",
+			declared: "audio/wav",
+			detected: "audio/wave",
+			want:     true,
+		},
+		{
+			name:     "wav_parent_match",
+			declared: "audio/x-wav",
+			detected: "audio/wav",
+			want:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := Matches(tt.declared, tt.detected); got != tt.want {
+				t.Errorf("Matches(%q, %q) got: %t want: %t", tt.declared, tt.detected, got, tt.want)
 			}
 		})
 	}

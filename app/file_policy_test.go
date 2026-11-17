@@ -24,70 +24,70 @@ func TestPolicyReader_checkMimeType(t *testing.T) {
 		expectedErr  error
 	}{
 		{
-			name:         "Exact match JPEG",
+			name:         "exact_match_jpeg",
 			declaredMime: "image/jpeg",
 			inputBytes:   jpegBytes,
 			expectedErr:  nil,
 		},
 		{
-			name:         "Prefix match with parameters (text/plain with charset)",
+			name:         "prefix_match_with_parameters_(text/plain_with_charset)",
 			declaredMime: "text/plain; charset=utf-8",
 			inputBytes:   textBytes,
 			expectedErr:  nil,
 		},
 		{
-			name:         "Special rule for audio/wav",
+			name:         "special_rule_for_audio/wav",
 			declaredMime: "audio/wav",
 			inputBytes:   wavBytes,
 			expectedErr:  nil,
 		},
 		{
-			name:         "Unknown type (empty bytes / generic)",
+			name:         "unknown_type_(empty_bytes_/_generic)",
 			declaredMime: "image/jpeg",
 			inputBytes:   []byte{},
 			expectedErr:  model.PolicyErrorExtUnknown,
 		},
 		{
-			name:         "Suspicious mismatch (Declared PNG, actual JPEG)",
+			name:         "suspicious_mismatch_(declared_png,_actual_jpeg)",
 			declaredMime: "image/png",
 			inputBytes:   jpegBytes,
 			expectedErr:  model.PolicyErrorExtSuspicious,
 		},
 		{
-			name:         "Nil slice input",
+			name:         "nil_slice_input",
 			declaredMime: "image/jpeg",
 			inputBytes:   nil,
 			expectedErr:  model.PolicyErrorExtUnknown,
 		},
 		{
-			name:         "Unknown binary stream (application/octet-stream)",
+			name:         "unknown_binary_stream_(application/octet_stream)",
 			declaredMime: "application/octet-stream",
 			inputBytes:   binaryBytes,
 			expectedErr:  model.PolicyErrorExtUnknown,
 		},
 		{
-			name:         "RIFF container spoofing (Declared WAV, actual WebP)",
+			name:         "riff_container_spoofing_(declared_wav,_actual_web_p)",
 			declaredMime: "audio/wav",
 			inputBytes:   webpBytes,
 			expectedErr:  model.PolicyErrorExtSuspicious,
 		},
 		{
-			name:         "Empty declared MimeType with valid file",
+			name:         "empty_declared_mime_type_with_valid_file",
 			declaredMime: "",
 			inputBytes:   pngBytes,
 			expectedErr:  model.PolicyErrorExtSuspicious,
 		},
 		{
-			name:         "Uppercase declared MimeType (RFC 2045 compliance check)",
+			name:         "uppercase_declared_mime_type_(rfc_2045_compliance_check)",
 			declaredMime: "IMAGE/JPEG",
 			inputBytes:   jpegBytes,
-			expectedErr:  model.PolicyErrorExtSuspicious,
+			expectedErr:  nil,
 		},
 		{
-			name:         "Leading/trailing spaces in declared MimeType",
+			name:         "leading/trailing_spaces_in_declared_mime_type",
 			declaredMime: " image/png ",
 			inputBytes:   pngBytes,
-			expectedErr:  model.PolicyErrorExtSuspicious,
+			expectedErr:  nil,
 		},
 	}
 

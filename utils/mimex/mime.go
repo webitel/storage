@@ -57,13 +57,21 @@ func pickMime(sniffed, declared string) string {
 		return declared
 	}
 
-	for m := mimetype.Lookup(declared); m != nil; m = m.Parent() {
-		if m.Is(sniffed) {
-			return declared
-		}
+	if Matches(declared, sniffed) {
+		return declared
 	}
 
 	return sniffed
+}
+
+func Matches(declared, detected string) bool {
+	for m := mimetype.Lookup(declared); m != nil; m = m.Parent() {
+		if m.Is(detected) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func IsAudio(raw []byte) bool {
