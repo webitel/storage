@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/juju/ratelimit"
@@ -288,7 +287,7 @@ func (r *PolicyReader) Read(buf []byte) (n int, err error) {
 	}
 
 	if r.mimeTyme == "" {
-		if err = r.checkMimeType(buf); err != nil {
+		if err = r.checkMimeType(buf[:n]); err != nil {
 			return n, err
 		}
 		r.mimeTyme = r.f.MimeType
@@ -306,13 +305,12 @@ func (r *PolicyReader) Close() (err error) {
 }
 
 func (r *PolicyReader) checkMimeType(bytes []byte) error {
-	detectedMime, ext := mimex.Detect(bytes)
+	detectedMime, _ := mimex.Detect(bytes)
 	if mimex.IsGeneric(detectedMime) {
 		return model.PolicyErrorExtUnknown
 	}
 
-	cleanExt := strings.TrimPrefix(ext, ".")
-	if strings.HasPrefix(r.f.MimeType, detectedMime) || (r.f.MimeType == "audio/wav" && cleanExt == "wav") {
+	if mimex.Matches(r.f.MimeType, detectedMime) {
 		return nil
 	}
 
