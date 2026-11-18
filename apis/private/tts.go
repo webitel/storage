@@ -3,6 +3,7 @@ package private
 import (
 	"fmt"
 	. "github.com/webitel/storage/apis/helper"
+	"github.com/webitel/storage/pkg/sysurl"
 	"github.com/webitel/storage/utils"
 	"github.com/webitel/wlog"
 	"io"
@@ -56,9 +57,9 @@ func (tts *ttsPerform) store() {
 }
 
 func (api *API) InitTTS() {
-	api.Routes.TTS.Handle("/{id}", api.ApiHandler(doTTSByProfile)).Methods("GET")
-	api.Routes.TTS.Handle("/", api.ApiHandler(doTTSByProfile)).Methods("GET")
-	api.Routes.TTS.Handle("", api.ApiHandler(doTTSByProfile)).Methods("GET")
+	api.Routes.TTS.Handle("/{id}", api.ApiHandler(doTTSByProfile)).Methods("GET").Name(string(sysurl.RouteTTS))
+	api.Routes.TTS.Handle("/", api.ApiHandler(doTTSByProfile)).Methods("GET").Name(string(sysurl.RouteTTS))
+	api.Routes.TTS.Handle("", api.ApiHandler(doTTSByProfile)).Methods("GET").Name(string(sysurl.RouteTTS))
 }
 
 func doTTSByProfile(c *Context, w http.ResponseWriter, r *http.Request) {

@@ -36,6 +36,7 @@ func Init(a *app.App, root *mux.Router) *API {
 	api.Routes.Media = api.Routes.ApiRoot.PathPrefix("/media").Subrouter()
 	api.Routes.TTS = api.Routes.ApiRoot.PathPrefix("/tts").Subrouter()
 	api.Routes.Redirect = api.Routes.ApiRoot.PathPrefix("/redirect").Subrouter()
+	api.Routes.ApiRoot.Use(api.sysAuth)
 
 	api.InitFile()
 	api.InitMedia()

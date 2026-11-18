@@ -5,11 +5,12 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/webitel/storage/pkg/sysurl"
 	"github.com/webitel/storage/utils/mimex"
 )
 
 func (api *API) InitRedirect() {
-	api.Routes.Redirect.Handle("/playback", api.ApiHandler(redirectPlayback)).Methods("GET")
+	api.Routes.Redirect.Handle("/playback", api.ApiHandler(redirectPlayback)).Methods("GET").Name(string(sysurl.RouteRedirectPlayback))
 }
 
 func redirectPlayback(ctx *Context, w http.ResponseWriter, r *http.Request) {

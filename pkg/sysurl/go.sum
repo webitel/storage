@@ -1,0 +1,10 @@
+github.com/webitel/crypto/cryptobox v0.3.1 h1:j8TkPS8OAgr1jV1LQSxXHBbHFA+R00qBiX+wKuwve0I=
+github.com/webitel/crypto/cryptobox v0.3.1/go.mod h1:5qNvcbZRokvBC4yEPFxBWV41liQTkmKooahrT9d7x9Q=
+github.com/webitel/crypto/env v0.2.0 h1:WSw59p7FBqhc26O8f9HCM2Sgpe1UplFf8t2nEv/pC7I=
+github.com/webitel/crypto/env v0.2.0/go.mod h1:/jyzvmqAY6KGRwiV4oCWaBAeZOW51j1JdgswUnIPxqo=
+github.com/webitel/webitel-go-kit/pkg/presign v0.1.0 h1:A+CfxnIrk/AMTK9n0ru/rpx6wYuz6E/R5STq0jyCRAM=
+github.com/webitel/webitel-go-kit/pkg/presign v0.1.0/go.mod h1:kvBJoccexamLAgiwsjqnlzhyyme8NacDWPmLCIZ3QsQ=
+golang.org/x/crypto v0.54.0 h1:YLIA59K4fiNzHzjnZt2tUJQjQtUWfWbeHBqKtk3eScw=
+golang.org/x/crypto v0.54.0/go.mod h1:KWL8ny2AZdGR2cWmzeHrp2azQPGogOv+HeQaVEXC2dk=
+golang.org/x/sys v0.47.0 h1:o7XGOvZQCADBQQ4Y7VNq2dRWQR7JmOUW8Kxx4ZsNgWs=
+golang.org/x/sys v0.47.0/go.mod h1:4GL1E5IUh+htKOUEOaiffhrAeqysfVGipDYzABqnCmw=

@@ -1,6 +1,7 @@
 package private
 
 import (
+	"github.com/webitel/storage/pkg/sysurl"
 	"io"
 	"net/http"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 )
 
 func (api *API) InitMedia() {
-	api.Routes.Media.Handle("/{id}/stream", api.ApiHandler(streamMedia)).Methods("GET")
+	api.Routes.Media.Handle("/{id}/stream", api.ApiHandler(streamMedia)).Methods("GET").Name(string(sysurl.RouteMediaStream))
 }
 
 // /sys/media/:id/stream?domain_id=

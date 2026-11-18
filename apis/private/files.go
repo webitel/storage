@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/pkg/sysurl"
 	"github.com/webitel/wlog"
 	"io"
 	"mime/multipart"
@@ -14,11 +15,11 @@ import (
 )
 
 func (api *API) InitFile() {
-	api.Routes.Files.Handle("", api.ApiHandler(putRecordCallFile)).Methods("PUT")
-	api.Routes.Files.Handle("/ai/{id}", api.ApiHandler(putAiSpeech)).Methods("PUT")
-	api.Routes.Files.Handle("/ai/{id}", api.ApiHandler(getAiSpeech)).Methods("GET")
-	api.Routes.Files.Handle("/ai/{id}/metadata", api.ApiHandler(getAiMetadata)).Methods("GET")
-	api.Routes.Files.Handle("", api.ApiHandler(putRecordCallFile)).Methods("POST")
+	api.Routes.Files.Handle("", api.ApiHandler(putRecordCallFile)).Methods("PUT").Name(string(sysurl.RouteRecordingUpload))
+	api.Routes.Files.Handle("/ai/{id}", api.ApiHandler(putAiSpeech)).Methods("PUT").Name(string(sysurl.RouteAiUpload))
+	api.Routes.Files.Handle("/ai/{id}", api.ApiHandler(getAiSpeech)).Methods("GET").Name(string(sysurl.RouteAiSpeech))
+	api.Routes.Files.Handle("/ai/{id}/metadata", api.ApiHandler(getAiMetadata)).Methods("GET").Name(string(sysurl.RouteAiMetadata))
+	api.Routes.Files.Handle("", api.ApiHandler(putRecordCallFile)).Methods("POST").Name(string(sysurl.RouteRecordingUpload))
 }
 
 //	/sys/records?
