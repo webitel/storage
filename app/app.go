@@ -13,7 +13,6 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
-	"github.com/webitel/engine/pkg/presign"
 	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/webitel-go-kit/infra/health"
 	healthhttp "github.com/webitel/webitel-go-kit/infra/health/http"
@@ -24,6 +23,7 @@ import (
 	otelsdk "github.com/webitel/webitel-go-kit/infra/otel/sdk"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
 	wlogadapter "github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq/pkg/adapter/wlog"
+	"github.com/webitel/webitel-go-kit/pkg/presign"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
 	"github.com/webitel/wlog"
 
@@ -31,6 +31,7 @@ import (
 	"github.com/webitel/storage/broker/rabbit"
 	"github.com/webitel/storage/interfaces"
 	"github.com/webitel/storage/model"
+	"github.com/webitel/storage/pkg/sysurl"
 	"github.com/webitel/storage/store"
 	"github.com/webitel/storage/store/sqlstore"
 	"github.com/webitel/storage/utils"
@@ -82,7 +83,8 @@ type App struct {
 	Synchronizer   interfaces.SynchronizerFilesInterface
 	filePolicies   *DomainFilePolicy
 
-	preSigned presign.PreSign
+	preSigned   presign.PreSign
+	sysVerifier *sysurl.Verifier
 
 	upTime time.Time
 
@@ -224,10 +226,14 @@ func New(options ...string) (outApp *App, outErr error) {
 		return nil, outErr
 	}
 
-	if preSign, err := presign.NewPreSigned(app.Config().PreSignedCertificateLocation); err != nil {
+	if preSign, err := presign.NewPreSignChain(app.Config().PreSignedCertificateLocation); err != nil {
 		return nil, fmt.Errorf("unable to load certificate file: %w", err)
 	} else {
 		app.preSigned = preSign
+	}
+
+	if outErr = app.initSysVerifier(); outErr != nil {
+		return nil, outErr
 	}
 
 	cryptoFileKey := app.Config().PreSignedCertificateLocation

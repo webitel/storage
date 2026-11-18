@@ -33,6 +33,7 @@ func (s *LocalizationSettings) SetDefaults() {
 type ServiceSettings struct {
 	ListenAddress         string `json:"public_address" flag:"public_address|:10023|Public server address" env:"PUBLIC_ADDRESS"`
 	ListenInternalAddress string `json:"internal_address" flag:"internal_address|:10021|Internal server address" env:"INTERNAL_ADDRESS"`
+	SysAuthMode           string `json:"sys_auth_mode" flag:"sys_auth_mode|log|Internal /sys URL signature check: off, log or enforce" env:"SYS_AUTH_MODE"`
 	PublicHost            string `json:"public_host" flag:"public_host|https://dev.webitel.com/|Public host" env:"PUBLIC_HOST"`
 }
 
@@ -144,7 +145,18 @@ type DefaultFileStore struct {
 	Props       StringInterface `json:"props"`
 }
 
+const (
+	SysAuthModeOff     = "off"
+	SysAuthModeLog     = "log"
+	SysAuthModeEnforce = "enforce"
+)
+
 func (c *Config) IsValid() AppError {
+	switch c.ServiceSettings.SysAuthMode {
+	case SysAuthModeOff, SysAuthModeLog, SysAuthModeEnforce:
+	default:
+		return NewInternalError("model.config.is_valid.sys_auth_mode.app_error", "sys_auth_mode must be off, log or enforce")
+	}
 
 	if c.MediaFileStoreSettings.Directory == "" {
 		return NewInternalError("model.config.is_valid.media_store_directory.app_error", "parameters media_directory is required")
