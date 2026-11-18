@@ -12,6 +12,7 @@ func (app *App) SaveMediaFile(src io.ReadCloser, mediaFile *model.MediaFile) (*m
 	var err model.AppError
 
 	mediaFile.Channel = model.NewString(model.UploadFileChannelMedia)
+	mediaFile.Name = model.SafeStoreName(mediaFile.Name)
 
 	if err = mediaFile.IsValid(); err != nil {
 		return nil, err

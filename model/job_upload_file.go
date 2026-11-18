@@ -56,7 +56,7 @@ func (f *JobUploadFile) GetMimeType() string {
 }
 
 func (self *JobUploadFile) GetStoreName() string {
-	return fmt.Sprintf("%s_%s", self.Uuid, self.Name)
+	return SafeStoreName(fmt.Sprintf("%s_%s", self.Uuid, self.Name))
 }
 
 func (self *JobUploadFile) GetViewName() string {
