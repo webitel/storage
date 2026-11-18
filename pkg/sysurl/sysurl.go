@@ -1,13 +1,20 @@
+// Package sysurl builds and verifies signed links to the storage internal /sys
+// HTTP routes. A link carries an expires timestamp and an HMAC signature over
+// the route, path, expiry and every signed query parameter.
 package sysurl
 
 import (
 	"errors"
+	"maps"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 )
 
+// Route names a /sys endpoint. It is part of the signed data, so a link built
+// for one route does not verify against another.
 type Route string
 
 const (
@@ -20,6 +27,7 @@ const (
 	RouteRedirectPlayback Route = "redirect.playback"
 )
 
+// Query parameter names and option defaults.
 const (
 	ParamExpires   = "expires"
 	ParamSignature = "signature"
@@ -31,6 +39,7 @@ const (
 	paramName    = "name"
 )
 
+// Errors returned by NewBuilder, NewVerifier, Builder methods and Verify.
 var (
 	ErrNoSigner         = errors.New("sysurl: signer is required")
 	ErrInvalidOption    = errors.New("sysurl: invalid option")
@@ -43,7 +52,7 @@ var (
 	ErrInvalidSignature = errors.New("sysurl: invalid signature")
 )
 
-// routes is the complete list of all URLs with their isUnsignedParam params
+// routes lists every known route with the extra query parameters it leaves unsigned.
 var routes = map[Route]map[string]struct{}{
 	RouteRecordingUpload:  {paramName: {}},
 	RouteAiUpload:         nil,
@@ -54,23 +63,18 @@ var routes = map[Route]map[string]struct{}{
 	RouteRedirectPlayback: nil,
 }
 
+// Routes returns all known routes in no particular order.
 func Routes() []Route {
-	return []Route{
-		RouteRecordingUpload,
-		RouteAiUpload,
-		RouteAiSpeech,
-		RouteAiMetadata,
-		RouteMediaStream,
-		RouteTTS,
-		RouteRedirectPlayback,
-	}
+	return slices.Collect(maps.Keys(routes))
 }
 
+// Valid reports whether r is a known route.
 func (r Route) Valid() bool {
 	_, ok := routes[r]
 	return ok
 }
 
+// Option configures a Builder or a Verifier.
 type Option func(*options)
 
 type options struct {
@@ -79,14 +83,20 @@ type options struct {
 	now    func() time.Time
 }
 
+// WithBucket sets the expiry bucket used by Builder. The default is
+// DefaultBucket and the minimum is one millisecond. Verifier ignores it.
 func WithBucket(d time.Duration) Option {
 	return func(o *options) { o.bucket = d }
 }
 
+// WithSkew sets how long Verifier still accepts a link after its expires
+// timestamp, to absorb clock drift between hosts. The default is DefaultSkew
+// and it must not be negative. Builder ignores it.
 func WithSkew(d time.Duration) Option {
 	return func(o *options) { o.skew = d }
 }
 
+// WithClock replaces time.Now as the time source.
 func WithClock(now func() time.Time) Option {
 	return func(o *options) { o.now = now }
 }

@@ -11,12 +11,15 @@ import (
 	"github.com/webitel/webitel-go-kit/pkg/presign"
 )
 
+// Verifier checks links created by a Builder that uses the same key.
 type Verifier struct {
 	signer presign.Signer
 	skew   int64
 	now    func() time.Time
 }
 
+// NewVerifier returns a Verifier that checks signatures with signer. It
+// returns ErrNoSigner for a nil signer and ErrInvalidOption for a bad option.
 func NewVerifier(signer presign.Signer, opts ...Option) (*Verifier, error) {
 	if signer == nil {
 		return nil, ErrNoSigner
@@ -28,6 +31,12 @@ func NewVerifier(signer presign.Signer, opts ...Option) (*Verifier, error) {
 	return &Verifier{signer: signer, skew: o.skew.Milliseconds(), now: o.now}, nil
 }
 
+// Verify checks that r carries a valid, unexpired signature for route. It
+// rebuilds the signed data from route, r.URL.Path, the expires parameter and
+// every query parameter except expires, signature, the route's unsigned keys
+// and empty format keys. A link stays valid until expires plus the skew.
+// Errors wrap ErrUnknownRoute, ErrMalformedQuery, ErrMissingSignature,
+// ErrDuplicateParam, ErrExpired or ErrInvalidSignature.
 func (v *Verifier) Verify(route Route, r *http.Request) error {
 	if !route.Valid() {
 		return fmt.Errorf("%w: %q", ErrUnknownRoute, route)
@@ -69,6 +78,9 @@ func (v *Verifier) Verify(route Route, r *http.Request) error {
 	return nil
 }
 
+// Strip removes the expires and signature parameters from r.URL.RawQuery and
+// keeps the other parameters in their original order and encoding. Call it
+// after Verify so handlers and proxied requests do not see the signature.
 func Strip(r *http.Request) {
 	if r.URL.RawQuery == "" {
 		return
