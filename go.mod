@@ -8,12 +8,12 @@ require (
 	cloud.google.com/go/texttospeech v1.22.0
 	github.com/BoRuDar/configuration/v4 v4.2.2
 	github.com/aws/aws-sdk-go v1.55.8
+	github.com/gabriel-vasile/mimetype v1.4.16
 	github.com/go-gorp/gorp v2.2.0+incompatible
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.31.0
-	github.com/h2non/filetype v1.1.3
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/juju/ratelimit v1.0.2
