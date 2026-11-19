@@ -80,7 +80,7 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 	return &file.File, backend, nil
 }
 
-func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
+func (app *App) RemoveFiles(domainId int64, ids []int64, userIp string) model.AppError {
 	files, err := app.Store.File().GetAllPage(context.Background(), domainId, &model.SearchFile{
 		Ids:      ids,
 		Channels: []string{model.UploadFileChannelCase},
@@ -102,7 +102,7 @@ func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
 		if notifyErr := app.watcherManager.Notify(
 			model.PermissionScopeFiles,
 			watcherkit.EventTypeDelete,
-			NewFileWatcherData(file),
+			NewFileWatcherData(file, userIp),
 		); notifyErr != nil {
 			wlog.Error(fmt.Sprintf("could not notify file store: %s", notifyErr.Error()))
 		}

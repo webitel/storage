@@ -142,9 +142,14 @@ func (l *LoggerObserver) Update(et watcher.EventType, args map[string]any) error
 		return watcher.ErrUnknownType
 	}
 
+	userIp, _ := args["user_ip"].(string)
+	if userIp == "" {
+		userIp = "unknown"
+	}
+
 	message, err := wlogger.NewMessage(
 		int64(file.UploadedBy.Id),
-		"unknown",
+		userIp,
 		actionType,
 		strconv.Itoa(int(file.Id)),
 		file,

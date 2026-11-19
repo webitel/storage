@@ -272,7 +272,7 @@ endScan:
 		file.Thumbnail = sf.Thumbnail
 	}
 
-	file.Id, err = app.storeFile(store, sf)
+	file.Id, err = app.storeFile(store, sf, file.UserIp)
 	if err != nil {
 		return err
 	}
@@ -444,7 +444,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 }
 
 // storeFile зберігає інформацію про файл у базі даних
-func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, model.AppError) {
+func (app *App) storeFile(store utils.FileBackend, file *model.File, userIp string) (int64, model.AppError) {
 	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
 		return 0, res.Err
@@ -459,7 +459,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File) (int64, mod
 		if notifyErr := app.watcherManager.Notify(
 			model.PermissionScopeFiles,
 			watcherkit.EventTypeCreate,
-			NewFileWatcherData(file),
+			NewFileWatcherData(file, userIp),
 		); notifyErr != nil {
 			wlog.Error(fmt.Sprintf("could not notify file store: %s, ", notifyErr.Error()))
 		}
@@ -472,10 +472,10 @@ type FileWatcherData struct {
 	Args map[string]any
 }
 
-func NewFileWatcherData(file *model.File) *FileWatcherData {
+func NewFileWatcherData(file *model.File, userIp string) *FileWatcherData {
 	return &FileWatcherData{
 		file: file,
-		Args: map[string]any{"obj": file},
+		Args: map[string]any{"obj": file, "user_ip": userIp},
 	}
 }
 

@@ -99,6 +99,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.Channel = &channel
 			file.CustomProperties = CustomPropertiesFromQuery(r.URL.Query()) // TODO
 			file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
+			file.UserIp = c.IpAddress
 
 			var reader io.ReadCloser
 			reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, part)
@@ -144,6 +145,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.Channel = &channel
 		file.CustomProperties = CustomPropertiesFromQuery(r.URL.Query())
 		file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
+		file.UserIp = c.IpAddress
 
 		var reader io.ReadCloser
 		reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, r.Body)

@@ -32,6 +32,7 @@ type JobUploadFile struct {
 	Thumbnail *Thumbnail `db:"thumbnail" json:"thumbnail"`
 
 	GenerateThumbnail bool `db:"-"`
+	UserIp string `db:"-" json:"-"`
 }
 
 type JobUploadFileWithProfile struct {

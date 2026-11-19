@@ -89,7 +89,7 @@ func (u *UploadTask) Execute() {
 	u.log.Debug(fmt.Sprintf("finish upload task %d [%s]", u.job.Id, u.Name()))
 
 	if *u.job.GetChannel() == model.UploadFileChannelCall {
-		u.app.WatcherManager().Notify(model.PermissionScopeFiles, watcher.EventTypeRecordCall, app.NewFileWatcherData(f))
+		u.app.WatcherManager().Notify(model.PermissionScopeFiles, watcher.EventTypeRecordCall, app.NewFileWatcherData(f, ""))
 	}
 }
 
