@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
-	"github.com/h2non/filetype"
 	"github.com/juju/ratelimit"
 	"golang.org/x/sync/singleflight"
 
@@ -15,6 +13,7 @@ import (
 
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
+	"github.com/webitel/storage/utils/mimex"
 )
 
 var policiesStoreGroup singleflight.Group
@@ -288,8 +287,7 @@ func (r *PolicyReader) Read(buf []byte) (n int, err error) {
 	}
 
 	if r.mimeTyme == "" {
-		err = r.testMimeType(buf)
-		if err != nil {
+		if err = r.checkMimeType(buf[:n]); err != nil {
 			return n, err
 		}
 		r.mimeTyme = r.f.MimeType
@@ -306,26 +304,20 @@ func (r *PolicyReader) Close() (err error) {
 	return r.r.Close()
 }
 
-func (r *PolicyReader) testMimeType(bytes []byte) error {
-	kind, err := filetype.Match(bytes)
-	if err != nil {
-		return err
-	}
-
-	if kind == filetype.Unknown {
-		// TODO
+func (r *PolicyReader) checkMimeType(bytes []byte) error {
+	detectedMime, _ := mimex.Detect(bytes)
+	if mimex.IsGeneric(detectedMime) {
 		return model.PolicyErrorExtUnknown
 	}
 
-	if strings.HasPrefix(r.f.MimeType, kind.MIME.Value) || (r.f.MimeType == "audio/wav" && kind.Extension == "wav") {
+	if mimex.Matches(r.f.MimeType, detectedMime) {
 		return nil
 	}
 
-	if r.f.MimeType != kind.MIME.Value {
+	if r.f.MimeType != detectedMime {
 		return model.PolicyErrorExtSuspicious
 	}
 
-	// File mime type is not in the allowed list
 	return model.PolicyErrorExtNotAllowed
 }
 
