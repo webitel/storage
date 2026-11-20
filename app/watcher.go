@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 	wlogger "github.com/webitel/webitel-go-kit/infra/logger_client"
 	"github.com/webitel/webitel-go-kit/infra/pubsub/rabbitmq"
@@ -128,8 +129,9 @@ func (l *LoggerObserver) Update(et watcher.EventType, args map[string]any) error
 		return fmt.Errorf("expected obj to be *model.File")
 	}
 
-	if file.UploadedBy == nil || file.UploadedBy.Id == 0 {
-		return fmt.Errorf("missing uploader info in file.UploadedBy")
+	session, ok := args["session"].(*auth_manager.Session)
+	if !ok || session == nil {
+		return fmt.Errorf("'session' not found in args")
 	}
 
 	actionType := map[watcher.EventType]wlogger.Action{
@@ -142,13 +144,13 @@ func (l *LoggerObserver) Update(et watcher.EventType, args map[string]any) error
 		return watcher.ErrUnknownType
 	}
 
-	userIp, _ := args["user_ip"].(string)
+	userIp := session.GetUserIp()
 	if userIp == "" {
 		userIp = "unknown"
 	}
 
 	message, err := wlogger.NewMessage(
-		int64(file.UploadedBy.Id),
+		session.GetUserId(),
 		userIp,
 		actionType,
 		strconv.Itoa(int(file.Id)),

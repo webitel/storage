@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/golang-lru/v2/expirable"
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"golang.org/x/sync/singleflight"
 
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
@@ -98,13 +99,13 @@ func (app *App) domainStore(domainId int64) (utils.FileBackend, model.AppError) 
 }
 
 // SyncUpload синхронно завантажує файл за замовчуванням
-func (app *App) SyncUpload(src io.Reader, file *model.JobUploadFile) model.AppError {
+func (app *App) SyncUpload(session *auth_manager.Session, src io.Reader, file *model.JobUploadFile) model.AppError {
 	store, err := app.domainStore(file.DomainId)
 	if err != nil {
 		return err
 	}
 
-	return app.upload(src, store.Id(), store, file)
+	return app.upload(session, src, store.Id(), store, file)
 }
 
 // SyncUploadToProfile синхронно завантажує файл у профіль користувача
@@ -114,14 +115,14 @@ func (app *App) SyncUploadToProfile(src io.Reader, profileId int, file *model.Jo
 		return err
 	}
 
-	return app.upload(src, &profileId, store, file)
+	return app.upload(nil, src, &profileId, store, file)
 }
 
 func (app *App) useClamd(file *model.BaseFile) bool {
 	return app.clamd != nil && file.Channel != nil && *file.Channel == model.UploadFileChannelChat
 }
 
-func (app *App) upload(src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) model.AppError {
+func (app *App) upload(session *auth_manager.Session, src io.Reader, profileId *int, store utils.FileBackend, file *model.JobUploadFile) model.AppError {
 	var reader io.Reader
 	var thumbnail *utils.Thumbnail
 	var ch chan model.AppError
@@ -272,7 +273,7 @@ endScan:
 		file.Thumbnail = sf.Thumbnail
 	}
 
-	file.Id, err = app.storeFile(store, sf, file.UserIp)
+	file.Id, err = app.storeFile(session, store, sf)
 	if err != nil {
 		return err
 	}
@@ -444,7 +445,7 @@ func (app *App) syncUpload(store utils.FileBackend, src io.Reader, file *model.J
 }
 
 // storeFile зберігає інформацію про файл у базі даних
-func (app *App) storeFile(store utils.FileBackend, file *model.File, userIp string) (int64, model.AppError) {
+func (app *App) storeFile(session *auth_manager.Session, store utils.FileBackend, file *model.File) (int64, model.AppError) {
 	res := <-app.Store.File().Create(file)
 	if res.Err != nil {
 		return 0, res.Err
@@ -459,7 +460,7 @@ func (app *App) storeFile(store utils.FileBackend, file *model.File, userIp stri
 		if notifyErr := app.watcherManager.Notify(
 			model.PermissionScopeFiles,
 			watcherkit.EventTypeCreate,
-			NewFileWatcherData(file, userIp),
+			NewFileWatcherData(session, file),
 		); notifyErr != nil {
 			wlog.Error(fmt.Sprintf("could not notify file store: %s, ", notifyErr.Error()))
 		}
@@ -472,10 +473,10 @@ type FileWatcherData struct {
 	Args map[string]any
 }
 
-func NewFileWatcherData(file *model.File, userIp string) *FileWatcherData {
+func NewFileWatcherData(session *auth_manager.Session, file *model.File) *FileWatcherData {
 	return &FileWatcherData{
 		file: file,
-		Args: map[string]any{"obj": file, "user_ip": userIp},
+		Args: map[string]any{"session": session, "obj": file},
 	}
 }
 

@@ -80,7 +80,7 @@ func (c *Controller) DeleteFiles(ctx context.Context, session *auth_manager.Sess
 		return nil
 	}
 
-	return c.app.RemoveFiles(session.Domain(0), deleteIds, session.GetUserIp())
+	return c.app.RemoveFiles(session, deleteIds)
 }
 
 func (c *Controller) DeleteQuarantineFiles(session *auth_manager.Session, ids []int64) model.AppError {

@@ -52,6 +52,7 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			c.Session = *session
+			c.Session.SetIp(c.IpAddress)
 		}
 	}
 

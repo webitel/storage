@@ -99,7 +99,6 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			file.Channel = &channel
 			file.CustomProperties = CustomPropertiesFromQuery(r.URL.Query()) // TODO
 			file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
-			file.UserIp = c.IpAddress
 
 			var reader io.ReadCloser
 			reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, part)
@@ -108,7 +107,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			}
 
 			// TODO PERMISSION
-			if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
+			if c.Err = c.App.SyncUpload(&c.Session, reader, file); c.Err != nil {
 				if c.Err.GetId() == utils.ErrMaxLimitId {
 					c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 				}
@@ -145,7 +144,6 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		file.Channel = &channel
 		file.CustomProperties = CustomPropertiesFromQuery(r.URL.Query())
 		file.UploadedBy = &model.Lookup{Id: int(c.Session.UserId)}
-		file.UserIp = c.IpAddress
 
 		var reader io.ReadCloser
 		reader, c.Err = c.App.FilePolicyForUpload(c.Session.DomainId, &file.BaseFile, r.Body)
@@ -155,7 +153,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		defer reader.Close()
 
 		// TODO PERMISSION
-		if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
+		if c.Err = c.App.SyncUpload(&c.Session, reader, file); c.Err != nil {
 			if c.Err.GetId() == utils.ErrMaxLimitId {
 				c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 			}
