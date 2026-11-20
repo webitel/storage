@@ -107,7 +107,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 			}
 
 			// TODO PERMISSION
-			if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
+			if c.Err = c.App.SyncUpload(&c.Session, reader, file); c.Err != nil {
 				if c.Err.GetId() == utils.ErrMaxLimitId {
 					c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 				}
@@ -153,7 +153,7 @@ func uploadAnyFile(c *Context, w http.ResponseWriter, r *http.Request) {
 		defer reader.Close()
 
 		// TODO PERMISSION
-		if c.Err = c.App.SyncUpload(reader, file); c.Err != nil {
+		if c.Err = c.App.SyncUpload(&c.Session, reader, file); c.Err != nil {
 			if c.Err.GetId() == utils.ErrMaxLimitId {
 				c.Err.SetDetailedError(utils.BytesSize(float64(c.App.MaxUploadFileSize())))
 			}

@@ -106,7 +106,7 @@ func (s *SafeUpload) run() {
 	if s.profileId != nil {
 		err = s.app.SyncUploadToProfile(s.reader, *s.profileId, s.request)
 	} else {
-		err = s.app.SyncUpload(s.reader, s.request)
+		err = s.app.SyncUpload(nil, s.reader, s.request)
 	}
 
 	s.setState(SafeUploadStateFinished)

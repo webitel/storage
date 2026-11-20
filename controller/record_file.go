@@ -24,7 +24,7 @@ func (c *Controller) UploadFileStream(src io.ReadCloser, file *model.JobUploadFi
 		return err
 	}
 	defer src.Close()
-	return c.app.SyncUpload(src2, file)
+	return c.app.SyncUpload(nil, src2, file)
 }
 
 func (c *Controller) UploadFileStreamToProfile(src io.ReadCloser, profileId int, file *model.JobUploadFile) model.AppError {
