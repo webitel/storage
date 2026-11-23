@@ -6,6 +6,7 @@ import (
 
 	"net/http"
 
+	"github.com/webitel/engine/pkg/wbt/auth_manager"
 	"github.com/webitel/storage/model"
 	"github.com/webitel/storage/utils"
 	watcherkit "github.com/webitel/webitel-go-kit/pkg/watcher"
@@ -80,7 +81,8 @@ func (app *App) GetFileByUuidWithProfile(domainId int64, uuid string) (*model.Fi
 	return &file.File, backend, nil
 }
 
-func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
+func (app *App) RemoveFiles(session *auth_manager.Session, ids []int64) model.AppError {
+	domainId := session.Domain(0)
 	files, err := app.Store.File().GetAllPage(context.Background(), domainId, &model.SearchFile{
 		Ids:      ids,
 		Channels: []string{model.UploadFileChannelCase},
@@ -102,7 +104,7 @@ func (app *App) RemoveFiles(domainId int64, ids []int64) model.AppError {
 		if notifyErr := app.watcherManager.Notify(
 			model.PermissionScopeFiles,
 			watcherkit.EventTypeDelete,
-			NewFileWatcherData(file),
+			NewFileWatcherData(session, file),
 		); notifyErr != nil {
 			wlog.Error(fmt.Sprintf("could not notify file store: %s", notifyErr.Error()))
 		}

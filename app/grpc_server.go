@@ -193,5 +193,18 @@ func (a *App) GetSessionFromCtx(ctx context.Context) (*auth_manager.Session, mod
 		return nil, model.NewInternalError("api.context.session_expired.app_error", "token="+token)
 	}
 
+	session.SetIp(clientIpFromGrpcContext(ctx))
+
 	return session, nil
+}
+
+// clientIpFromGrpcContext returns the client ip forwarded by the gateway.
+func clientIpFromGrpcContext(ctx context.Context) string {
+	info, _ := metadata.FromIncomingContext(ctx)
+	ip := strings.Join(info.Get(model.HEADER_REAL_IP), ",")
+	if ip == "" {
+		ip = strings.Join(info.Get(model.HEADER_FORWARDED), ",")
+	}
+
+	return ip
 }
