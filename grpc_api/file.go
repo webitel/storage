@@ -557,6 +557,12 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 
 	policyErr := model.IsFilePolicyError(su.Err())
 	if gErr != nil && gErr != io.EOF && !policyErr {
+		// The write side already failed (e.g. the file backend is
+		// unreachable): no resume can complete this upload.
+		if failed := uploadFailed(su); failed != nil {
+			return failed
+		}
+
 		su.Sleep()
 		wlog.Error(gErr.Error())
 		return gErr
@@ -567,8 +573,11 @@ func (api *file) SafeUploadFile(in storage.FileService_SafeUploadFileServer) err
 		}
 	}
 
-	<-su.WaitUploaded()
-	fileRequest := su.File()
+	fileRequest, upErr := uploadedFile(su)
+	if upErr != nil {
+		return upErr
+	}
+
 	var err model.AppError
 	var publicUrl string
 	if publicUrl, err = api.ctrl.GeneratePreSignetResourceSignature(model.AnyFileRouteName, "download", fileRequest.Id, fileRequest.DomainId); err != nil {
@@ -1075,4 +1084,36 @@ func channelTypeGrpc(channel string) storage.UploadFileChannel {
 		return storage.UploadFileChannel_UnknownChannel
 
 	}
+}
+
+// finishedUpload is the part of a safe upload SafeUploadFile reads to learn
+// how the write to the file backend ended.
+type finishedUpload interface {
+	WaitUploaded() chan struct{}
+	Err() error
+	File() *model.JobUploadFile
+}
+
+// uploadFailed returns the error a finished upload ended with, without
+// waiting for one still in progress.
+func uploadFailed(su finishedUpload) error {
+	select {
+	case <-su.WaitUploaded():
+		return su.Err()
+	default:
+		return nil
+	}
+}
+
+// uploadedFile waits for the upload to finish and returns the stored file, or
+// the error that kept it from being stored: a failed write must not be
+// reported as an uploaded file without an id.
+func uploadedFile(su finishedUpload) (*model.JobUploadFile, error) {
+	<-su.WaitUploaded()
+
+	if err := su.Err(); err != nil {
+		return nil, err
+	}
+
+	return su.File(), nil
 }

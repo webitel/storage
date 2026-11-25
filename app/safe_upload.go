@@ -85,12 +85,15 @@ func (s *SafeUpload) SetError(err error) {
 }
 
 func (s *SafeUpload) Err() error {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+
 	return s.err
 }
 
 func (s *SafeUpload) Write(src []byte) error {
-	if s.err != nil {
-		return s.err
+	if err := s.Err(); err != nil {
+		return err
 	}
 	n, err := s.writer.Write(src)
 	s.mx.Lock()
