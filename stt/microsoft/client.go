@@ -107,6 +107,9 @@ type Task struct {
 }
 
 func NewClient(config Config) (*client, error) {
+	if !model.IsValidCloudRegion(config.Region) {
+		return nil, errors.New("invalid region")
+	}
 	h := hmac.New(sha256.New, []byte("bla bla"))
 	c := &client{
 		id:        config.Id,

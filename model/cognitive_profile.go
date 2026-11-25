@@ -2,11 +2,48 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
 )
 
-const CognitiveProfileKeyField = "key"
+const (
+	CognitiveProfileKeyField         = "key"
+	CognitiveProfileRegionField      = "region"
+	CognitiveProfileKeyLocationField = "key_location"
+
+	CognitiveServiceTTS = "TTS"
+
+	GoogleServiceAccountType = "service_account"
+	GoogleTokenURI           = "https://oauth2.googleapis.com/token"
+
+	maxCloudRegionLength = 64
+)
+
+var cloudRegionPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
+func IsValidCloudRegion(region string) bool {
+	return len(region) <= maxCloudRegionLength && cloudRegionPattern.MatchString(region)
+}
+
+func ValidateGoogleServiceAccount(data []byte) error {
+	var key struct {
+		Type     string `json:"type"`
+		TokenURI string `json:"token_uri"`
+	}
+	if err := json.Unmarshal(data, &key); err != nil {
+		return errors.New("credentials must be a JSON object")
+	}
+	if key.Type != GoogleServiceAccountType {
+		return fmt.Errorf("credentials type must be %q", GoogleServiceAccountType)
+	}
+	if key.TokenURI != "" && key.TokenURI != GoogleTokenURI {
+		return fmt.Errorf("token_uri must be %q", GoogleTokenURI)
+	}
+	return nil
+}
 
 type CognitiveProfile struct {
 	Id        int64      `json:"id" db:"id"`
@@ -64,8 +101,37 @@ func (CognitiveProfile) EntityName() string {
 }
 
 func (c *CognitiveProfile) IsValid() AppError {
-	// on create action key from properties can't be empty
-	// on update action key can be empty (task: WTEL-4344)
+	if _, ok := c.Properties[CognitiveProfileKeyLocationField]; ok {
+		return NewBadRequestError("model.cognitive_profile.key_location.app_error", "key_location is not supported")
+	}
+
+	region := c.Properties.GetString(CognitiveProfileRegionField)
+	if region != "" && !IsValidCloudRegion(region) {
+		return NewBadRequestError("model.cognitive_profile.region.app_error", "invalid region")
+	}
+
+	switch strings.ToLower(c.Provider) {
+	case "microsoft":
+		if region == "" {
+			return NewBadRequestError("model.cognitive_profile.region.app_error", "region is required")
+		}
+	case "google":
+		if !strings.EqualFold(c.Service, CognitiveServiceTTS) {
+			break
+		}
+		key, ok := c.Properties[CognitiveProfileKeyField]
+		if !ok || key == nil || key == "" {
+			break
+		}
+		data, err := json.Marshal(key)
+		if err == nil {
+			err = ValidateGoogleServiceAccount(data)
+		}
+		if err != nil {
+			return NewBadRequestError("model.cognitive_profile.key.app_error", err.Error())
+		}
+	}
+
 	return nil
 }
 

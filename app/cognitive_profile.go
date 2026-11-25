@@ -45,6 +45,9 @@ func (app *App) UpdateCognitiveProfile(profile *model.CognitiveProfile) (*model.
 	oldProfile.UpdatedAt = profile.UpdatedAt
 
 	oldProfile.Provider = profile.Provider
+	if profile.Properties == nil {
+		profile.Properties = model.StringInterface{}
+	}
 	// if access_key of profile is empty do not let reset access key (task: WTEL-4344)
 	if oldAccessKey, newAccessKey := oldProfile.Properties.GetString(model.CognitiveProfileKeyField), profile.Properties.GetString(model.CognitiveProfileKeyField); newAccessKey == "" {
 		profile.Properties[model.CognitiveProfileKeyField] = oldAccessKey
@@ -55,6 +58,10 @@ func (app *App) UpdateCognitiveProfile(profile *model.CognitiveProfile) (*model.
 	oldProfile.Description = profile.Description
 	oldProfile.Service = profile.Service
 	oldProfile.Default = profile.Default
+
+	if err = oldProfile.IsValid(); err != nil {
+		return nil, err
+	}
 
 	return app.Store.CognitiveProfile().Update(oldProfile)
 

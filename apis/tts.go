@@ -20,9 +20,7 @@ func streamTts(c *Context, w http.ResponseWriter, r *http.Request) {
 func tts(c *Context, w http.ResponseWriter, r *http.Request, download bool) {
 	params := helper.TtsParamsFromRequest(r)
 
-	if params.DomainId == 0 {
-		params.DomainId = int(c.Session.DomainId)
-	}
+	params.DomainId = int(c.Session.DomainId)
 	out, t, size, err := c.App.TTS(app.TtsProfile, params)
 	if err != nil {
 		c.Err = err

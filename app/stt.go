@@ -80,17 +80,15 @@ func (app *App) getSttProfile(id *int, syncTime *int64) (p *model.CognitiveProfi
 	var err error
 	switch p.Provider {
 	case microsoft.ClientName:
-
-		if p.Instance, err = microsoft.NewClient(microsoft.ConfigFromJson(*id, app.JobCallbackUri(p.Id), p.JsonProperties())); err != nil {
-			// TODO
-		}
+		p.Instance, err = microsoft.NewClient(microsoft.ConfigFromJson(*id, app.JobCallbackUri(p.Id), p.JsonProperties()))
 	case google.ClientName:
-		if p.Instance, err = google.New(google.ConfigFromJson(p.JsonProperties())); err != nil {
-
-		}
-
+		p.Instance, err = google.New(google.ConfigFromJson(p.JsonProperties()))
 	default:
 		//todo error
+	}
+
+	if err != nil {
+		return nil, model.NewInternalError("app.stt.profile.client.app_error", err.Error())
 	}
 
 	app.sttProfilesCache.Add(*id, p)

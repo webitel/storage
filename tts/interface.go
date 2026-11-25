@@ -12,14 +12,13 @@ type TTSEngine interface {
 }
 
 type TTSParams struct {
-	Id          string
-	DomainId    int             `json:"-"`
-	ProfileId   int             `json:"-"`
-	Key         json.RawMessage `json:"key"`
-	Token       string          `json:"token"`
-	KeyLocation string          `json:"key_location"`
-	Region      string          `json:"region"`
-	Locale      string          `json:"locale"`
+	Id        string
+	DomainId  int             `json:"-"`
+	ProfileId int             `json:"-"`
+	Key       json.RawMessage `json:"key"`
+	Token     string          `json:"token"`
+	Region    string          `json:"region"`
+	Locale    string          `json:"locale"`
 
 	Format         string `json:"-"`
 	Voice          string `json:"-"`
