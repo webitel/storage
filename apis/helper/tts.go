@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	tts2 "github.com/webitel/storage/tts"
+	"github.com/webitel/storage/tts"
 )
 
-func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
+func TtsParamsFromRequest(r *http.Request) tts.TTSParams {
 	var profileId int
 	var domainId int
 	var tmp string
@@ -23,16 +23,13 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 		domainId, _ = strconv.Atoi(query.Get("domain_id"))
 	}
 
-	params := tts2.TTSParams{
+	params := tts.TTSParams{
 		Id:        query.Get("id"),
 		DomainId:  domainId,
 		ProfileId: profileId,
 
-		Key:      []byte(query.Get("key")),
-		Token:    query.Get("token"),
 		Format:   query.Get("format"),
 		Voice:    query.Get("voice"),
-		Region:   query.Get("region"),
 		Text:     query.Get("text"),
 		TextType: query.Get("text_type"),
 		Language: query.Get("language"),
@@ -79,7 +76,6 @@ func TtsParamsFromRequest(r *http.Request) tts2.TTSParams {
 		params.BackgroundPlayback = true
 	}
 
-	params.KeyLocation = query.Get("keyLocation")
 	params.VoiceSettings = query
 
 	return params

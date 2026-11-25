@@ -126,16 +126,21 @@ func (api *fileTranscript) FileTranscriptSafe(ctx context.Context, in *storage.F
 		ops.Locale = &in.Locale
 	}
 
-	if in.GetProfileId() > 0 {
-		ops.ProfileId = model.NewInt(int(in.GetProfileId()))
+	if in.GetProfileId() <= 0 {
+		return nil, model.NewBadRequestError("grpc_api.file_transcript.create_file_transcript_safe.profile_required.error", "profile_id is required")
 	}
-	value, err, _ := api.getProfileGroup.Do(fmt.Sprintf("%d-%d", in.GetDomainId(), ops.ProfileId), func() (interface{}, error) {
-		return api.ctrl.GetProfileWithoutAuth(in.GetDomainId(), int64(*ops.ProfileId))
+	ops.ProfileId = model.NewInt(int(in.GetProfileId()))
+
+	value, err, _ := api.getProfileGroup.Do(fmt.Sprintf("%d-%d", in.GetDomainId(), in.GetProfileId()), func() (interface{}, error) {
+		return api.ctrl.GetProfileWithoutAuth(in.GetDomainId(), in.GetProfileId())
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	profile := value.(*model.CognitiveProfile)
 	if !profile.Enabled {
-		return nil, model.NewBadRequestError("grpc_api.file_transcript.create_file_transcript_safe.profile_disabled.error", fmt.Sprintf("profile id=%d is disabled", ops.ProfileId))
+		return nil, model.NewBadRequestError("grpc_api.file_transcript.create_file_transcript_safe.profile_disabled.error", fmt.Sprintf("profile id=%d is disabled", in.GetProfileId()))
 	}
 	syncTime := profile.UpdatedAt.Unix()
 	ops.ProfileSyncTime = &syncTime

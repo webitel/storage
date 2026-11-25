@@ -9,6 +9,7 @@ import (
 
 	texttospeech "cloud.google.com/go/texttospeech/apiv1"
 	texttospeechpb "cloud.google.com/go/texttospeech/apiv1/texttospeechpb"
+	"github.com/webitel/storage/model"
 	"google.golang.org/api/option"
 )
 
@@ -21,9 +22,10 @@ func Google(params TTSParams) (io.ReadCloser, *string, *int, error) {
 	options := make([]option.ClientOption, 0, 1)
 
 	if len(params.Key) != 0 {
-		options = append(options, option.WithCredentialsJSON(params.Key))
-	} else if params.KeyLocation != "" {
-		options = append(options, option.WithCredentialsFile(params.KeyLocation))
+		if err = model.ValidateGoogleServiceAccount(params.Key); err != nil {
+			return nil, nil, nil, model.NewBadRequestError("tts.google.key.app_error", err.Error())
+		}
+		options = append(options, option.WithAuthCredentialsJSON(option.ServiceAccount, params.Key))
 	}
 
 	client, err = texttospeech.NewClient(ctx, options...)
